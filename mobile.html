@@ -894,6 +894,11 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     }catch(e){setStatus('mAdminSystemStatus',e.message,'err')}
   }
 
+  document.addEventListener('click',e=>{
+    const adminButton=e.target.closest('.menuPanel button[data-screen="adminMobile"]');
+    if(adminButton&&window.GJ_AUTH?.isAdmin!==true){e.preventDefault();e.stopImmediatePropagation();document.getElementById('menuPanel')?.classList.remove('open')}
+  },true);
+
   window.addEventListener('gj-auth-ready',async ev=>{
     const p=ev.detail.profile;
     const displayName=p?.full_name||[p?.first_name,p?.last_name].filter(Boolean).join(' ')||p?.email||'Gebruiker';const headerName=document.getElementById('headerUserName');if(headerName)headerName.textContent=displayName;
@@ -1026,7 +1031,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 })();
 </script>
 
-<script src="auth.js?v=10801"></script>
+<script src="auth.js?v=10802"></script>
 
 <script id="v102CoreScript">
 (()=>{

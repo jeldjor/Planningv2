@@ -4,11 +4,13 @@
 
 - Beheer is op iPhone en laptop alleen zichtbaar en bereikbaar voor de bestaande centrale adminrol.
 - De CSS-regel die de mobiele beheerknop voor gewone gebruikers opnieuw zichtbaar maakte is gecorrigeerd.
+- De algemene mobiele knopregel kan de adminverberging niet meer overschrijven; openen van het beheerscherm wordt daarnaast in JavaScript geweigerd zonder adminrol.
 - Beheer kan Live Locaties nu per gebruiker aan- of uitzetten.
 - De database weigert locatieopslag wanneer de beheerder Live Locaties voor die gebruiker niet heeft ingeschakeld.
 - Gewone gebruikers zien Routefunctionaliteit niet meer onder Instellingen.
 - De toestemmingsflow start alleen wanneer Live Locaties zowel centraal als voor de betreffende gebruiker is ingeschakeld.
 - Een apart, herhaalbaar DEV-correctiebestand is toegevoegd voor testprojecten waarop de oorspronkelijke v10.8-migratie al is uitgevoerd.
+- De laptop heeft nu een vaste uitlogknop die de Supabase-sessie beëindigt, locatietaken stopt, sessiesleutels wist en terugkeert naar het inlogscherm.
 
 ## Nieuwe functies
 

@@ -6,7 +6,7 @@ Betekenis:
 - 🟨 **Statisch gecontroleerd**: code/SQL aantoonbaar gecontroleerd, maar nog niet tegen een echt Supabase-testproject of echte iPhone uitgevoerd.
 - ❌ **Nog niet uitgevoerd**: vereist het nieuwe testproject, echte accounts, netwerk/deployment of een iPhone/PWA.
 
-De automatische testopdracht was `npm test`: **21 tests geslaagd, 0 mislukt**. Ook zijn de runtimeconfiguratiegenerator en volledige deploybuild met fictieve testwaarden succesvol uitgevoerd; de gegenereerde waarden zijn daarna verwijderd. Er is geen SQL uitgevoerd.
+De automatische testopdracht was `npm test`: **22 tests geslaagd, 0 mislukt**. Ook zijn de runtimeconfiguratiegenerator en volledige deploybuild met fictieve testwaarden succesvol uitgevoerd; de gegenereerde waarden zijn daarna verwijderd. Er is geen SQL uitgevoerd.
 
 ## Scheiding en configuratie
 
@@ -87,6 +87,7 @@ De automatische testopdracht was `npm test`: **21 tests geslaagd, 0 mislukt**. O
 | Onderdeel | Status | Werkelijke controle |
 |---|---|---|
 | Login/uitloggen/rollen/Beheer | 🟨 Statisch gecontroleerd | Inline syntax, authcontract, centrale rol en Edge Function compilecontrole. |
+| Laptop-uitlogknop beëindigt sessie en stopt locatiemanager | ✅ Geslaagd | Geautomatiseerde bron-/DOM-controle van knop, lokale Supabase-sign-out, sessiecleanup en terugkeer naar login. |
 | Voordoen als gebruiker | 🟨 Statisch gecontroleerd | Herstel/validatie en locatiepauze gecontroleerd; echte sessie ontbreekt. |
 | Vandaag/Kalender/Overzicht | 🟨 Statisch gecontroleerd | Bestaande modules behouden en scripts syntactisch geldig; functionele browsertest ontbreekt. |
 | Database/planning/vaste afspraken/afwezigheid | 🟨 Statisch gecontroleerd | Bestaande modules behouden; baseline-tabellen/RLS toegevoegd; echte dataflow ontbreekt. |

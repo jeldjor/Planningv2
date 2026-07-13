@@ -74,6 +74,7 @@ test('beide apparaten laden runtimeconfig, v10.8-module en developmentversie', a
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
     assert.match(html, /app-config\.js\?v=10801/);
+    assert.match(html, /auth\.js\?v=10802/);
     assert.match(html, /v108\.css\?v=10801/);
     assert.match(html, /v108\.js\?v=10801/);
     assert.match(html, /v10\.8\.1 DEV/);
@@ -82,9 +83,21 @@ test('beide apparaten laden runtimeconfig, v10.8-module en developmentversie', a
 
 test('iPhone beheer blijft hard verborgen zonder beheerrol', async () => {
   const html = await read('mobile.html');
+  const auth = await read('auth.js');
   assert.match(html, /body\.gj-admin \.menuPanel button\[data-screen="adminMobile"\]\{display:grid!important/);
   assert.doesNotMatch(html, /\n\.menuPanel button\[data-screen="adminMobile"\]\{display:grid!important/);
   assert.match(html, /el\.style\.display=isAdmin\?'':'none'/);
+  assert.match(auth, /body:not\(\.gj-admin\) \.menuPanel button\.gjAdminOnly\{display:none!important\}/);
+  assert.match(html, /adminButton&&window\.GJ_AUTH\?\.isAdmin!==true/);
+});
+
+test('laptop heeft een bereikbare Supabase-uitlogactie', async () => {
+  const html = await read('laptop.html');
+  assert.match(html, /<\/div>\s*<button id="desktopLogout"[^>]*>Uitloggen<\/button>\s*<\/aside>/);
+  assert.match(html, /auth\.signOut\(\{scope:'local'\}\)/);
+  assert.match(html, /sessionStorage\.removeItem\('gj_app_open_session'\)/);
+  assert.match(html, /GJ_LOCATION_MANAGER\?\.destroy\?\.\(\)/);
+  assert.match(html, /location\.replace\('\.\/index\.html'\)/);
 });
 
 test('alle inline scripts in laptop en iPhone zijn syntactisch compileerbaar', async () => {
