@@ -1,0 +1,76 @@
+/* Bingo Beats V172 - gerichte verbeterlaag bovenop stabiele V171. */
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
+html.bbSpotifyReturning{background:#061b14}
+html.bbSpotifyReturning body{visibility:hidden}
+
+body{
+  background:
+    radial-gradient(circle at 18% 5%,rgba(126,217,87,.22),transparent 30%),
+    radial-gradient(circle at 84% 8%,rgba(0,212,199,.18),transparent 28%),
+    linear-gradient(165deg,#04100c,#071b13 50%,#0b2b1e)!important;
+}
+
+.hbHostStartOverlay{background:rgba(2,15,10,.9)!important}
+.hbHostStartModal,
+.bbPlayerTestCard,
+.modalCard,
+.bbHostJuryCard{
+  background:linear-gradient(150deg,#0d3424,#071b13 62%,#06150f)!important;
+  border-color:rgba(126,217,87,.28)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.58),0 0 36px rgba(126,217,87,.14)!important;
+}
+.hbChecklist>div{background:rgba(126,217,87,.08)!important;border-color:rgba(126,217,87,.18)!important}
+.hbResumeBtn,.hbNewBtn{background:linear-gradient(135deg,#7ED957,#00D4C7)!important;color:#04130d!important}
+
+.bbCardSizeHelp{margin:2px 2px 8px!important}
+
+/* De kaartgrootte komt uit dezelfde kamerinstelling voor iedere weergave. */
+.bbDynamicCard,
+.bbV144Card,
+.bbV160OwnMiniCard,
+.compactBingoCard,
+.bbOverlayBingo{
+  grid-template-columns:repeat(var(--bb-card-size,5),minmax(0,1fr))!important;
+  grid-template-rows:repeat(var(--bb-card-size,5),minmax(0,1fr))!important;
+}
+.bbDynamicCard[data-card-size="6"]{gap:4px!important}
+.bbDynamicCard[data-card-size="6"]>*{border-radius:8px!important;font-size:clamp(10px,3.2vw,18px)!important}
+.bbDynamicCard[data-card-size="4"]{gap:7px!important}
+.bbV160OwnMiniCard.bbDynamicCard{aspect-ratio:1/1;max-height:min(35svh,300px)}
+.bbV160OwnMiniCard.bbDynamicCard .bbV160MiniCell{min-width:0;min-height:0;aspect-ratio:1/1}
+
+/* Jury bewust een maat groter en beter leesbaar. */
+.bbHostJuryModal{padding:clamp(12px,3vw,28px)!important}
+.bbHostJuryCard{width:min(920px,96vw)!important;max-height:92svh!important;padding:clamp(22px,4vw,38px)!important}
+.bbHostJuryCard h2{font-size:clamp(28px,4vw,42px)!important;margin-top:0}
+.bbHostJuryCard p{font-size:clamp(15px,2vw,19px)!important}
+.bbHostJuryRow{padding:clamp(14px,2vw,20px)!important;font-size:clamp(16px,2vw,20px)!important}
+.bbHostJuryName{font-weight:900;font-size:1.08em}
+.bbHostJuryAnswer{font-size:1.05em}
+.bbHostJuryBtns button{min-width:58px;min-height:52px;font-size:24px!important}
+
+/* Lobby verlaten zonder de andere spelers te storen. */
+.bbLobbyStopBtn{
+  position:fixed;z-index:4600;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;
+  width:auto!important;min-width:92px!important;margin:0!important;padding:10px 14px!important;
+  border-radius:999px!important;background:#b5282e!important;color:#fff!important;
+  border:1px solid rgba(255,255,255,.3)!important;box-shadow:0 8px 24px rgba(0,0,0,.35)!important;
+  font-size:13px!important;letter-spacing:.4px
+}
+.bbStopModal{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}
+.bbStopModal.hidden{display:none!important}
+.bbStopCard{width:min(430px,94vw);padding:26px;border-radius:26px;text-align:center;background:linear-gradient(150deg,#0d3424,#06150f);border:1px solid rgba(126,217,87,.3);box-shadow:0 28px 80px rgba(0,0,0,.6)}
+.bbStopCard h2{margin:0 0 8px;font-size:29px}.bbStopCard p{opacity:.84;line-height:1.4}
+.bbStopActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.bbStopActions button{font-size:16px!important;padding:13px!important}.bbStopConfirm{background:#b5282e!important;color:#fff!important}
+
+/* Host-doet-mee gebruikt exact dezelfde transparante logobehandeling als spelers. */
+body.bbHostPlayerMode #mainHeader,
+body.bbHostPlayerMode .bbLogoHeader{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;mix-blend-mode:normal!important}
+body.bbHostPlayerMode .bbLogoHeader{filter:none!important}
+body.bbHostPlayerMode .bbHostTopJury{right:112px!important}
+
+@media(max-width:640px){
+  .bbHostJuryCard{padding:20px!important}.bbHostJuryRow{gap:12px!important}
+  .bbLobbyStopBtn{top:calc(env(safe-area-inset-top,0px) + 8px);right:8px;min-width:86px!important;padding:9px 12px!important;font-size:12px!important}
+  .bbStopActions{grid-template-columns:1fr}
+}
