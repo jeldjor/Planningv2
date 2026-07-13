@@ -1,0 +1,55 @@
+name: Deploy v10.8 development
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-development
+  cancel-in-progress: true
+
+jobs:
+  test-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm install
+
+      - run: npm test
+
+      - name: Maak uitsluitend development-runtimeconfig
+        env:
+          APP_ENV: development
+          APP_DEPLOYMENT_LABEL: Development / test
+          SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.DEV_SUPABASE_PROJECT_REF }}
+          MAP_PROVIDER: openstreetmap
+        run: npm run config:generate
+
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
