@@ -201,12 +201,8 @@
       if(['Uitgevoerd','Niet uitgevoerd'].includes(visit.status))html=html.replace('<div class="btnRow">','<div class="btnRow"><button type="button" class="visitPdfBtn secondary" data-id="'+String(visit.planningId||visit.id)+'">PDF</button>');
       return html;
     };
-    async function calculateMobileRoutes(){
-      const dates=[...new Set((db.visits||[]).filter(v=>v.date&&v.status!=='Uit planning').map(v=>v.date))];
-      for(const date of dates)await recalculateMobileDayRoute(date);
-      renderAll();
-    }
-    window.addEventListener('gj-auth-ready',()=>setTimeout(()=>calculateMobileRoutes().catch(console.error),900));
+    // De mobiele kern berekent vanaf v10.11 zelf de volledige route inclusief
+    // terugrit. Daardoor gebruikt het dagtotaal exact dezelfde trajecten als laptop.
   }
 
   function localHistory(ref){return (db.history||[]).find(h=>String(h.id)===String(ref)||String(h.supabaseHistoryId)===String(ref)||String(h.planningId)===String(ref))||null}
