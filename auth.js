@@ -10,7 +10,7 @@ function workspaceClient(raw,owner){
  const wrap=(builder,table,needsFilter=true)=>new Proxy(builder,{get(target,prop){
   if(prop==='then'){const q=needsFilter?target.eq('user_id',owner):target;return q.then.bind(q)}
   const value=target[prop];if(typeof value!=='function')return value;
-  return (...args)=>{let filter=needsFilter;if(prop==='insert'||prop==='upsert'){const add=row=>({...row,user_id:row?.user_id||owner});args[0]=Array.isArray(args[0])?args[0].map(add):add(args[0]);filter=false;if(prop==='upsert'&&table==='app_day_settings'&&args[1]?.onConflict==='datum')args[1]={...args[1],onConflict:'user_id,datum'}}const result=value.apply(target,args);return result&&typeof result.then==='function'?wrap(result,table,filter):result}
+  return (...args)=>{let filter=needsFilter;if(prop==='insert'||prop==='upsert'){const add=row=>({...row,user_id:owner});args[0]=Array.isArray(args[0])?args[0].map(add):add(args[0]);filter=false;if(prop==='upsert'&&table==='app_day_settings'&&args[1]?.onConflict==='datum')args[1]={...args[1],onConflict:'user_id,datum'}}const result=value.apply(target,args);return result&&typeof result.then==='function'?wrap(result,table,filter):result}
  }});
  return new Proxy(raw,{get(target,prop){if(prop==='from')return table=>{const b=target.from(table);return WORKSPACE_TABLES.has(table)?wrap(b,table,true):b};const value=target[prop];return typeof value==='function'?value.bind(target):value}})
 }

@@ -110,9 +110,9 @@
     },
 
     installDevelopmentLabel() {
-      document.title = 'Planning-GJsystems v10.8.1 DEV';
+      document.title = 'Planning-GJsystems v10.8.2 DEV';
       document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach((element) => {
-        element.innerHTML = element.classList.contains('settingsVersion') ? 'Versie: v10.8.1 DEV<br>Supabase: development/test' : 'v10.8.1 DEV';
+        element.innerHTML = element.classList.contains('settingsVersion') ? 'Versie: v10.8.2 DEV<br>Supabase: development/test' : 'v10.8.2 DEV';
       });
       if ($('v108DevBanner')) return;
       const config = window.GJ_CONFIG_API?.result()?.config;

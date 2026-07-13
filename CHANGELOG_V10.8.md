@@ -1,4 +1,17 @@
-# Changelog v10.8.1
+# Changelog v10.8.2
+
+## Correcties v10.8.2
+
+- Het iPhone-startscherm gebruikt nu het transparante lichte menu-logo op een effen donkerblauwe achtergrond; systems en slogan zijn zilver/wit.
+- Instellingen → Profiel opent op iPhone en laptop rechtstreeks de ronde cropper, zonder de iOS-onbetrouwbare DataTransfer-omweg.
+- De cropper ondersteunt slepen, knijpen/zoomen, een zoomregelaar en een live ronde uitsnede; het resultaat wordt daarna centraal opgeslagen.
+- Taalwisselen werkt direct zonder volledige paginaherstart en wordt centraal per echt account opgeslagen.
+- Een centrale dynamische vertaallaag vertaalt ook later gerenderde schermen, Contact-statussen, placeholders en knoppen op laptop en iPhone.
+- Contact versturen en antwoorden verversen uitsluitend de Contact-inhoud; de applicatie wordt niet meer opnieuw gestart.
+- De witte/zilveren kaart achter het laptoplogo linksonder is definitief transparant gemaakt.
+- De laptop maakt geen onbeperkte databaseclient meer aan vóór authenticatie. Alle planning-, klant- en synchronisatiequeries gebruiken verplicht de actieve werkruimteclient.
+- De werkruimteclient overschrijft bij inserts/upserts altijd `user_id` met de actieve werkruimte, zodat meegegeven of achtergebleven ids geen gegevens kunnen mengen.
+- Versie en cachelabels zijn bijgewerkt naar v10.8.2 DEV.
 
 ## Correcties v10.8.1
 
@@ -40,6 +53,7 @@
 ## Gewijzigde bestanden
 
 - Gewijzigd: `auth.js`, `index.html`, `laptop.html`, `mobile.html`.
+- Nieuw in v10.8.2: `v1082.js`, `v1082.css` en geïntegreerde correctietests.
 - Nieuw: `app-config.js`, `runtime-config.example.js`, `.env.example`, `.gitignore`, `v108.js`, `v108.css`.
 - Nieuw: beide DEV-SQL-bestanden, optionele cron-SQL en Edge Functions.
 - Nieuw: `SUPABASE_V10_8_1_ADMIN_PER_USER_LOCATIONS_DEV.sql` voor bestaande v10.8-testinstallaties.

@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 const files = [
   'index.html', 'laptop.html', 'mobile.html', 'auth.js', 'app-config.js', 'runtime-config.js',
-  'v105.js', 'v105.css', 'v106.js', 'v106.css', 'v108.js', 'v108.css',
+  'v105.js', 'v105.css', 'v106.js', 'v106.css', 'v108.js', 'v108.css', 'v1082.js', 'v1082.css',
   'logo.png', 'logo-dark.png', 'logo-dark-menu.png', 'logo-header.png',
   'logo-light.png', 'logo-login.png', 'logo-menu.png'
 ];
@@ -12,4 +12,3 @@ await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 for (const file of files) await cp(resolve(file), resolve(dist, file));
 console.log('Deploymentmap gemaakt:', dist);
-

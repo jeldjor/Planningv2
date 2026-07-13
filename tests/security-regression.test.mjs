@@ -9,7 +9,7 @@ const read = (name) => readFile(resolve(root, name), 'utf8');
 const hash = async (path) => createHash('sha256').update(await readFile(path)).digest('hex');
 
 test('nieuwe repository bevat geen bekende productieprojectconfiguratie of hardcoded Supabase-project-URL', async () => {
-  const files = ['index.html', 'laptop.html', 'mobile.html', 'auth.js', 'app-config.js', 'v108.js'];
+  const files = ['index.html', 'laptop.html', 'mobile.html', 'auth.js', 'app-config.js', 'v108.js', 'v1082.js'];
   const text = (await Promise.all(files.map((name) => readFile(resolve(root, name), 'utf8')))).join('\n');
   assert.doesNotMatch(text, /https:\/\/[a-z0-9]+\.supabase\.co/);
   assert.doesNotMatch(text, /sb_(?:publishable|secret)_[A-Za-z0-9_-]{20,}/);
@@ -69,7 +69,7 @@ test('v10.7 ondersteunende modules en beeldbestanden blijven byte-identiek', asy
   }
 });
 
-test('beide apparaten laden runtimeconfig, v10.8-module en developmentversie', async () => {
+test('beide apparaten laden runtimeconfig, correctiemodule en developmentversie', async () => {
   for (const name of ['laptop.html', 'mobile.html']) {
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
@@ -77,8 +77,42 @@ test('beide apparaten laden runtimeconfig, v10.8-module en developmentversie', a
     assert.match(html, /auth\.js\?v=10802/);
     assert.match(html, /v108\.css\?v=10801/);
     assert.match(html, /v108\.js\?v=10801/);
-    assert.match(html, /v10\.8\.1 DEV/);
+    assert.match(html, /v1082\.css\?v=10820/);
+    assert.match(html, /v1082\.js\?v=10820/);
+    assert.match(html, /v10\.8\.2 DEV/);
   }
+});
+
+test('planning gebruikt uitsluitend de aangemelde werkruimteclient', async () => {
+  const auth = await read('auth.js');
+  const html = await read('laptop.html');
+  assert.match(auth, /const add=row=>\(\{\.\.\.row,user_id:owner\}\)/);
+  assert.doesNotMatch(auth, /user_id:row\?\.user_id\|\|owner/);
+  assert.match(html, /if\(window\.GJ_AUTH\?\.profile && window\.GJ_AUTH\?\.sb\)/);
+  assert.match(html, /Supabase: wacht op veilige aanmelding/);
+  assert.doesNotMatch(html.match(/function initSupabaseClient\(\)\{[\s\S]*?\n\}/)?.[0]||'', /createSupabaseClient\(\)/);
+});
+
+test('iPhone splash gebruikt het lichte logo en profielinstellingen openen de ronde cropper', async () => {
+  const mobile = await read('mobile.html');
+  const laptop = await read('laptop.html');
+  assert.match(mobile, /id="splash"[\s\S]*logo-menu\.png\?v=10820/);
+  assert.doesNotMatch(mobile.match(/id="splash"[\s\S]*?<\/div><\/div>/)?.[0]||'', /Powered by/);
+  for (const html of [mobile,laptop]) {
+    assert.match(html, /settingsButton\?\.addEventListener\('click'/);
+    assert.match(html, /settingsFile\?\.addEventListener\('change'/);
+    assert.match(html, /class="cropHelp"/);
+    assert.match(html, /setupProfileCropper\([^)]*profile/i);
+  }
+});
+
+test('taal en contact worden zonder volledige paginaherlaad afgehandeld', async () => {
+  const js = await read('v1082.js');
+  assert.match(js, /window\.GJ_I18N=/);
+  assert.match(js, /MutationObserver/);
+  assert.match(js, /#contactSend,#mContactSend/);
+  assert.match(js, /refreshContact\(\)/);
+  assert.doesNotMatch(js, /location\.reload/);
 });
 
 test('iPhone beheer blijft hard verborgen zonder beheerrol', async () => {

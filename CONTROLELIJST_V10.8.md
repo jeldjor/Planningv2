@@ -1,4 +1,4 @@
-# Controlelijst Planning-GJsystems v10.8.1
+# Controlelijst Planning-GJsystems v10.8.2
 
 Betekenis:
 
@@ -6,7 +6,19 @@ Betekenis:
 - 🟨 **Statisch gecontroleerd**: code/SQL aantoonbaar gecontroleerd, maar nog niet tegen een echt Supabase-testproject of echte iPhone uitgevoerd.
 - ❌ **Nog niet uitgevoerd**: vereist het nieuwe testproject, echte accounts, netwerk/deployment of een iPhone/PWA.
 
-De automatische testopdracht was `npm test`: **22 tests geslaagd, 0 mislukt**. Ook zijn de runtimeconfiguratiegenerator en volledige deploybuild met fictieve testwaarden succesvol uitgevoerd; de gegenereerde waarden zijn daarna verwijderd. Er is geen SQL uitgevoerd.
+De automatische testopdracht was `npm test`: **26 tests geslaagd, 0 mislukt**. Ook zijn de runtimeconfiguratiegenerator en volledige deploybuild met fictieve testwaarden succesvol uitgevoerd; de gegenereerde waarden zijn daarna verwijderd. Er is geen SQL uitgevoerd.
+
+## Correctieronde v10.8.2
+
+| Onderdeel | Status | Werkelijke controle |
+|---|---|---|
+| iPhone splash donkerblauw met licht/zilver logo | ✅ Geslaagd | Asset- en DOM-test; het splashscherm verwijst naar het transparante zilver/witte menu-logo. |
+| Ronde profielcropper via Instellingen op iPhone en laptop | ✅ Geslaagd | Binding, ronde viewport, slepen/zoomcode en opslag-event automatisch gecontroleerd; echte Foto’s-kiezer nog op fysieke iPhone controleren. |
+| Taal wijzigen zonder appreload | ✅ Geslaagd | Automatische DOM-test wisselt Nederlands → Engels → Duits zonder navigatie. |
+| Dynamisch gerenderde teksten vertalen | ✅ Geslaagd | MutationObserver-test vertaalt een later toegevoegd Contact-statusbericht. |
+| Contact versturen/antwoorden zonder appreload | ✅ Geslaagd | Nieuwe captureflow bevat gerichte Contact-refresh en geen `location.reload`; echte backendverzending blijft een DEV-acceptatietest. |
+| Transparant laptoplogo linksonder | ✅ Geslaagd | Laatste CSS-laag verwijdert achtergrond, rand, schaduw en pseudo-element. |
+| Planning niet mengen tussen gebruiker en beheerder | ✅ Geslaagd (codecontract) | Onbegrensde pre-auth client verwijderd; writes forceren actieve `user_id`; echte meeraccount-DEV-test blijft verplicht voor productiegoedkeuring. |
 
 ## Scheiding en configuratie
 
