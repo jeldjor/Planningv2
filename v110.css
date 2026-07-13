@@ -1,0 +1,12 @@
+/* Planning-GJsystems v10.10 */
+body.v110PdfBusy::before,body.v110SavingDay::before{
+  content:"Rapport wordt opgebouwd...";position:fixed;inset:0;z-index:25000;
+  display:grid;place-items:center;background:rgba(10,23,48,.62);color:#fff;
+  font-size:16px;font-weight:900;letter-spacing:.01em;backdrop-filter:blur(2px)
+}
+body.v110SavingDay::before{content:"Complete dag en live route worden opgeslagen..."}
+.visitPdfBtn{background:#0a1730!important;color:#fff!important;border:1px solid #31415f!important}
+@media(max-width:700px){
+  body.v110PdfBusy::before,body.v110SavingDay::before{font-size:14px;text-align:center;padding:28px}
+  .visitPdfBtn{min-width:52px}
+}

@@ -11,13 +11,13 @@ const [laptop,mobile,script,styles,pkg]=await Promise.all([
   readFile(new URL('../package.json',import.meta.url),'utf8')
 ]);
 
-test('v10.9 bestanden en alle inline scripts zijn syntactisch geldig',()=>{
+test('v10.9 regressiebestanden en alle inline scripts zijn syntactisch geldig',()=>{
   new vm.Script(script,{filename:'v109.js'});
   for(const [name,html] of [['laptop',laptop],['mobile',mobile]]){
     const blocks=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).filter(x=>x.trim());
     blocks.forEach((code,index)=>new vm.Script(code,{filename:`${name}-inline-${index}.js`}));
   }
-  assert.equal(JSON.parse(pkg).version,'10.9.0');
+  assert.equal(JSON.parse(pkg).version,'10.10.0');
 });
 
 test('TomTom wordt centraal gecontroleerd en live routestatus is leidend',()=>{

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Planning-GJsystems v10.9 DEV</title>
+<title>Planning-GJsystems v10.10 DEV</title>
 <script>
 // v6: failsafe tegen blijven hangen op beginscherm/logo
 window.__GJ_APP_VERSION__='8.4';
@@ -305,6 +305,8 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="runtime-config.js"></script>
 <script src="app-config.js?v=10801"></script>
+<script src="vendor/jspdf.umd.min.js?v=251"></script>
+<script src="visit-pdf.js?v=11000"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -444,6 +446,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v108.css?v=10801">
 <link rel="stylesheet" href="v1082.css?v=10820">
 <link rel="stylesheet" href="v109.css?v=10900">
+<link rel="stylesheet" href="v110.css?v=11000">
 </head>
 <body>
 <div id="splash" class="splash"><div class="logoBox"><img src="logo-menu.png?v=10820" alt="GJ Systems — The Smarter Way"></div></div>
@@ -1115,4 +1118,5 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=10801"></script>
 <script src="v109.js?v=10900"></script>
+<script src="v110.js?v=11000"></script>
 </body></html>

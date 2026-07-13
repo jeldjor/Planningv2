@@ -1,0 +1,128 @@
+[
+  {
+    "name": "01-bijenkorf-4-fotos",
+    "file": "output/pdf/01-bijenkorf-4-fotos.pdf",
+    "profile": "bijenkorf",
+    "pages": 1,
+    "photos": 4,
+    "customer": "de Bijenkorf Eindhoven",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "02-scapino-8-fotos",
+    "file": "output/pdf/02-scapino-8-fotos.pdf",
+    "profile": "scapino",
+    "pages": 1,
+    "photos": 8,
+    "customer": "Scapino Breda",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "03-intersport-2-fotos",
+    "file": "output/pdf/03-intersport-2-fotos.pdf",
+    "profile": "intersport",
+    "pages": 1,
+    "photos": 2,
+    "customer": "Intersport Tilburg",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "04-van-tilburg-sport-6-fotos",
+    "file": "output/pdf/04-van-tilburg-sport-6-fotos.pdf",
+    "profile": "van_tilburg_sport",
+    "pages": 1,
+    "photos": 6,
+    "customer": "Van Tilburg Sport Nistelrode",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "05-onbekende-keten",
+    "file": "output/pdf/05-onbekende-keten.pdf",
+    "profile": "stichd",
+    "pages": 1,
+    "photos": 3,
+    "customer": "Sporthuis De Markt",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "06-zonder-fotos",
+    "file": "output/pdf/06-zonder-fotos.pdf",
+    "profile": "inno",
+    "pages": 1,
+    "photos": 0,
+    "customer": "INNO Antwerpen",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "07-een-foto",
+    "file": "output/pdf/07-een-foto.pdf",
+    "profile": "scapino",
+    "pages": 1,
+    "photos": 1,
+    "customer": "Scapino Den Bosch",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "08-niet-uitgevoerd",
+    "file": "output/pdf/08-niet-uitgevoerd.pdf",
+    "profile": "intersport",
+    "pages": 1,
+    "photos": 0,
+    "customer": "Intersport Breda",
+    "status": "Niet uitgevoerd"
+  },
+  {
+    "name": "09-lange-samenvatting",
+    "file": "output/pdf/09-lange-samenvatting.pdf",
+    "profile": "bijenkorf",
+    "pages": 2,
+    "photos": 4,
+    "customer": "de Bijenkorf Utrecht",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "10-zonder-contactpersoon",
+    "file": "output/pdf/10-zonder-contactpersoon.pdf",
+    "profile": "scapino",
+    "pages": 1,
+    "photos": 2,
+    "customer": "Scapino Eindhoven",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "11-ontbrekend-logo",
+    "file": "output/pdf/11-ontbrekend-logo.pdf",
+    "profile": "inno",
+    "pages": 1,
+    "photos": 3,
+    "customer": "INNO Brussel",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "12-onbereikbare-foto",
+    "file": "output/pdf/12-onbereikbare-foto.pdf",
+    "profile": "intersport",
+    "pages": 1,
+    "photos": 2,
+    "customer": "Intersport Eindhoven",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "13-iphone-weergave",
+    "file": "output/pdf/13-iphone-weergave.pdf",
+    "profile": "van_tilburg_sport",
+    "pages": 1,
+    "photos": 5,
+    "customer": "Van Tilburg Sport Eindhoven",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "14-meer-dan-8-fotos",
+    "file": "output/pdf/14-meer-dan-8-fotos.pdf",
+    "profile": "scapino",
+    "pages": 2,
+    "photos": 10,
+    "customer": "Scapino Utrecht",
+    "status": "Uitgevoerd"
+  }
+]

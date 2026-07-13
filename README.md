@@ -1,4 +1,4 @@
-# Planning-GJsystems v10.9 – Route- en dagroutecorrecties
+# Planning-GJsystems v10.10 - Live routes, dagverplaatsing en winkelbezoek-PDF
 
 Dit is een zelfstandige development/testversie, inhoudelijk gebaseerd op `Planning-GJsystems v10.7 COMPLETE`. Gebruik deze repository uitsluitend met een **nieuw, leeg Supabase development/testproject**. De productie-repository, productie-app en productiedatabase horen niet bij deze installatie.
 
@@ -46,7 +46,7 @@ Kopieer `.env.example` naar een lokaal `.env`-bestand en vul alleen waarden van 
 
 ```text
 APP_ENV=development
-APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.9 DEV
+APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.10 DEV
 SUPABASE_URL=https://<nieuwe-project-ref>.supabase.co
 SUPABASE_ANON_KEY=<anon-of-publishable-key-van-het-testproject>
 SUPABASE_PROJECT_REF=<nieuwe-project-ref>
@@ -101,6 +101,14 @@ De migratie maakt `public.cleanup_location_history()` en geeft alleen `service_r
 
 iOS mag een web/PWA volledig pauzeren. De app probeert volgens het ingestelde interval te verzenden zolang uitvoering mogelijk is en direct bij openen of terugkeer naar de voorgrond. Zij beweert niet dat iOS in gepauzeerde toestand exact op tijd blijft bijwerken. Beheer toont daarom altijd meettijd, ontvangsttijd, ouderdom, nauwkeurigheid en status.
 
+## Live routes en complete dagen
+
+Na planninggeneratie wordt de definitieve, geoptimaliseerde volgorde altijd opnieuw volledig via TomTom berekend. Een dag wordt uitsluitend groen als alle trajecten, inclusief de terugroute, live beschikbaar zijn. Bij een complete dagverplaatsing wordt Supabase eerst bijgewerkt en gecontroleerd; pas daarna wijzigt de lokale kalender. Realtime ophalen wordt tijdens deze korte bewerking uitgesteld.
+
+## Winkelbezoek-PDF
+
+De bestaande PDF-knoppen openen de dynamische generator uit `visit-pdf.js`. De generator kiest het ketenprofiel uitsluitend vanuit het centrale klantveld `keten` en gebruikt bij een onbekende waarde de algemene Stichd-template. Op iPhone verschijnt de PDF-actie alleen bij een afgerond bezoek. Zie [PDF_README_V10.10.md](PDF_README_V10.10.md) voor velden, foto-ophaalwijze en uitbreiden van ketenprofielen.
+
 ## Beheer en locatiekeuze per gebruiker
 
 - Alleen de centrale rol `profiles.role = 'admin'` ziet en opent Beheer.
@@ -114,4 +122,7 @@ iOS mag een web/PWA volledig pauzeren. De app probeert volgens het ingestelde in
 - [ANALYSE_EN_BOUWPLAN_V10.8.md](ANALYSE_EN_BOUWPLAN_V10.8.md)
 - [CONTROLELIJST_V10.8.md](CONTROLELIJST_V10.8.md)
 - [CHANGELOG_V10.8.md](CHANGELOG_V10.8.md)
+- [CHANGELOG_V10.10.md](CHANGELOG_V10.10.md)
+- [PDF_README_V10.10.md](PDF_README_V10.10.md)
+- [PDF_CONTROLELIJST_V10.10.md](PDF_CONTROLELIJST_V10.10.md)
 - [ROLLBACK_EN_PRODUCTIEMIGRATIE.md](ROLLBACK_EN_PRODUCTIEMIGRATIE.md)
