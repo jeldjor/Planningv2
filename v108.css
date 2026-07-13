@@ -1,0 +1,52 @@
+/* Planning-GJsystems v10.8 Live Locaties */
+.v108DevBadge{display:inline-flex;align-items:center;gap:6px;background:#fff4d6;color:#7a4d00;border:1px solid #e8c45c;border-radius:999px;padding:5px 9px;font-weight:900;font-size:12px}
+.v108DevBanner{position:fixed;right:12px;bottom:12px;z-index:80;background:#6b3f00;color:#fff4d6;border:1px solid #e8c45c;border-radius:10px;padding:7px 10px;font-weight:900;font-size:11px;box-shadow:0 8px 22px rgba(0,0,0,.22);pointer-events:none}
+.v108LocationSettings{margin-top:16px}
+.v108StatusGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.v108StatusItem{border:1px solid #dce4f0;border-radius:10px;background:#f8fafc;padding:9px;min-width:0}
+.v108StatusItem span{display:block;color:#667085;font-size:11px;font-weight:800;margin-bottom:3px}
+.v108StatusItem strong{display:block;color:#102a43;overflow-wrap:anywhere}
+.v108Actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.v108Error{color:#b42318;font-weight:800;white-space:pre-wrap;margin-top:8px}
+.v108Neutral{color:#667085;font-weight:800}
+.v108AdminSettings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end;margin:12px 0}
+.v108AdminSettings label{min-width:0}
+.v108Section{border-top:1px solid #dce4f0;margin-top:16px;padding-top:14px}
+.v108Map{height:360px;min-height:240px;border:1px solid #cbd5e1;border-radius:13px;background:#eef2f6;overflow:hidden;z-index:1}
+.v108MapEmpty{display:grid;place-items:center;height:100%;padding:18px;text-align:center;color:#667085;font-weight:800}
+.v108LocationList{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:12px}
+.v108LocationCard{border:1px solid #dce4f0;border-radius:13px;background:#fff;padding:11px;display:grid;gap:8px;min-width:0}
+.v108LocationHead{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:9px;align-items:center}
+.v108Avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#123b73;color:#d9e0e8;display:grid;place-items:center;font-weight:950;overflow:hidden;border:2px solid #d9e0e8}
+.v108Avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.v108LocationName{font-weight:950;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v108LocationMeta{color:#667085;font-size:12px;line-height:1.35}
+.v108Pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:11px;font-weight:950;white-space:nowrap}
+.v108Pill.current{background:#eaf8ef;color:#166534}.v108Pill.stale{background:#fff4d6;color:#8a5a00}.v108Pill.offline{background:#fbefef;color:#b42318}.v108Pill.none,.v108Pill.disabled{background:#eef2f6;color:#475467}
+.v108Permission{font-size:12px;font-weight:850;color:#334155}
+.v108HistoryControls{display:grid;grid-template-columns:minmax(180px,1fr) 160px auto;gap:8px;align-items:end;margin:10px 0}
+.v108HistoryList{max-height:300px;overflow:auto;border:1px solid #dce4f0;border-radius:11px;margin-top:10px}
+.v108HistoryPoint{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;padding:8px 10px;border-bottom:1px solid #e5e7eb;align-items:center}
+.v108HistoryPoint:last-child{border-bottom:0}.v108HistoryPoint.latest{background:#eef4ff}
+.v108PointNumber{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#123b73;color:#d9e0e8;font-weight:950}
+.v108Marker{width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.35)}
+.v108Marker.current{background:#16a34a}.v108Marker.stale{background:#d89b00}.v108Marker.offline{background:#b42318}.v108Marker.latest{background:#083b86;width:28px;height:28px}
+.v108UserMarker{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#123b73;color:#fff;font-weight:950;border:4px solid #94a3b8;box-shadow:0 3px 10px rgba(0,0,0,.35);overflow:hidden}
+.v108UserMarker.current{border-color:#16a34a}.v108UserMarker.stale{border-color:#d89b00}.v108UserMarker.offline{border-color:#b42318}.v108UserMarker.disabled,.v108UserMarker.none{border-color:#64748b}
+.v108UserMarker img{width:100%;height:100%;object-fit:cover;display:block}
+.v108HistoryMarker{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#083b86;border:3px solid #083b86;font-weight:950;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.v108HistoryMarker.latest{width:34px;height:34px;background:#083b86;color:#fff;border-color:#ffcc57}
+.v108Consent{position:fixed;inset:0;z-index:1000000;background:rgba(4,20,45,.72);display:grid;place-items:center;padding:18px}
+.v108ConsentCard{width:min(430px,100%);background:#fff;border-radius:18px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.36)}
+.v108ConsentCard h2{font-size:20px;margin:0 0 10px;color:#102a43}.v108ConsentCard p{font-size:15px;line-height:1.45;color:#334155;margin:0 0 16px}
+.v108ConsentActions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.v108ConsentActions button{min-height:44px}
+.v108LeafletPopup{line-height:1.4;min-width:190px}.v108LeafletPopup strong{display:block;margin-bottom:3px}
+.leaflet-container{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+@media(max-width:760px){
+  .v108DevBanner{right:6px;bottom:calc(80px + env(safe-area-inset-bottom));font-size:9px;padding:5px 7px}
+  .v108StatusGrid,.v108AdminSettings,.v108HistoryControls{grid-template-columns:1fr}
+  .v108LocationList{grid-template-columns:1fr}.v108Map{height:280px}.v108LocationCard{padding:8px}
+  .v108ConsentCard{padding:17px}.v108ConsentActions{grid-template-columns:1fr}
+  #adminMobile .v108AdminSettings select,#adminMobile .v108AdminSettings button{min-height:36px}
+}

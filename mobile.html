@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Planning-GJsystems v10.8 DEV</title>
+<script>
+// v6: failsafe tegen blijven hangen op beginscherm/logo
+window.__GJ_APP_VERSION__='8.4';
+(function(){
+  function hideSplash(){
+    var s=document.getElementById('splash');
+    if(s){ s.classList.add('hide'); s.style.display='none'; }
+  }
+  window.addEventListener('error', function(e){ console.error('GJ app error:', e.error || e.message); hideSplash(); });
+  window.addEventListener('unhandledrejection', function(e){ console.error('GJ app promise error:', e.reason); hideSplash(); });
+  setTimeout(hideSplash, 1800);
+})();
+</script>
+<style>
+
+:root{
+  --primary:#083b86;--primary-dark:#052d68;--primary-light:#ffcc57;--soft:#eef4ff;--gold:#ffcc57;
+  --bg:#f6f7f9;--panel:#fff;--text:#182230;--muted:#667085;--line:#e5e7eb;
+  --green:#16a34a;--green-bg:#eaf8ef;--orange:#f97316;--orange-bg:#fff7ed;--red:#b42318;
+  --shadow:0 3px 10px rgba(16,24,40,.05);
+  --field:30px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;max-width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;line-height:1.16}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font-family:inherit;box-sizing:border-box}
+button{border:0;border-radius:9px;background:var(--primary);color:#fff!important;font-weight:900;min-height:30px;padding:5px 8px;cursor:pointer;touch-action:manipulation;font-size:12px;line-height:1.05}
+button.secondary{background:var(--soft)!important;color:var(--primary-dark)!important;border:1px solid #d9e6f4}
+button.ghost{background:#fff!important;color:var(--primary-dark)!important;border:1px solid var(--line)}
+button.orange{background:var(--orange)!important;color:#fff!important}
+button.red{background:#fbefef!important;color:var(--red)!important;border:1px solid #f5b7b7}
+input,select,textarea{width:100%;min-width:0;max-width:100%;border:1px solid #d5dbe7;border-radius:8px;background:#fff;color:var(--text);height:var(--field);min-height:var(--field);padding:3px 6px;font-size:15px;line-height:1}
+select{padding-right:22px}
+textarea{height:70px;min-height:70px;resize:vertical;line-height:1.15;padding:6px}
+input::placeholder,textarea::placeholder{color:#98a2b3;opacity:1}
+label{display:grid;gap:2px;font-size:10.5px;font-weight:950;color:#111827;min-width:0;max-width:100%;overflow:hidden;line-height:1;letter-spacing:.12px}
+label span{line-height:1;font-weight:950!important;color:#111827!important}
+.splash{position:fixed;inset:0;background:linear-gradient(145deg,#123b73,#082b63);z-index:100;display:grid;place-items:center;color:#fff;transition:opacity .25s ease}.splash.hide{opacity:0;pointer-events:none}.splash small{display:block;text-align:center;margin-bottom:10px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.logoBox{width:146px;background:transparent;border-radius:0;padding:0;box-shadow:none}.logoBox img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.28))}
+.header{position:sticky;top:0;z-index:30;min-height:60px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 8px calc(7px + env(safe-area-inset-top));border-bottom:2px solid var(--gold);box-shadow:0 6px 16px rgba(5,45,104,.22)}
+.profileBlock{display:flex;align-items:center;gap:8px;min-width:0;flex:1}.profileButton{width:42px;height:42px;min-width:42px;min-height:42px;border-radius:50%;padding:0!important;background:#fff!important;border:2px solid var(--gold)!important;overflow:hidden;display:grid;place-items:center;box-shadow:0 3px 12px rgba(0,0,0,.2)}.profileButton img{width:100%;height:100%;object-fit:cover;display:none}.profileButton.hasPhoto img{display:block}.profileButton.hasPhoto .profileFallback{display:none}.profileFallback{font-size:23px;color:var(--primary)!important;line-height:1}.headerUserName{min-width:0;color:var(--gold);font-weight:950;font-size:clamp(15px,4.2vw,20px);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 1px rgba(0,0,0,.25)}
+.headerActions{display:flex;align-items:center;gap:6px;flex:0 0 auto}.menuBtn,.syncBtn{background:rgba(4,38,89,.72)!important;color:var(--gold)!important;border:1px solid var(--gold)!important;border-radius:11px;min-height:32px;height:32px;padding:4px 9px;font-size:12px;box-shadow:0 3px 10px rgba(0,0,0,.16)}.menuBtn .menuIcon,.syncBtn .syncIcon{color:var(--gold)!important;font-size:13px;margin-right:3px}.syncBtn.busy{opacity:.75;pointer-events:none}.syncBtn.busy .syncIcon{display:inline-block;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.menuPanel{position:fixed;right:6px;top:68px;z-index:60;width:min(235px,calc(100vw - 12px));display:none;background:linear-gradient(180deg,#062f6d,#041f49);border:1px solid rgba(255,204,87,.6);border-radius:14px;padding:8px;box-shadow:0 24px 80px rgba(0,0,0,.42);max-height:calc(100dvh - 76px);overflow:auto}.menuPanel.open{display:flex;flex-direction:column}.menuPanel button{width:100%;background:transparent!important;color:#fff!important;text-align:left;border-radius:9px;min-height:36px;padding:8px 10px;display:grid!important;grid-template-columns:28px minmax(0,1fr);align-items:center;column-gap:8px}.menuPanel button .navIcon{width:28px;display:grid;place-items:center;text-align:center}.menuPanel button .navLabel{display:block;min-width:0;text-align:left}.menuPanel button.active{background:rgba(255,255,255,.14)!important;color:#fff!important;box-shadow:inset 3px 0 0 #d9e0e8}.menuSpacer{flex:1;min-height:18px}.menuBrand{width:120px;max-width:62%;align-self:center;background:transparent;border-radius:0;padding:0;margin:8px auto 5px;display:grid;place-items:center;min-height:0;border:0;box-shadow:none}.menuBrand img{display:block;width:112px;max-width:100%;height:auto;max-height:92px;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,.25))}.menuLogout{margin-top:2px;border:1px solid var(--gold)!important;background:rgba(255,204,87,.12)!important;color:var(--gold)!important;text-align:center!important}.menuPanel .version{text-align:center;color:rgba(255,255,255,.58);font-size:10px;padding:5px 0 0}
+main{width:100%;max-width:430px;margin:0 auto;padding:4px 7px}.screen{display:none;width:100%;max-width:100%;overflow-x:hidden}.screen.active{display:block}
+h1{font-size:18px;line-height:1.05;margin:1px 0 4px}h2{font-size:14px;margin:0 0 4px}.muted{color:var(--muted);font-size:11px;line-height:1.1}#todayDate{margin:2px 0 6px;font-size:13px}
+.panel,.card{background:var(--panel);border:1px solid #dce4f0;border-radius:14px;box-shadow:0 5px 18px rgba(5,45,104,.08);padding:8px;margin-bottom:7px;overflow:hidden}
+.grid2{display:flex;gap:5px;align-items:flex-end;max-width:100%;overflow:hidden}.grid2>*{flex:1 1 0;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:8px}.stat{background:#fff;border:1px solid #dce4f0;border-radius:11px;padding:7px 2px;text-align:center;min-width:0;min-height:72px;display:grid;place-items:center;align-content:center;box-shadow:0 2px 8px rgba(5,45,104,.05)}.statIcon{font-size:22px;line-height:1;color:var(--primary);margin-bottom:4px}.stat strong{display:block;font-size:17px;line-height:1;color:#082b63}.stat span{display:block;font-size:10px;line-height:1.05;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg{display:flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:4px 6px;margin:3px 0;font-size:11px;font-weight:850;color:#334155;max-width:100%;overflow:hidden;min-height:27px;line-height:1.1}.leg.walk{background:#ecfdf3;color:#166534;border-color:#bbf7d0}.leg.home,.leg.pause{background:#fff7ed;color:#92400e;border-color:#fed7aa}.leg.pause{border-style:dashed}.leg.disabled{opacity:.45;text-decoration:line-through}
+.visitCard{border-left:3px solid var(--primary);padding:6px 6px 6px 7px;border-radius:11px;margin-bottom:5px}.visitCard.done{border-left-color:var(--green);background:var(--green-bg);border-color:#9bd5ad}.visitCard.notdone{border-left-color:var(--orange);background:var(--orange-bg);border-color:#fdba74}.visitCard.out{opacity:.55;border-left-color:#94a3b8;background:#f8fafc}.visitTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px;align-items:start}.visitTop strong{font-size:16px;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pill{display:inline-flex;align-items:center;background:#f1f5f9;border-radius:999px;padding:3px 6px;font-size:10.5px;font-weight:850;white-space:nowrap;line-height:1}.routeMode{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 6px;font-size:10.5px;font-weight:900;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;white-space:nowrap;line-height:1}.routeMode.walk{background:#ecfdf3;color:#166534;border-color:#bbf7d0}
+.btnRow{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}.btnRow button{min-height:31px;font-size:13px;padding:5px}.smallBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:4px}.smallBtns button{min-height:28px;padding:4px 2px;font-size:11px;border-radius:8px}.savedLine{margin-top:4px;padding:4px 6px;border-radius:7px;background:#dcfce7;color:#166534;font-weight:950;font-size:11px;line-height:1.05}.visitCard.notdone .savedLine{background:#ffedd5;color:#c2410c}
+.timeLine{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:4px 0}.timeEdit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 30px;gap:4px;margin:4px 0;align-items:end}.timeEdit input{height:28px;min-height:28px;font-size:15px;padding:2px 4px}.eyeBtn,.saveTimeBtn{min-height:27px!important;height:27px!important;padding:3px 5px!important;border-radius:7px!important}
+.form{display:grid;gap:5px;max-width:100%}.formRow{display:flex;gap:5px;max-width:100%;overflow:hidden}.formRow>*{flex:1 1 0;min-width:0}
+.finishOverlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:90;display:none;align-items:flex-end;justify-content:center;padding:6px}.finishOverlay.open{display:flex}.finishSheet{width:min(430px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:14px 14px 12px 12px;padding:8px;box-shadow:0 24px 80px rgba(0,0,0,.35)}.finishHead{display:flex;justify-content:space-between;gap:6px;align-items:flex-start;margin-bottom:5px}.finishClose{background:#f1f5f9!important;color:#334155!important;min-height:27px!important;padding:4px 8px!important}.photoBox{border:1px dashed #cbd5e1;border-radius:9px;background:#f8fafc;padding:6px;display:grid;gap:4px}.photoList{display:flex;flex-wrap:wrap;gap:5px}.photoTag{background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 6px;font-size:10px;color:#475467}.finishActions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}.finishActions button{min-height:31px}#finishActivity{height:29px;min-height:29px}#finishSummary{height:78px;min-height:78px;max-height:78px;resize:none;font-size:14px;line-height:1.12}#finishPhotos,#finishCamera{display:none}.photoActions{display:grid;grid-template-columns:1fr 1fr;gap:5px}.photoActions button{min-height:32px;font-size:12px}.photoSelection{font-size:10.5px;color:var(--muted);line-height:1.2}
+.dayItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}.dayItem:last-child{border-bottom:0}.dayItem.clickable{cursor:pointer}.empty{color:#98a2b3;text-align:center;padding:8px 6px;font-size:12px}
+
+.uiIcon{width:22px;height:22px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.fieldWithIcon .fieldIcon{display:grid;place-items:center}.fieldWithIcon .fieldIcon .uiIcon{width:21px;height:21px}
+.statIcon{display:grid;place-items:center;color:#123b73}.statIcon .uiIcon{width:25px;height:25px}
+.todayMainButton,.todayActionButton{display:flex;align-items:center;justify-content:center;gap:7px}.todayMainButton .uiIcon{width:20px;height:20px}.todayActionButton .uiIcon{width:18px;height:18px}
+.todayMainButton .buttonLabel,.todayActionButton .buttonLabel{display:inline-block}
+.themeGrid{display:none!important}.settingsVersion{text-align:center;color:var(--muted);font-size:11px;margin-top:6px}.fieldWithIcon{position:relative}.fieldWithIcon .fieldIcon{position:absolute;left:10px;bottom:8px;z-index:2;font-size:18px;color:var(--gold)}.fieldWithIcon input,.fieldWithIcon select{padding-left:38px;height:42px;min-height:42px;font-size:18px;font-weight:800;color:#092b61}.todayControls label span{font-size:12px;margin-bottom:4px}.todayMainButton{width:100%;margin-top:9px!important;min-height:48px!important;border-radius:12px!important;background:linear-gradient(135deg,var(--primary),var(--primary-dark))!important;color:var(--gold)!important;font-size:15px!important;border:1px solid var(--gold)!important}.todayActionButton{min-height:43px!important;background:#fff!important;color:#092b61!important;border:1px solid #dce4f0!important;font-size:13px!important}.todayActionButton .actionIcon{color:var(--gold);font-size:17px;margin-right:5px}
+.monthHead{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:8px}.monthHead button{min-height:31px;width:36px;padding:3px 8px;border-radius:10px}.monthTitle{font-weight:950;font-size:15px;text-align:center;flex:1;text-transform:capitalize}.calendarPanel{padding:8px!important}.monthGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%;max-width:100%}.monthDow{text-align:center;font-size:9px;font-weight:950;color:var(--muted);padding:2px 0 4px;text-transform:uppercase}.monthDay{min-height:48px;border:1px solid #e1e6ef;background:#fff;border-radius:9px;padding:5px 3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;overflow:hidden;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease}.monthDay:active{transform:scale(.96)}.monthDay.other{opacity:.28;background:#f8fafc}.monthDay.today{border:2px solid var(--primary);padding:4px 2px}.monthDay.selected{background:var(--soft);border-color:var(--primary);box-shadow:0 3px 10px rgba(49,95,159,.13)}.monthNo{font-size:11px;font-weight:950;line-height:1}.customerCount{display:inline-flex;align-items:center;justify-content:center;gap:2px;min-width:27px;border-radius:999px;padding:2px 5px;font-size:9px;font-weight:950;line-height:1;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}.monthDay.selected .customerCount{background:#fff}.calendarDayCard{padding:10px!important;border-radius:14px!important}.calendarDayHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}.calendarDayTitle{font-size:16px;font-weight:950;text-transform:capitalize}.calendarDaySummary{font-size:11px;color:var(--muted);margin-top:2px}.calendarVisit{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.calendarVisit:last-child{border-bottom:0}.calendarVisitTime{font-size:11px;font-weight:950;color:var(--primary-dark);line-height:1.2}.calendarVisitName{font-size:13px;font-weight:950;line-height:1.15}.calendarVisitMeta{font-size:10.5px;color:var(--muted);margin-top:2px}.calendarVisit .routeBtn{min-height:30px;padding:4px 8px;font-size:12px;border-radius:9px}.calendarPause{margin:7px 0 0}.calendarEmpty{padding:18px 6px;text-align:center;color:var(--muted);font-size:12px}
+
+@media(max-width:360px){main{padding:4px 6px}.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.visitTop strong{font-size:14px}.btnRow{grid-template-columns:1fr 1fr}.smallBtns{grid-template-columns:repeat(3,minmax(0,1fr))}#absence .formRow.absenceDates{grid-template-columns:112px 112px!important;width:230px!important;max-width:230px!important}#blockStart,#blockEnd{width:112px!important;min-width:112px!important;max-width:112px!important}}
+
+
+/* v6.4: Afronden klant schermvullend en groot tekstvak */
+.finishOverlay.open{align-items:stretch!important;justify-content:stretch!important;padding:0!important;background:#fff!important}
+.finishSheet{width:100%!important;height:100dvh!important;max-height:none!important;border-radius:0!important;padding:calc(10px + env(safe-area-inset-top)) 10px calc(12px + env(safe-area-inset-bottom))!important;box-shadow:none!important;display:flex!important;flex-direction:column!important}
+.finishSheet .form{display:flex!important;flex-direction:column!important;gap:8px!important;flex:1!important;min-height:0!important}
+#finishSummary{height:42vh!important;min-height:260px!important;max-height:none!important;font-size:15px!important;line-height:1.35!important;padding:10px!important}
+.photoBox{flex:0 0 auto!important}
+.finishActions{margin-top:auto!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+.finishActions button{min-height:42px!important;font-size:14px!important}
+.finishHead{position:sticky!important;top:0!important;background:#fff!important;z-index:2!important;padding-bottom:6px!important}
+
+
+/* v7.5: mobiele beheerfuncties uitsluitend binnen Beheer */
+body .adminTabs:not(#adminMobile .adminTabs),
+body .adminPane:not(#adminMobile .adminPane),
+body [data-admin-clear]:not(#adminMobile [data-admin-clear]),
+body #mAdminCreateUser:not(#adminMobile #mAdminCreateUser),
+body #mAdminRefreshUsers:not(#adminMobile #mAdminRefreshUsers),
+body #mTomTomSave:not(#adminMobile #mTomTomSave),
+body #mTomTomDisable:not(#adminMobile #mTomTomDisable),
+body #mTomTomTest:not(#adminMobile #mTomTomTest),
+body #mAdminBackup:not(#adminMobile #mAdminBackup),
+body #mAdminRestore:not(#adminMobile #mAdminRestore){
+  display:none!important;
+}
+
+
+/* v7.5: Beheer is een echte aparte module */
+#adminMobile.screen{display:none!important}
+#adminMobile.screen.active{display:block!important}
+body:not(.gj-admin) #adminMobile{display:none!important}
+
+
+/* v8.0 UI Refresh: vaste donkerblauw/zilver huisstijl */
+:root{
+  --primary:#123b73!important;--primary-dark:#0b274d!important;--primary-light:#dfe5ec!important;
+  --soft:#eef2f6!important;--gold:#d9e0e8!important;--silver:#d9e0e8;
+  --bg:#f5f7fa!important;--line:#d4dbe4!important;
+}
+.header{background:linear-gradient(135deg,#123b73,#0b274d)!important;border-bottom-color:#d9e0e8!important}
+.headerUserName{color:#fff!important;text-shadow:none!important}
+.profileButton{background:#d9e0e8!important;border-color:#f4f6f8!important}
+.menuBtn,.syncBtn{background:rgba(8,31,62,.78)!important;color:#fff!important;border-color:#d9e0e8!important}
+.menuBtn .menuIcon,.syncBtn .syncIcon{color:#d9e0e8!important}
+.menuPanel{background:linear-gradient(180deg,#123b73,#0b274d)!important;border-color:#aeb8c5!important}
+.menuPanel button.active{background:rgba(217,224,232,.18)!important;color:#fff!important}
+.menuBrand{width:auto!important;max-width:154px!important;background:#d9e0e8!important;border-color:#aeb8c5!important;padding:5px 7px!important}
+.menuBrand img{width:116px!important;max-height:65px!important}
+.menuLogout{border-color:#d9e0e8!important;color:#fff!important;background:rgba(217,224,232,.10)!important}
+.todayMainButton{background:linear-gradient(135deg,#123b73,#0b274d)!important;color:#fff!important;border-color:#aeb8c5!important}
+.fieldWithIcon .fieldIcon,.todayActionButton .actionIcon{color:#60758d!important}
+.statIcon{color:#123b73!important}
+/* compacte formulieren: twee kolommen, echte ruimte, geen overlap */
+#absence .panel{padding:8px!important}
+#absence .form{gap:7px!important}
+#absence .formRow{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;overflow:visible!important;width:100%!important}
+#absence .formRow>label{width:100%!important;min-width:0!important;overflow:visible!important}
+#absence input,#absence select{height:38px!important;min-height:38px!important;font-size:15px!important;padding:4px 7px!important}
+#absence textarea{height:72px!important;min-height:72px!important;font-size:14px!important}
+#absence label{gap:4px!important;font-size:11px!important;overflow:visible!important}
+@media(max-width:360px){#absence .formRow{gap:7px!important}#absence input,#absence select{font-size:13px!important;padding:3px 5px!important}}
+/* profielfoto cropper */
+.profileCropOverlay{position:fixed;inset:0;z-index:120;background:rgba(4,15,31,.78);display:none;align-items:center;justify-content:center;padding:16px}
+.profileCropOverlay.open{display:flex}.profileCropDialog{width:min(360px,100%);background:#fff;border-radius:18px;padding:14px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.profileCropDialog h2{margin:0 0 10px;color:#123b73}.cropViewport{width:240px;height:240px;max-width:72vw;max-height:72vw;margin:0 auto;border-radius:50%;overflow:hidden;border:4px solid #d9e0e8;background:#eef2f6;touch-action:none;position:relative}
+.cropViewport img{position:absolute;max-width:none;user-select:none;-webkit-user-drag:none;transform-origin:0 0}.cropZoom{width:100%;margin:12px 0}.cropActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cropActions button{min-height:40px}.cropActions .cancel{background:#eef2f6!important;color:#123b73!important}
+
+
+/* v8.2: compacte, gecentreerde invoervelden op Vandaag en Afwezigheid */
+#today .todayControls{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;align-items:end!important;overflow:visible!important}
+#today .todayControls>label{min-width:0!important;overflow:visible!important;gap:4px!important}
+#today .todayControls input,#today .todayControls select{
+  height:34px!important;min-height:34px!important;padding:3px 28px 3px 30px!important;
+  font-size:16px!important;font-weight:800!important;line-height:28px!important;text-align:center!important;
+}
+#today .fieldWithIcon .fieldIcon{left:9px!important;bottom:8px!important;font-size:17px!important}
+#today .todayControls select{text-align-last:center!important}
+#absence .panel{padding:9px!important}
+#absence .form{gap:8px!important}
+#absence .form>label:first-child select{height:34px!important;min-height:34px!important;font-size:15px!important;padding:3px 28px 3px 10px!important;line-height:28px!important}
+#absence .formRow{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;width:100%!important;overflow:visible!important}
+#absence .formRow>label{min-width:0!important;width:100%!important;overflow:visible!important;gap:4px!important}
+#absence input[type="date"],#absence input[type="time"]{
+  height:34px!important;min-height:34px!important;padding:2px 5px!important;font-size:14px!important;
+  font-weight:700!important;line-height:28px!important;text-align:center!important;
+}
+#absence input[type="date"]::-webkit-date-and-time-value,#absence input[type="time"]::-webkit-date-and-time-value{text-align:center!important}
+#absence input[type="date"]::-webkit-calendar-picker-indicator,#absence input[type="time"]::-webkit-calendar-picker-indicator{margin:0!important;padding:0!important;opacity:.75}
+#absence label{font-size:10.5px!important;gap:4px!important}
+#absence textarea{height:64px!important;min-height:64px!important;font-size:14px!important;padding:7px!important}
+#absence #saveBlock{min-height:34px!important;height:34px!important;margin-top:1px!important;font-size:13px!important}
+@media(max-width:360px){
+ #today .todayControls,#absence .formRow{gap:7px!important}
+ #today .todayControls input,#today .todayControls select{font-size:14px!important;padding-left:25px!important;padding-right:22px!important}
+ #absence input[type="date"],#absence input[type="time"]{font-size:12.5px!important;padding:2px 3px!important}
+}
+/* v8.2: foto moet altijd zichtbaar zijn achter de ronde cropcirkel */
+.cropViewport{isolation:isolate;background:#dfe5ec!important}
+.cropViewport::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.8);z-index:2}
+.cropViewport img{display:block!important;visibility:visible!important;opacity:1!important;z-index:1!important;will-change:transform,width,height}
+
+
+/* v8.3: echt compacte mobiele invoervelden zonder overlap (iOS/Safari) */
+#today .todayControls,
+#absence .formRow{
+  display:grid!important;
+  grid-template-columns:calc((100% - 12px)/2) calc((100% - 12px)/2)!important;
+  column-gap:12px!important;
+  row-gap:7px!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:visible!important;
+  align-items:end!important;
+}
+#today .todayControls>label,
+#absence .formRow>label{
+  display:grid!important;
+  grid-template-rows:auto 30px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:visible!important;
+  gap:4px!important;
+}
+#today .todayControls input,
+#today .todayControls select,
+#absence .form>label:first-child select,
+#absence input[type="date"],
+#absence input[type="time"]{
+  display:block!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  margin:0!important;
+  border-radius:8px!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  line-height:30px!important;
+  font-size:13px!important;
+  font-weight:750!important;
+  text-align:center!important;
+  vertical-align:middle!important;
+  overflow:hidden!important;
+}
+#today .todayControls input,
+#absence input[type="date"],
+#absence input[type="time"]{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+}
+#today .todayControls select,
+#absence .form>label:first-child select{
+  padding-left:28px!important;
+  padding-right:25px!important;
+  text-align-last:center!important;
+}
+#today .todayControls input{padding-left:28px!important;padding-right:7px!important}
+#today .fieldWithIcon .fieldIcon{
+  left:8px!important;
+  bottom:6px!important;
+  width:17px!important;
+  height:17px!important;
+  display:grid!important;
+  place-items:center!important;
+}
+#today .fieldWithIcon .fieldIcon .uiIcon{width:17px!important;height:17px!important}
+#today .todayControls label>span:first-child,
+#absence label>span:first-child{
+  font-size:10px!important;
+  line-height:1!important;
+  margin:0!important;
+}
+#today .todayControls input::-webkit-date-and-time-value,
+#absence input[type="date"]::-webkit-date-and-time-value,
+#absence input[type="time"]::-webkit-date-and-time-value{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:30px!important;
+  min-height:30px!important;
+  padding:0!important;
+  margin:0!important;
+  text-align:center!important;
+}
+#absence .panel{padding:9px 10px!important}
+#absence .form{gap:8px!important}
+#absence .form>label:first-child{gap:4px!important}
+#absence .form>label:first-child select{
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  padding-left:10px!important;
+  padding-right:25px!important;
+}
+#absence textarea{height:58px!important;min-height:58px!important;max-height:58px!important;padding:7px 9px!important;font-size:13px!important;line-height:1.2!important}
+#absence #saveBlock{height:32px!important;min-height:32px!important;max-height:32px!important;font-size:12px!important;margin-top:1px!important}
+@media(max-width:360px){
+  #today .todayControls,#absence .formRow{grid-template-columns:calc((100% - 9px)/2) calc((100% - 9px)/2)!important;column-gap:9px!important}
+  #today .todayControls input,#today .todayControls select,#absence input[type="date"],#absence input[type="time"]{font-size:12px!important}
+}
+
+
+/* v8.6 Requested Fixes: zichtbare datum, compacte velden en strak uitgelijnd menu */
+#todayDate{display:block!important;min-height:16px!important;margin:0 0 7px 1px!important;color:#667085!important;font-size:12px!important;font-weight:650!important;line-height:1.2!important;text-transform:none!important}
+#today h1{margin-bottom:1px!important}
+#today .panel,#absence .panel{padding:8px!important}
+#today .todayControls,#absence .formRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:14px!important}
+#today .todayControls>label,#absence .formRow>label{grid-template-rows:auto 28px!important;gap:3px!important}
+#today .todayControls input,#today .todayControls select,#absence .form>label:first-child select,#absence input[type="date"],#absence input[type="time"]{height:28px!important;min-height:28px!important;max-height:28px!important;line-height:28px!important;border-radius:7px!important;font-size:12.5px!important;padding-top:0!important;padding-bottom:0!important}
+#today .todayControls input,#today .todayControls select{padding-left:27px!important;padding-right:23px!important}
+#today .fieldWithIcon .fieldIcon{left:8px!important;bottom:6px!important;width:16px!important;height:16px!important}
+#absence .form{gap:7px!important}
+#absence .form>label:first-child{gap:3px!important}
+#absence .form>label:first-child select{padding-left:9px!important;padding-right:25px!important}
+#absence textarea{height:58px!important;min-height:58px!important}
+#absence #saveBlock{height:32px!important;min-height:32px!important}
+.menuPanel button[data-screen],.menuPanel .menuLogout{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;align-items:center!important;column-gap:10px!important;text-align:left!important;padding:8px 12px!important}
+.menuPanel .navIcon{width:24px!important;min-width:24px!important;text-align:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important}
+.menuPanel .navLabel{display:block!important;min-width:0!important;text-align:left!important;line-height:1.05!important}
+.menuPanel button[data-screen]{margin:1px 0!important}
+.menuPanel button.active{box-shadow:inset 3px 0 0 #d9e0e8!important}
+.menuBrand{width:132px!important;max-width:68%!important;padding:5px 7px!important;margin:9px auto 6px!important}
+.menuBrand img{width:108px!important;max-height:60px!important}
+.menuLogout{margin-top:3px!important}
+@media(max-width:360px){#today .todayControls,#absence .formRow{gap:10px!important}#today .todayControls input,#today .todayControls select,#absence input[type="date"],#absence input[type="time"]{font-size:11.5px!important}}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="runtime-config.js"></script>
+<script src="app-config.js?v=10800"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// v7: forceer nieuwe versie op iPhone/PWA
+(function(){
+  try{
+    if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}
+    if(window.caches){caches.keys().then(function(keys){keys.forEach(function(k){caches.delete(k);});});}
+  }catch(e){}
+})();
+</script>
+
+<style id="gjMobileAdminCss">
+#adminMobile .adminTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:7px}
+#adminMobile .adminTab{min-height:34px;padding:5px 3px;font-size:11px}
+#adminMobile .adminTab.active{background:var(--primary)!important;color:#fff!important}
+#adminMobile .adminPane[hidden]{display:none!important}
+#adminMobile .adminStatus{padding:6px 8px;border-radius:8px;background:#f8fafc;border:1px solid var(--line);font-size:11px;margin:5px 0}
+#adminMobile .adminStatus.ok{background:#ecfdf3;color:#166534;border-color:#bbf7d0}
+#adminMobile .adminStatus.err{background:#fef2f2;color:#b42318;border-color:#fecaca}
+#adminMobile .adminStatus.busy{background:#fff7ed;color:#92400e;border-color:#fed7aa}
+#adminMobile .adminUser{padding:7px;margin-bottom:5px;border:1px solid var(--line);border-radius:10px;background:#fff}
+#adminMobile .adminUserHead{display:flex;justify-content:space-between;gap:5px;align-items:flex-start}
+#adminMobile .adminUserActions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+#adminMobile .dangerGrid{display:grid;gap:6px}
+#adminMobile .dangerGrid button{min-height:38px}
+#adminMobile .dangerButton{background:#b42318!important;color:#fff!important}
+#adminMobile .warningButton{background:#fff7ed!important;color:#c2410c!important;border:1px solid #fdba74!important}
+#adminMobile .adminHelp{font-size:10.5px;color:var(--muted);line-height:1.25;margin-bottom:7px}
+#adminMobile .tomtomState{font-weight:900}
+#adminMobile .backupInput{display:none}
+
+/* v8.6 Requested Fixes: zichtbare datum, compacte velden en strak uitgelijnd menu */
+#todayDate{display:block!important;min-height:16px!important;margin:0 0 7px 1px!important;color:#667085!important;font-size:12px!important;font-weight:650!important;line-height:1.2!important;text-transform:none!important}
+#today h1{margin-bottom:1px!important}
+#today .panel,#absence .panel{padding:8px!important}
+#today .todayControls,#absence .formRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:14px!important}
+#today .todayControls>label,#absence .formRow>label{grid-template-rows:auto 28px!important;gap:3px!important}
+#today .todayControls input,#today .todayControls select,#absence .form>label:first-child select,#absence input[type="date"],#absence input[type="time"]{height:28px!important;min-height:28px!important;max-height:28px!important;line-height:28px!important;border-radius:7px!important;font-size:12.5px!important;padding-top:0!important;padding-bottom:0!important}
+#today .todayControls input,#today .todayControls select{padding-left:27px!important;padding-right:23px!important}
+#today .fieldWithIcon .fieldIcon{left:8px!important;bottom:6px!important;width:16px!important;height:16px!important}
+#absence .form{gap:7px!important}
+#absence .form>label:first-child{gap:3px!important}
+#absence .form>label:first-child select{padding-left:9px!important;padding-right:25px!important}
+#absence textarea{height:58px!important;min-height:58px!important}
+#absence #saveBlock{height:32px!important;min-height:32px!important}
+.menuPanel button[data-screen],.menuPanel .menuLogout{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;align-items:center!important;column-gap:10px!important;text-align:left!important;padding:8px 12px!important}
+.menuPanel .navIcon{width:24px!important;min-width:24px!important;text-align:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;line-height:1!important}
+.menuPanel .navLabel{display:block!important;min-width:0!important;text-align:left!important;line-height:1.05!important}
+.menuPanel button[data-screen]{margin:1px 0!important}
+.menuPanel button.active{box-shadow:inset 3px 0 0 #d9e0e8!important}
+.menuBrand{width:132px!important;max-width:68%!important;padding:5px 7px!important;margin:9px auto 6px!important}
+.menuBrand img{width:108px!important;max-height:60px!important}
+.menuLogout{margin-top:3px!important}
+@media(max-width:360px){#today .todayControls,#absence .formRow{gap:10px!important}#today .todayControls input,#today .todayControls select,#absence input[type="date"],#absence input[type="time"]{font-size:11.5px!important}}
+
+</style>
+
+
+<style id="v86FinalFixes">
+/* v8.6: menu exact uitlijning en transparant logo */
+.menuPanel button[data-screen]{grid-template-columns:24px minmax(0,1fr)!important;column-gap:11px!important;min-height:42px!important;padding:8px 12px!important;white-space:nowrap!important}
+.menuPanel button[data-screen] .navIcon{width:24px!important;height:24px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;line-height:1!important}
+.menuPanel button[data-screen] .navIcon svg{width:18px!important;height:18px!important;display:block!important}
+.menuPanel button[data-screen] .navLabel{display:flex!important;align-items:center!important;min-height:24px!important;line-height:24px!important;white-space:nowrap!important}
+.menuBrand{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;width:128px!important;max-width:62%!important;margin:10px auto 7px!important}
+.menuBrand img{width:120px!important;max-height:104px!important;object-fit:contain!important;filter:drop-shadow(0 5px 10px rgba(0,0,0,.28))!important}
+</style>
+
+<style id="v87CleanFinal">
+.menuPanel button[data-screen="adminMobile"]{display:grid!important;grid-template-columns:24px minmax(0,1fr)!important;align-items:center!important;column-gap:11px!important;width:100%!important;white-space:nowrap!important}
+.menuPanel button[data-screen="adminMobile"] .navIcon{grid-column:1!important;width:24px!important;height:24px!important;margin:0!important}
+.menuPanel button[data-screen="adminMobile"] .navLabel{grid-column:2!important;display:block!important;line-height:24px!important;white-space:nowrap!important;margin:0!important}
+.menuBrand{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;width:138px!important;max-width:70%!important}
+.menuBrand img{width:132px!important;height:auto!important;max-height:132px!important;object-fit:contain!important}
+</style>
+
+<style id="v90LogoNoClipping">
+/* v9.0: complete logo as one image, never clipped */
+.logoBox{
+  width:170px!important;
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+  background:transparent!important;
+  padding:0!important;
+}
+.logoBox img{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  overflow:visible!important;
+}
+.menuBrand{
+  width:150px!important;
+  max-width:72%!important;
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  margin:10px auto 7px!important;
+}
+.menuBrand img{
+  display:block!important;
+  width:150px!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.28))!important;
+}
+</style>
+
+
+<style id="v100ContactMobileStyles">
+#contactMobile textarea{min-height:130px}.mContactCard{background:#fff;border:1px solid var(--line,#d8dee8);border-radius:16px;padding:14px;margin:10px 0;display:grid;gap:9px}.mContactHead{display:flex;justify-content:space-between;gap:8px}.mContactText{white-space:pre-wrap;line-height:1.45}.mContactReply{background:#eef4ff;border-radius:10px;padding:10px;border-left:4px solid #123b73}.mContactActions{display:grid;gap:8px}.mContactActions textarea{min-height:90px}.mContactBadge{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:#b42318;color:#fff;font-size:11px;font-weight:900}
+</style>
+
+<style id="v102CoreStyles">
+:root{--logoOrange:#ef7d00;--silver:#d9e0e8}
+button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn){color:var(--silver)!important}
+button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) .uiIcon{color:var(--silver)!important;stroke:var(--silver)!important}
+.brandDivider span,.bottomDivider span{background:var(--logoOrange)!important;box-shadow:0 0 0 3px rgba(239,125,0,.18)!important}
+.sidebar{overflow:hidden!important;display:flex!important;flex-direction:column!important;padding-top:10px!important;padding-bottom:10px!important}
+.userBrand{flex:0 0 auto}.navList{flex:1 1 auto;min-height:0;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:2px!important;overflow:hidden!important}.nav{padding:clamp(5px,1.05vh,9px) 10px!important;min-height:0!important;font-size:clamp(11px,1.45vh,14px)!important}.productBrand{flex:0 0 auto}.productCard img{content:url('logo-menu.png?v=10200')!important}
+.desktopProfileButton,.profileButton{cursor:default!important}.desktopProfileButton:after,.profileButton:after{content:''}
+.v102SettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:14px;margin-top:14px}.v102Card{border:1px solid var(--line,#d8dee8);border-radius:14px;background:#fff;padding:14px;display:grid;gap:10px}.v102Card h3{margin:0;color:#123b73}.v102ProfilePreview{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#eef2f6;border:4px solid var(--logoOrange)}.v102Criteria{font-size:12px;color:#667085;line-height:1.5}.v102Criteria .ok{color:#067647}.v102Criteria .bad{color:#b42318}.v102Impersonation{position:fixed;z-index:99990;left:246px;right:0;top:0;background:var(--logoOrange);color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:center;gap:14px;font-weight:900;box-shadow:0 4px 16px #0003}.v102Impersonation button{background:#fff!important;color:#9a4d00!important;border-color:#fff!important;padding:6px 10px!important}.v102Impersonating .main{padding-top:58px!important}.v102SupportFilters{display:grid;grid-template-columns:1fr 180px 180px;gap:8px;margin:10px 0}.v102Chat{display:grid;gap:8px;max-height:360px;overflow:auto;padding:8px;background:#f8fafc;border-radius:10px}.v102Bubble{max-width:82%;padding:9px 11px;border-radius:12px;white-space:pre-wrap}.v102Bubble.user{background:#eaf0f8;justify-self:start}.v102Bubble.admin{background:#123b73;color:#fff;justify-self:end}.v102Unread{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#ef7d00;color:#fff;font-size:11px}@media(max-width:1050px){.v102Impersonation{left:0;bottom:66px;top:auto}.v102Impersonating .main{padding-top:0!important;padding-bottom:120px!important}}@media(max-width:760px){.v102SettingsGrid,.v102SupportFilters{grid-template-columns:1fr}.v102Impersonation{font-size:12px;padding:7px}.v102Card{padding:12px}}
+</style>
+<link rel="stylesheet" href="v105.css?v=10500">
+<link rel="stylesheet" href="v106.css?v=10700">
+<link rel="stylesheet" href="v108.css?v=10800">
+</head>
+<body>
+<div id="splash" class="splash"><div><small data-key="powered">Powered by</small><div class="logoBox"><img src="logo-login.png?v=9100" alt="Logo"></div></div></div>
+<header class="header"><div class="profileBlock"><button id="profileButton" class="profileButton" type="button" aria-label="Profielfoto. Wijzigen via Instellingen → Profiel"><span class="profileFallback">♙</span><img id="profileImage" alt="Profielfoto"></button><input id="profileFile" type="file" accept="image/*" style="display:none"><div id="headerUserName" class="headerUserName">Gebruiker</div></div><div class="headerActions"><button id="syncBtn" class="syncBtn" type="button" aria-label="Synchroniseren"><span class="syncIcon">↻</span> <span data-key="sync">Sync</span></button><button id="menuBtn" class="menuBtn" type="button"><span class="menuIcon">☰</span><span data-key="menu">MENU</span></button></div></header>
+<nav id="menuPanel" class="menuPanel">
+<button type="button" data-screen="today" class="active"><span class="navIcon">⌂</span><span class="navLabel" data-key="today">Vandaag</span></button>
+<button type="button" data-screen="calendar"><span class="navIcon">▣</span><span class="navLabel" data-key="calendar">Kalender</span></button>
+<button type="button" data-screen="overview"><span class="navIcon">☷</span><span class="navLabel" data-key="overview">Overzicht</span></button>
+<button type="button" data-screen="absence"><span class="navIcon">⊘</span><span class="navLabel" data-key="absence">Afwezigheid</span></button>
+<button type="button" data-screen="settings"><span class="navIcon">⚙</span><span class="navLabel" data-key="settings">Instellingen</span></button>
+<button type="button" data-screen="contactMobile"><span class="navIcon">✉</span><span class="navLabel">Contact</span></button>
+<button type="button" data-screen="adminMobile" class="gjAdminOnly"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.7-2.9 8.2-7 10-4.1-1.8-7-5.3-7-10V6l7-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="navLabel" data-key="admin">Beheer</span></button>
+<div class="menuSpacer"></div><div class="menuBrand"><img src="logo-menu.png?v=10800" alt="GJ Systems — The Smarter Way"></div><button id="menuLogout" type="button" class="menuLogout"><span class="navIcon">↪</span><span class="navLabel" data-key="logout">Uitloggen</span></button><div class="version">v10.8 DEV</div></nav>
+<div id="profileCropOverlay" class="profileCropOverlay" aria-hidden="true"><div class="profileCropDialog"><h2 data-key="editProfilePhoto">Profielfoto aanpassen</h2><div id="cropViewport" class="cropViewport"><img id="cropImage" alt="Uitsnede"></div><input id="cropZoom" class="cropZoom" type="range" min="1" max="3" step="0.01" value="1"><div class="cropActions"><button id="cropCancel" type="button" class="cancel" data-key="cancel">Annuleren</button><button id="cropSave" type="button" data-key="save">Opslaan</button></div></div></div>
+<main>
+<section id="today" class="screen active"><h1 data-key="today">Vandaag</h1><p class="muted" id="todayDate"></p><div class="panel"><div class="grid2 todayControls"><label class="compactTimeField fieldWithIcon"><span data-key="depart">Vertrektijd</span><span class="fieldIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg></span><input id="depart" type="time" value="08:00"></label><label class="compactRouteField fieldWithIcon"><span data-key="routeApp">Route-app</span><span class="fieldIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3.5-1 4-4 4-7s1.5-5 5-5h4"></path><path d="M15 4l3 3-3 3"></path><circle cx="5" cy="19" r="1.5"></circle></svg></span><select id="navApp"><option>Waze</option><option>Google Maps</option><option>Apple Kaarten</option></select></label></div><div class="stats"><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="16.5" cy="9" r="2.5"></circle><path d="M3.5 19c.6-3.2 2.6-5 5.5-5s4.9 1.8 5.5 5"></path><path d="M14 14.5c2.7 0 4.5 1.5 5 4.5"></path></svg></div><strong id="statVisits">0</strong><span data-key="customers">klanten</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"></path><circle cx="12" cy="10" r="2"></circle></svg></div><strong id="statKm">–</strong><span>km</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 16z"></path><path d="M4 16v3h2v-2h12v2h2v-3"></path><circle cx="8" cy="16" r="1"></circle><circle cx="16" cy="16" r="1"></circle></svg></div><strong id="statTravel">–</strong><span data-key="travelTime">reistijd</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.2l2.6 2.6L16.5 9"></path></svg></div><strong id="statDone">0</strong><span data-key="ready">klaar</span></div></div><button id="fullRouteBtn" class="todayMainButton" type="button"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 16z"></path><path d="M4 16v3h2v-2h12v2h2v-3"></path><circle cx="8" cy="16" r="1"></circle><circle cx="16" cy="16" r="1"></circle></svg><span class="buttonLabel" data-key="openFullRoute">Volledige route openen</span></button><div class="smallBtns" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button id="togglePause" type="button" class="todayActionButton"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6.5A3.5 3.5 0 0 1 12.5 18h-4A3.5 3.5 0 0 1 5 14.5V8z"></path><path d="M16 10h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5c0-1 1-1 1-2M11 5c0-1 1-1 1-2"></path></svg><span class="buttonLabel" data-key="togglePause">Pauze aan/uit</span></button><button id="recalcBtn" type="button" class="todayActionButton"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path><path d="M7 4H4v3"></path><path d="M4.8 7A9 9 0 0 1 20 9"></path></svg><span class="buttonLabel" data-key="recalc">Tijden</span></button></div></div><div id="todayRoute"></div></section>
+<section id="calendar" class="screen"><h1 data-key="calendar">Kalender</h1><div class="panel calendarPanel"><div class="monthHead"><button id="prevMonth" class="secondary" type="button">‹</button><div id="monthTitle" class="monthTitle">Maand</div><button id="nextMonth" class="secondary" type="button">›</button></div><div id="calendarList"></div></div><div id="calendarDetail"></div></section>
+<section id="overview" class="screen"><h1 data-key="overview">Overzicht</h1><label><span data-key="search">Zoeken</span><input id="search" data-ph="searchPh" placeholder="Zoek klant, plaats of postcode"></label><div id="overviewList" style="margin-top:8px"></div></section>
+<section id="absence" class="screen"><h1 data-key="absence">Afwezigheid</h1><div class="panel"><div class="form"><label><span data-key="type">Type</span><select id="blockType"><option>Verlof</option><option>Ziekte</option><option>Training</option><option>Overig</option></select></label><div class="formRow absenceDates"><label class="compactDateField"><span data-key="startDate">Startdatum</span><input id="blockStart" type="date"></label><label class="compactDateField"><span data-key="endDate">Einddatum</span><input id="blockEnd" type="date"></label></div><div class="formRow absenceTimes"><label class="compactTimeField"><span data-key="startTime">Starttijd</span><input id="blockStartTime" type="time" placeholder="09:00"></label><label class="compactTimeField"><span data-key="endTime">Eindtijd</span><input id="blockEndTime" type="time" placeholder="12:30"></label></div><label><span data-key="description">Omschrijving</span><textarea id="blockNote" data-ph="absencePh" placeholder="Bijv. tandarts, verlof ochtend of training"></textarea></label><button id="saveBlock" type="button" data-key="save">Opslaan</button></div></div><div id="absenceList"></div></section>
+<section id="settings" class="screen"><h1 data-key="settings">Instellingen</h1><div class="v102SettingsGrid">
+<div class="v102Card"><h3>Profiel</h3><p class="muted">Wijzig hier je centraal gesynchroniseerde profielfoto.</p><img id="mV102ProfilePreview" class="v102ProfilePreview" alt="Profielfoto"><input id="mV102ProfileFile" type="file" accept="image/*" hidden><button id="mV102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
+<div class="v102Card"><h3>Wachtwoord wijzigen</h3><label>Huidig wachtwoord<input id="mV102CurrentPassword" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="mV102NewPassword" type="password" autocomplete="new-password"></label><label>Nieuw wachtwoord herhalen<input id="mV102NewPasswordAgain" type="password" autocomplete="new-password"></label><div id="mV102PasswordCriteria" class="v102Criteria"></div><button id="mV102ChangePassword" type="button">Wachtwoord wijzigen</button><div id="mV102PasswordStatus" class="adminStatus"></div></div></div><div class="panel form"><label><span data-key="language">Taal</span><select id="lang"><option value="nl">Nederlands</option><option value="de">Deutsch</option><option value="en">English</option></select></label><div class="muted">Vaste uitstraling: blauw met gouden accenten.</div><label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:8px"><input id="defaultSettings" type="checkbox" style="width:auto;height:auto"> <span data-key="useDefault">Als standaard gebruiken</span></label><button id="saveSettings" type="button" data-key="saveSettings">Instellingen opslaan</button><div class="settingsVersion">Versie: v10.5<br>Supabase: nog niet gekoppeld</div></div></section>
+
+
+<section id="contactMobile" class="screen">
+  <h1>Contact</h1><p class="muted">Stuur een vraag naar de beheerder en bekijk de reactie.</p>
+  <div class="panel form">
+    <label><span>Onderwerp</span><select id="mContactSubject"><option>Planning</option><option>Database / klanten</option><option>Account / inloggen</option><option>Route / TomTom</option><option>iPhone / mobiel</option><option>Overig</option></select></label>
+    <label><span>Vraag</span><textarea id="mContactMessage" maxlength="5000" placeholder="Beschrijf je vraag zo duidelijk mogelijk..."></textarea></label>
+    <button id="mContactSend" type="button">Vraag versturen</button><button id="mContactRefresh" type="button" class="secondary">Vernieuwen</button>
+    <div id="mContactStatus" class="adminStatus">Nog niets verstuurd.</div>
+  </div>
+  <h2>Mijn berichten</h2><div id="mContactMessages"></div>
+</section>
+
+<section id="adminMobile" class="screen gjAdminOnly">
+  <h1>Beheer</h1>
+  <p class="muted">Alle beheerdersfuncties staan uitsluitend in deze module.</p>
+
+  <div class="adminTabs">
+    <button type="button" class="secondary adminTab active" data-admin-tab="users">Gebruikers</button>
+    <button type="button" class="secondary adminTab" data-admin-tab="tomtom">TomTom</button>
+    <button type="button" class="secondary adminTab" data-admin-tab="system">Systeem</button>
+    <button type="button" class="secondary adminTab" data-admin-tab="contact">Contact <span id="mAdminContactBadge"></span></button>
+  </div>
+
+  <div id="adminPaneUsers" class="adminPane">
+    <div class="panel form">
+      <h2>Gebruiker aanmaken</h2>
+      <div class="formRow">
+        <label><span>Voornaam</span><input id="mAdminFirstName" autocomplete="off"></label>
+        <label><span>Achternaam</span><input id="mAdminLastName" autocomplete="off"></label>
+      </div>
+      <label><span>E-mailadres</span><input id="mAdminEmail" type="email" autocomplete="off"></label>
+      <label><span>Tijdelijk wachtwoord</span><input id="mAdminPassword" type="password" autocomplete="new-password"></label>
+      <label><span>Rol</span><input value="Gebruiker" disabled><small>v10.0 gebruikt één beheerder.</small></label>
+      <button id="mAdminCreateUser" type="button">Gebruiker aanmaken</button>
+      <button id="mAdminRefreshUsers" type="button" class="secondary">Gebruikers vernieuwen</button>
+      <div id="mAdminUserStatus" class="adminStatus">Gebruikers nog niet geladen.</div>
+    </div>
+    <div id="mAdminUsers"></div>
+  </div>
+
+  <div id="adminPaneTomtom" class="adminPane" hidden>
+    <div class="panel form">
+      <h2>Beveiligde TomTom-koppeling</h2>
+      <p class="adminHelp">De API-sleutel blijft in Supabase en is niet zichtbaar voor gewone gebruikers. Routes en geocoding werken voor iedereen via de beveiligde proxy.</p>
+      <label><span>Nieuwe TomTom API-sleutel</span><input id="mTomTomKey" type="password" autocomplete="off" placeholder="Plak hier de sleutel"></label>
+      <button id="mTomTomSave" type="button">Opslaan en inschakelen</button>
+      <button id="mTomTomDisable" type="button" class="warningButton">TomTom uitschakelen</button>
+      <button id="mTomTomTest" type="button" class="secondary">TomTom testen</button>
+      <div id="mTomTomStatus" class="adminStatus busy">Status wordt geladen…</div>
+    </div>
+  </div>
+
+
+  <div id="adminPaneContact" class="adminPane" hidden>
+    <div class="panel"><div class="adminUserHead"><div><h2>Contact-inbox</h2><p class="adminHelp">Vragen van gebruikers, synchroon op laptop en iPhone.</p></div><button id="mAdminContactRefresh" type="button" class="secondary">Vernieuwen</button></div></div>
+    <div id="mAdminContactInbox"></div>
+  </div>
+
+  <div id="adminPaneSystem" class="adminPane" hidden>
+    <div class="panel">
+      <h2>Systeembeheer</h2>
+      <p class="adminHelp">Voor definitief verwijderen moet je altijd exact <strong>BEVESTIG</strong> typen.</p>
+      <div class="dangerGrid">
+        <button type="button" class="secondary" data-admin-clear="planning">Planning leegmaken</button>
+        <button type="button" class="secondary" data-admin-clear="fixed">Vaste bezoeken leegmaken</button>
+        <button type="button" class="secondary" data-admin-clear="unplanned">Niet ingepland leegmaken</button>
+        <button type="button" class="secondary" data-admin-clear="history">Historie en fotoverwijzingen leegmaken</button>
+        <button type="button" class="secondary" data-admin-clear="routes">Lokale routecache leegmaken</button>
+        <button type="button" id="mAdminBackup" class="secondary">Back-up downloaden</button>
+        <button type="button" id="mAdminRestore" class="secondary">Back-up herstellen</button>
+        <input id="mAdminRestoreFile" class="backupInput" type="file" accept="application/json">
+        <button type="button" class="dangerButton" data-admin-clear="database">Database helemaal leegmaken</button>
+        <button type="button" class="dangerButton" data-admin-clear="all">Alles resetten</button>
+      </div>
+      <div id="mAdminSystemStatus" class="adminStatus">Nog geen actie uitgevoerd.</div>
+    </div>
+  </div>
+</section>
+
+<div id="finishOverlay" class="finishOverlay"><div class="finishSheet"><div class="finishHead"><div><strong id="finishTitle">Klant afronden</strong><div id="finishMeta" class="muted"></div></div><button id="finishClose" class="finishClose" type="button" data-key="close">Sluit</button></div><div class="form"><label><span data-key="activity">Activiteit</span><input id="finishActivity" data-ph="activityPh" placeholder="Bijv. winkelcheck, schapcontrole"></label><label><span data-key="summary">Samenvatting</span><textarea id="finishSummary" data-ph="summaryPh" placeholder="Typ hier uitgebreid wat er is gedaan, bijzonderheden, afspraken of opmerkingen..."></textarea></label><div class="photoBox"><strong data-key="photos">Foto's</strong><div class="photoActions"><button id="btnTakePhoto" type="button" class="secondary">📷 Maak foto</button><button id="btnChoosePhoto" type="button" class="ghost">🖼 Kies foto</button></div><input id="finishCamera" type="file" accept="image/*" capture="environment" multiple><input id="finishPhotos" type="file" accept="image/*" multiple><div id="selectedPhotos" class="photoSelection">Nog geen nieuwe foto’s gekozen.</div><div id="existingPhotos" class="photoList"></div><span id="photoHelp" class="muted" data-key="photoHelp">Maak een foto of kies er één uit Foto’s, iCloud Drive of Bestanden.</span></div><div class="finishActions"><button id="btnDone" type="button" data-key="executed">Uitgevoerd</button><button id="btnNotDone" class="orange" type="button" data-key="notExecuted">Niet uitgevoerd</button></div></div></div></div>
+</main>
+<script>
+(function(){
+const VERSION='v10.8 DEV',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
+let sb=null;
+window.addEventListener('gj-auth-ready',()=>{if(window.GJ_AUTH?.sb)sb=window.GJ_AUTH.sb});
+const COLORS={blue:['#083b86','#052d68','#eef4ff']};
+const TR={nl:{today:'Vandaag',calendar:'Kalender',overview:'Overzicht',absence:'Afwezigheid',settings:'Instellingen',admin:'Beheer',powered:'Powered by',depart:'Vertrektijd',routeApp:'Route-app',customers:'klanten',travelTime:'reistijd',ready:'klaar',openFullRoute:'Volledige route openen',togglePause:'Pauze aan/uit',recalc:'Tijden',resetDemo:'Demo reset',calendarHint:'Klik op een dag voor kort overzicht.',search:'Zoeken',type:'Type',startDate:'Startdatum',endDate:'Einddatum',startTime:'Starttijd',endTime:'Eindtijd',description:'Omschrijving',save:'Opslaan',language:'Taal',colorMode:'Kleurmodus',useDefault:'Als standaard gebruiken',saveSettings:'Instellingen opslaan',close:'Sluit',activity:'Activiteit',summary:'Samenvatting',photos:"Foto's",photoHelp:'Voeg foto’s toe van deze klant/uitvoering.',executed:'Uitgevoerd',notExecuted:'Niet uitgevoerd',route:'Route',finish:'Afronden',edit:'Aanpassen',remove:'Uit planning',noCustomers:'Geen klanten gevonden.',noAbsence:'Nog geen afwezigheid.',visitsThisYear:'bezoeken dit jaar',open:'open',info:'info',searchPh:'Zoek klant, plaats of postcode',absencePh:'Bijv. tandarts, verlof ochtend of training',activityPh:'Bijv. winkelcheck, schapcontrole',summaryPh:'Typ hier uitgebreid wat er is gedaan, bijzonderheden, afspraken of opmerkingen...',dayNoPlan:'Geen planning.',planned:'Gepland',saved:'opgeslagen',routeAuto:'Autoroute',routeWalk:'Wandelroute',removeConfirm:'Uit planning halen?',absenceSaved:'Afwezigheid opgeslagen.',settingsSaved:'Instellingen opgeslagen.',photoSelected:'geen bestand geselecteerd',logout:'Uitloggen',sync:'Sync',menu:'MENU',editProfilePhoto:'Profielfoto aanpassen',cancel:'Annuleren'},de:{today:'Heute',calendar:'Kalender',overview:'Übersicht',absence:'Abwesenheit',settings:'Einstellungen',admin:'Verwaltung',powered:'Powered by',depart:'Abfahrt',routeApp:'Routen-App',customers:'Kunden',travelTime:'Fahrzeit',ready:'fertig',openFullRoute:'Ganze Route öffnen',togglePause:'Pause an/aus',recalc:'Zeiten',resetDemo:'Demo zurücksetzen',calendarHint:'Tippe auf einen Tag für eine kurze Übersicht.',search:'Suchen',type:'Typ',startDate:'Startdatum',endDate:'Enddatum',startTime:'Startzeit',endTime:'Endzeit',description:'Beschreibung',save:'Speichern',language:'Sprache',colorMode:'Farbmodus',useDefault:'Als Standard verwenden',saveSettings:'Einstellungen speichern',close:'Schließen',activity:'Aktivität',summary:'Zusammenfassung',photos:'Fotos',photoHelp:'Füge Fotos dieses Kunden/Besuchs hinzu.',executed:'Ausgeführt',notExecuted:'Nicht ausgeführt',route:'Route',finish:'Abschließen',edit:'Bearbeiten',remove:'Entfernen',noCustomers:'Keine Kunden gefunden.',noAbsence:'Noch keine Abwesenheit.',visitsThisYear:'Besuche dieses Jahr',open:'öffnen',info:'Info',searchPh:'Kunde, Ort oder PLZ suchen',absencePh:'Z.B. Zahnarzt, Urlaub vormittags oder Schulung',activityPh:'Z.B. Storecheck, Regalprüfung',summaryPh:'Beschreibe ausführlich, was erledigt wurde, Besonderheiten oder Notizen...',dayNoPlan:'Keine Planung.',planned:'Geplant',saved:'gespeichert',routeAuto:'Autoroute',routeWalk:'Fußweg',removeConfirm:'Aus Planung entfernen?',absenceSaved:'Abwesenheit gespeichert.',settingsSaved:'Einstellungen gespeichert.',photoSelected:'keine Datei ausgewählt',logout:'Abmelden',sync:'Sync',menu:'MENÜ',editProfilePhoto:'Profilfoto anpassen',cancel:'Abbrechen'},en:{today:'Today',calendar:'Calendar',overview:'Overview',absence:'Absence',settings:'Settings',admin:'Admin',powered:'Powered by',depart:'Departure',routeApp:'Route app',customers:'customers',travelTime:'travel time',ready:'done',openFullRoute:'Open full route',togglePause:'☕ Pause on/off',recalc:'Times',resetDemo:'Reset demo',calendarHint:'Tap a day for a short overview.',search:'Search',type:'Type',startDate:'Start date',endDate:'End date',startTime:'Start time',endTime:'End time',description:'Description',save:'Save',language:'Language',colorMode:'Color mode',useDefault:'Use as default',saveSettings:'Save settings',close:'Close',activity:'Activity',summary:'Summary',photos:'Photos',photoHelp:'Add photos for this customer/visit.',executed:'Executed',notExecuted:'Not executed',route:'Route',finish:'Finish',edit:'Edit',remove:'Remove',noCustomers:'No customers found.',noAbsence:'No absence yet.',visitsThisYear:'visits this year',open:'open',info:'info',searchPh:'Search customer, city or postcode',absencePh:'E.g. dentist, morning leave or training',activityPh:'E.g. store check, shelf check',summaryPh:'Type what was done, details, agreements or notes...',dayNoPlan:'No planning.',planned:'Planned',saved:'saved',routeAuto:'Car route',routeWalk:'Walking route',removeConfirm:'Remove from planning?',absenceSaved:'Absence saved.',settingsSaved:'Settings saved.',photoSelected:'no file selected',logout:'Log out',sync:'Sync',menu:'MENU',editProfilePhoto:'Edit profile photo',cancel:'Cancel'}};
+const $=id=>document.getElementById(id);
+function localIso(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+function parseLocalDate(iso){const [y,m,d]=String(iso||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1)}
+const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,pendingFinishFiles=[];
+function t(k){return (TR[db?.settings?.language||'nl']||TR.nl)[k]||TR.nl[k]||k}
+function ts(status){
+  const m={Gepland:'planned',Uitgevoerd:'executed','Niet uitgevoerd':'notExecuted','Uit planning':'remove'};
+  return t(m[status]||status)||status;
+}function applyLang(){
+ document.documentElement.lang=db.settings.language||'nl';
+ document.querySelectorAll('[data-key]').forEach(el=>el.textContent=t(el.dataset.key));
+ document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=t(el.dataset.ph));
+ const l=db.settings.language||'nl';
+ const languageNames={nl:{nl:'Nederlands',de:'Duits',en:'Engels'},de:{nl:'Niederländisch',de:'Deutsch',en:'Englisch'},en:{nl:'Dutch',de:'German',en:'English'}};
+ document.querySelectorAll('#lang option').forEach(o=>o.textContent=languageNames[l][o.value]||o.textContent);
+ const absenceTypes={nl:{Verlof:'Verlof',Ziekte:'Ziekte',Training:'Training',Overig:'Overig'},de:{Verlof:'Urlaub',Ziekte:'Krankheit',Training:'Schulung',Overig:'Sonstiges'},en:{Verlof:'Leave',Ziekte:'Sickness',Training:'Training',Overig:'Other'}};
+ document.querySelectorAll('#blockType option').forEach(o=>o.textContent=absenceTypes[l][o.value]||o.textContent);
+}function blankDb(){return{customers:[],visits:[],blocks:[],history:[],settings:{theme:'blue',language:'nl'}}}function load(){try{return JSON.parse(localStorage.getItem(STORAGE)||'null')||blankDb()}catch(e){return blankDb()}}function save(){if(window.__GJ_WORKSPACE_CLEARING__)return;localStorage.setItem(STORAGE,JSON.stringify(db))}function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function addDaysIso(iso,n){const d=parseLocalDate(iso);d.setDate(d.getDate()+n);return localIso(d)}function applyTheme(){const c=COLORS.blue;document.documentElement.style.setProperty('--primary',c[0]);document.documentElement.style.setProperty('--primary-dark',c[1]);document.documentElement.style.setProperty('--soft',c[2]);db.settings.theme='blue';localStorage.setItem('gj_theme','blue')}
+
+function mapCustomerRow(c){return {id:c.id,name:c.naam||c.winkel||'Klant',street:c.straat||c.adres||'',nr:c.huisnr||'',postal:c.postcode||'',city:c.plaats||'',phone:c.telefoon_winkel||c.telefoon||'',email:c.email||'',lat:c.latitude,lng:c.longitude,note:c.notities||''}}
+async function loadPlanningFromSupabase(){
+  if(!sb)return false;
+  try{
+    const [planningRes,daysRes,absRes]=await Promise.all([
+      sb.from('planning').select('*').order('datum',{ascending:true}).order('route_volgorde',{ascending:true}).limit(5000),
+      sb.from('app_day_settings').select('*'),
+      sb.from('app_absences').select('*').order('start_date',{ascending:true})
+    ]);
+    if(planningRes.error)throw planningRes.error;
+    const planning=planningRes.data||[];
+    const ids=[...new Set(planning.map(p=>p.customer_id).filter(Boolean))];
+    let customers=[];
+    if(ids.length){const res=await sb.from('customers').select('*').in('id',ids);if(res.error)throw res.error;customers=res.data||[]}
+    db.customers=customers.map(r=>({id:String(r.id),name:r.winkel||r.naam||r.klantnaam||r.keten||'Onbekende klant',chain:r.keten||'',street:r.straat||r.adres||'',nr:r.huisnr||r.huisnummer||'',postal:r.postcode||'',city:r.plaats||'',country:r.land||'',lat:r.latitude,lng:r.longitude,opening:r.openingstijden||null,visitDuration:Number(r.bezoektijd||30)}));
+    const customerIds=new Set(db.customers.map(c=>c.id));
+    db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true}});
+    db.dayDepartures={};
+    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5)});
+    db.blocks=absRes.error?[]:(absRes.data||[]).map(r=>({id:String(r.id),type:r.type||'Overig',start:r.start_date,end:r.end_date||r.start_date,startTime:String(r.start_time||'').slice(0,5),endTime:String(r.end_time||'').slice(0,5),note:r.note||'',fromSupabase:true}));
+    save();return true;
+  }catch(e){console.error('Supabase laden mislukt',e);return false}
+}
+async function saveDepartureToSupabase(date,value){
+  if(!sb)return;
+  const old=(db.dayDepartures||{})[date]||value;
+  db.dayDepartures=db.dayDepartures||{};db.dayDepartures[date]=value;
+  const delta=(Number(value.slice(0,2))*60+Number(value.slice(3,5)))-(Number(old.slice(0,2))*60+Number(old.slice(3,5)));
+  const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning');
+  if(delta){for(const v of rows){const shift=x=>{if(!x)return x;let n=Number(x.slice(0,2))*60+Number(x.slice(3,5))+delta;return String(Math.floor(n/60)%24).padStart(2,'0')+':'+String((n%60+60)%60).padStart(2,'0')};v.time=shift(v.time);v.end=shift(v.end)}}
+  const d=await sb.from('app_day_settings').upsert({datum:date,vertrektijd:value+':00',updated_at:new Date().toISOString()},{onConflict:'datum'});if(d.error)throw d.error;
+  for(const v of rows){const u=await sb.from('planning').update({starttijd:v.time||null,eindtijd:v.end||null,updated_at:new Date().toISOString()}).eq('id',v.planningId);if(u.error)throw u.error}
+  save();renderAll();
+}
+async function saveAbsenceToSupabase(b){
+  const {data,error}=await sb.from('app_absences').insert({type:b.type,start_date:b.start,end_date:b.end,start_time:b.startTime||null,end_time:b.endTime||null,note:b.note||''}).select('*').single();
+  if(error)throw error; b.id=String(data.id);b.fromSupabase=true;save();renderAll();
+}
+function customer(id){return db.customers.find(c=>c.id===id)||{}}function todayVisits(includeOut=false){return db.visits.filter(v=>v.date===todayIso()&&(includeOut||v.status!=='Uit planning')&&(!v.pause||v.active!==false)).sort((a,b)=>(a.order||0)-(b.order||0))}function address(c){return [c.street,c.nr,c.postal,c.city].filter(Boolean).join(' ')}function navUrl(q){const app=$('navApp').value;if(app==='Waze')return 'https://waze.com/ul?q='+q+'&navigate=yes'; if(app==='Apple Kaarten')return 'http://maps.apple.com/?q='+q; return 'https://www.google.com/maps/search/?api=1&query='+q}function fullRouteUrl(){const pts=todayVisits().filter(v=>!v.pause&&v.status!=='Uit planning').map(v=>address(customer(v.customerId)));return 'https://www.google.com/maps/dir/'+['Neerstraat 1, Den Bosch'].concat(pts).concat(['Neerstraat 1, Den Bosch']).map(encodeURIComponent).join('/')}function timeToMin(x){if(!x)return null;const p=x.split(':').map(Number);return p[0]*60+p[1]}function minToTime(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}function durationOf(v){const s=timeToMin(v.time),e=timeToMin(v.end);if(s!==null&&e!==null){let d=e-s;if(d<0)d+=1440;return Math.max(5,d)}return v.pause?30:35}function parseLegInfo(txt){
+  const s=String(txt||'');
+  const tm=s.match(/(\d+)\s*min/i);
+  const km=s.match(/([\d,.]+)\s*km/i);
+  const meter=s.match(/([\d,.]+)\s*m(?!in)/i);
+  return {min:tm?parseInt(tm[1],10):10, km:km?parseFloat(km[1].replace(',','.')):(meter?parseFloat(meter[1].replace(',','.'))/1000:0)};
+}
+function customerKey(c){return String((c.name||'')+' '+(c.city||'')).toLowerCase()}
+function estimateLeg(prevCustomer,toCustomer,isFirst){
+  const to=customerKey(toCustomer), from=prevCustomer?customerKey(prevCustomer):'home';
+  let mode='drive', min=12, km=5;
+  const sameCity=prevCustomer && String(prevCustomer.city||'').toLowerCase()===String(toCustomer.city||'').toLowerCase();
+  if(isFirst){
+    if(to.includes('den bosch')||to.includes('s-hertogenbosch')||to.includes("'s-hertogenbosch")){min=12;km=5;}
+    else if(to.includes('eindhoven')){min=34;km=37;}
+    else if(to.includes('tilburg')){min=29;km=31;}
+    else if(to.includes('breda')){min=41;km=52;}
+  }else if(sameCity){
+    mode='walk'; min=6; km=0.45;
+  }else if((from.includes('den bosch')||from.includes("'s-hertogenbosch")) && to.includes('eindhoven')){min=34;km=37;}
+  else if(from.includes('eindhoven') && to.includes('tilburg')){min=36;km=38;}
+  else if(from.includes('tilburg') && to.includes('breda')){min=31;km=31;}
+  else if(from.includes('breda') && to.includes('tilburg')){min=31;km=31;}
+  else if(from.includes('tilburg') && to.includes('eindhoven')){min=36;km=38;}
+  else if(from.includes('eindhoven') && (to.includes('den bosch')||to.includes("'s-hertogenbosch"))){min=34;km=37;}
+  else {min=25;km=22;}
+  return {mode,min,km};
+}
+function returnLegInfo(lastCustomer){
+  const k=customerKey(lastCustomer); let min=12,km=5;
+  if(k.includes('breda')){min=41;km=52;}
+  else if(k.includes('tilburg')){min=29;km=31;}
+  else if(k.includes('eindhoven')){min=34;km=37;}
+  else if(k.includes('den bosch')||k.includes("'s-hertogenbosch")){min=12;km=5;}
+  return {min,km};
+}
+function fmtKm(km){return km<1 ? Math.round(km*1000)+' m' : Math.round(km)+' km'}
+function fmtTravel(min){return min>=60 ? Math.floor(min/60)+'u'+String(min%60).padStart(2,'0') : min+' min'}
+function recalcFrom(id){recalcAll(false)}
+function recalcAll(doRender=true){
+  // Mobiel mag klanttijden nooit opnieuw vanaf de vertrektijd berekenen.
+  // De begin- en eindtijden komen rechtstreeks uit de planning in Supabase/laptop.
+  save();
+  if(doRender) renderAll();
+}
+function routeTotals(){
+  const vs=todayVisits().filter(v=>!v.pause);
+  let km=0,min=0;
+  vs.forEach(v=>{const p=parseLegInfo(v.leg);km+=p.km;min+=p.min});
+  if(vs.length){const ret=parseLegInfo(vs[vs.length-1].returnLeg);km+=ret.km;min+=ret.min;}
+  return {km,min};
+}
+function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals();const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;$('statKm').textContent=real.length?Math.round(tot.km):'–';$('statTravel').textContent=real.length?fmtTravel(tot.min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
+function cardHtml(v){if(v.pause)return '<div class="leg pause">'+esc(v.leg||'☕ Pauze')+' <span style="margin-left:auto">'+esc((v.time||'')+' - '+(v.end||''))+'</span><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button></div></div>';const c=customer(v.customerId),q=encodeURIComponent(address(c)),done=v.status==='Uitgevoerd',nd=v.status==='Niet uitgevoerd',out=v.status==='Uit planning',cls=done?'done':(nd?'notdone':(out?'out':'')),mode=v.mode==='walk'?'walk':'drive';const timeHtml=editingTime===v.id?'<div class="timeEdit"><input id="editStart-'+esc(v.id)+'" type="time" value="'+esc(v.time||'')+'"><input id="editEnd-'+esc(v.id)+'" type="time" value="'+esc(v.end||'')+'"><button class="saveTimeBtn" data-id="'+esc(v.id)+'">✓</button></div>':'<div class="timeLine"><span class="pill">'+esc((v.time||'')+' - '+(v.end||''))+'</span><button class="eyeBtn secondary" data-id="'+esc(v.id)+'">👁️</button></div>';return (v.leg?'<div class="leg '+(mode==='walk'?'walk':'')+'">'+esc(v.leg)+'</div>':'')+'<div class="card visitCard '+cls+'"><div class="visitTop"><strong>'+esc(c.name||'Klant')+'</strong><span class="pill">'+esc(ts(v.status||'Gepland'))+'</span></div>'+timeHtml+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0"><span class="routeMode '+(mode==='walk'?'walk':'')+'">'+(mode==='walk'?'🚶 '+t('routeWalk'):'🚗 '+t('routeAuto'))+'</span></div><div class="muted">'+esc(c.city||'')+'</div><div>'+esc([c.street,c.nr,c.postal].filter(Boolean).join(' '))+'</div>'+((done||nd)?'<div class="savedLine">'+(done?'✓':'!')+' '+esc(ts(v.status))+' '+t('saved')+((v.photos&&v.photos.length)?' · 📷 '+v.photos.length+' foto(s)':'')+'</div>':'')+'<div class="btnRow"><button class="routeBtn" data-q="'+q+'">'+t('route')+'</button><button class="finishBtn secondary" data-id="'+esc(v.id)+'">'+((done||nd)?t('edit'):t('finish'))+'</button></div><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button><button class="removePlan red" data-id="'+esc(v.id)+'">'+t('remove')+'</button></div></div>'+(v.returnLeg?'<div class="leg home">'+esc(v.returnLeg)+'</div>':'')}
+function renderCalendar(){const base=new Date();base.setMonth(base.getMonth()+monthOffset,1);const year=base.getFullYear(),month=base.getMonth(),locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';$('monthTitle').textContent=base.toLocaleDateString(locale,{month:'long',year:'numeric'});const first=new Date(year,month,1),start=new Date(first);start.setDate(first.getDate()-((first.getDay()+6)%7));const dows=db.settings.language==='en'?['mo','tu','we','th','fr','sa','su']:db.settings.language==='de'?['mo','di','mi','do','fr','sa','so']:['ma','di','wo','do','vr','za','zo'];let out='<div class="monthGrid">'+dows.map(d=>'<div class="monthDow">'+d+'</div>').join('');for(let i=0;i<42;i++){const cur=new Date(start);cur.setDate(start.getDate()+i);const iso=localIso(cur),vis=db.visits.filter(v=>v.date===iso&&!v.pause&&v.status!=='Uit planning'),cls=['monthDay',cur.getMonth()===month?'':'other',iso===todayIso()?'today':'',iso===selectedCalendarDate?'selected':''].join(' ');out+='<div class="'+cls+'" data-date="'+iso+'"><div class="monthNo">'+cur.getDate()+'</div>';if(vis.length)out+='<span class="customerCount">👥 '+vis.length+'</span>';out+='</div>'}out+='</div>';$('calendarList').innerHTML=out}
+function openDay(iso){
+  selectedCalendarDate=iso;
+  const vs=db.visits.filter(v=>v.date===iso&&v.status!=='Uit planning').sort((a,b)=>(a.order||0)-(b.order||0));
+  const real=vs.filter(v=>!v.pause);
+  const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';
+  const title=parseLocalDate(iso).toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long'});
+  const first=real[0],last=real[real.length-1];
+  const summary=real.length ? real.length+' '+t('customers')+(first&&last?' · '+esc(first.time||'')+'–'+esc(last.end||''):'') : '';
+  $('calendarDetail').innerHTML='<div class="card calendarDayCard"><div class="calendarDayHead"><div><div class="calendarDayTitle">'+esc(title)+'</div><div class="calendarDaySummary">'+summary+'</div></div><span class="pill">'+real.length+' 👥</span></div>'+(!vs.length?'<div class="calendarEmpty">'+t('dayNoPlan')+'</div>':vs.map(v=>{if(v.pause)return '<div class="leg pause calendarPause">'+esc((v.time||'')+' - '+(v.end||'')+' '+(v.leg||'Pauze'))+'</div>';const c=customer(v.customerId),q=encodeURIComponent(address(c));return '<div class="calendarVisit"><div class="calendarVisitTime">'+esc(v.time||'--:--')+'<br>'+esc(v.end||'--:--')+'</div><div><div class="calendarVisitName">'+esc(c.name||'Klant')+'</div><div class="calendarVisitMeta">'+esc([c.city,ts(v.status||'Gepland')].filter(Boolean).join(' · '))+'</div></div><button class="routeBtn" data-q="'+q+'">↗</button></div>'}).join(''))+'</div>';
+  renderCalendar();
+}
+function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();renderToday();renderCalendar();renderOverview();renderAbsence()}function move(id,dir){const vs=todayVisits(true),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const tmp=vs[i].order;vs[i].order=vs[j].order;vs[j].order=tmp;vs.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((v,idx)=>v.order=idx+1);save();renderAll();saveVisitOrderToSupabase().then(()=>manualSync(false)).catch(console.error)}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){for(const f of Array.from(files||[])){if(f&&String(f.type||'').startsWith('image/'))pendingFinishFiles.push(f)}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
+ // Bewaar het originele bestand ongewijzigd. Zo blijven resolutie, kwaliteit,
+ // bestandstype en metadata behouden bij openen en opslaan op de laptop.
+ if(!file || !String(file.type||'').startsWith('image/')) return file;
+ return file;
+}
+async function uploadVisitPhotos(historyId,planningId,files){
+ const saved=[];
+ for(let i=0;i<files.length;i++){
+  const file=await prepareVisitPhoto(files[i]);
+  const safe=(file.name||('foto-'+(i+1)+'.jpg')).replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path=String(planningId||'zonder-planning')+'/'+String(historyId)+'/'+Date.now()+'-'+i+'-'+safe;
+  const up=await sb.storage.from('visit-photos').upload(path,file,{contentType:file.type||'image/jpeg',upsert:false});
+  if(up.error){console.error('Foto upload mislukt:',up.error);throw new Error('Foto upload mislukt: '+up.error.message)}
+  const row=await sb.from('visit_photos').insert({history_id:historyId,file_path:path});
+  if(row.error){console.error('Fotokoppeling opslaan mislukt:',row.error);throw new Error('Foto kon niet aan bezoek worden gekoppeld: '+row.error.message)}
+  const pub=sb.storage.from('visit-photos').getPublicUrl(path).data.publicUrl;
+  saved.push({name:file.name||safe,data:pub,path});
+ }
+ return saved;
+}
+async function finish(status){
+ const v=db.visits.find(x=>x.id===activeVisitId);if(!v)return;
+ const selectedFiles=pendingFinishFiles.slice();
+ v.status=status;v.activity=$('finishActivity').value.trim();v.summary=$('finishSummary').value.trim();v.completedAt=new Date().toISOString();
+ let uploaded=[];
+ if(sb && v.planningId){
+   const upd=await sb.from('planning').update({status:status,uitgevoerd:status==='Uitgevoerd'}).eq('id',v.planningId);
+   if(upd.error){console.error('Status opslaan mislukt:',upd.error);alert('Status niet opgeslagen in Supabase: '+upd.error.message);return;}
+   const hist=await sb.from('visit_history').insert({customer_id:v.customerId,planning_id:v.planningId,bezoekdatum:v.date,starttijd:v.time||null,eindtijd:v.end||null,activiteit:v.activity,samenvatting:v.summary,opmerkingen:status,duur_min:durationOf(v),afgerond:true}).select('id').single();
+   if(hist.error){console.error('Historie opslaan mislukt:',hist.error);alert('Bezoekhistorie opslaan mislukt: '+hist.error.message);return;}
+   if(selectedFiles.length){
+    try{uploaded=await uploadVisitPhotos(hist.data.id,v.planningId,selectedFiles)}catch(e){alert('Het bezoek is opgeslagen, maar niet alle foto’s zijn geüpload. '+e.message)}
+   }
+ }
+ v.photos=(v.photos||[]).concat(uploaded.length?uploaded:selectedFiles.map(f=>({name:f.name,size:f.size,type:f.type})));
+ const item={visitId:v.id,planningId:v.planningId||v.id,customerId:v.customerId,status,activity:v.activity,summary:v.summary,photos:v.photos,createdAt:v.completedAt};
+ const idx=db.history.findIndex(h=>h.visitId===v.id);if(idx>=0)db.history[idx]=item;else db.history.push(item);
+ save();closeFinish();renderAll();alert(ts(status)+' '+t('saved'))}
+
+function setupProfileCropper(fileInput,button,imageEl){
+  const overlay=document.getElementById('profileCropOverlay'), viewport=document.getElementById('cropViewport'), cropImg=document.getElementById('cropImage'), zoom=document.getElementById('cropZoom');
+  if(!overlay||!viewport||!cropImg||!zoom||!fileInput||!button||!imageEl)return;
+  let base=1,scale=1,x=0,y=0,naturalW=1,naturalH=1;
+  let pointers=new Map(),startX=0,startY=0,startImageX=0,startImageY=0,startDistance=0,startScale=1;
+  const viewSize=()=>Math.max(1,viewport.getBoundingClientRect().width);
+  const clamp=()=>{const s=viewSize(),w=naturalW*base*scale,h=naturalH*base*scale;x=Math.min(0,Math.max(s-w,x));y=Math.min(0,Math.max(s-h,y));};
+  const draw=()=>{clamp();cropImg.style.width=(naturalW*base*scale)+'px';cropImg.style.height=(naturalH*base*scale)+'px';cropImg.style.transform='translate3d('+x+'px,'+y+'px,0)';};
+  const openFile=file=>{
+    if(!file)return;
+    if(file.size>8000000){alert('Kies een foto kleiner dan 8 MB.');return;}
+    const r=new FileReader();
+    r.onload=()=>{
+      overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
+      cropImg.onload=()=>requestAnimationFrame(()=>{
+        naturalW=cropImg.naturalWidth||1;naturalH=cropImg.naturalHeight||1;
+        const s=viewSize();base=Math.max(s/naturalW,s/naturalH);scale=1;zoom.value='1';
+        x=(s-naturalW*base)/2;y=(s-naturalH*base)/2;draw();
+      });
+      cropImg.src=r.result;
+    };
+    r.readAsDataURL(file);
+  };
+  button.addEventListener('click',()=>fileInput.click());
+  fileInput.addEventListener('change',e=>{openFile(e.target.files&&e.target.files[0]);e.target.value='';});
+  zoom.addEventListener('input',()=>{const old=scale,s=viewSize(),cx=(s/2-x)/(base*old),cy=(s/2-y)/(base*old);scale=parseFloat(zoom.value);x=s/2-cx*base*scale;y=s/2-cy*base*scale;draw();});
+  const distance=()=>{const p=[...pointers.values()];return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)};
+  viewport.addEventListener('pointerdown',e=>{viewport.setPointerCapture?.(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){startX=e.clientX;startY=e.clientY;startImageX=x;startImageY=y;}else if(pointers.size===2){startDistance=distance();startScale=scale;}e.preventDefault();});
+  viewport.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){x=startImageX+e.clientX-startX;y=startImageY+e.clientY-startY;}else if(pointers.size===2){const s=viewSize(),old=scale,midX=s/2,midY=s/2;scale=Math.max(1,Math.min(3,startScale*(distance()/Math.max(1,startDistance))));zoom.value=String(scale);const cx=(midX-x)/(base*old),cy=(midY-y)/(base*old);x=midX-cx*base*scale;y=midY-cy*base*scale;}draw();e.preventDefault();});
+  const pointerEnd=e=>{pointers.delete(e.pointerId);if(pointers.size===1){const p=[...pointers.values()][0];startX=p.x;startY=p.y;startImageX=x;startImageY=y;}else if(pointers.size===0){startDistance=0;} };
+  viewport.addEventListener('pointerup',pointerEnd);viewport.addEventListener('pointercancel',pointerEnd);
+  document.getElementById('cropCancel').addEventListener('click',()=>{overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');cropImg.removeAttribute('src');});
+  document.getElementById('cropSave').addEventListener('click',()=>{const out=512,view=viewSize(),canvas=document.createElement('canvas');canvas.width=out;canvas.height=out;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,out,out);ctx.drawImage(cropImg,(x/view)*out,(y/view)*out,(naturalW*base*scale/view)*out,(naturalH*base*scale/view)*out);const data=canvas.toDataURL('image/jpeg',.9);imageEl.src=data;button.classList.add('hasPhoto');overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('gj-profile-photo-changed',{detail:data}));});
+}
+
+async function init(){console.info('Planning GJ mobiel v10.6 - centrale Supabase planning');db=load();db.settings=db.settings||{};db.settings.language=localStorage.getItem('gj_app_language')||db.settings.language||'nl';const supaOk=await loadPlanningFromSupabase();if(!supaOk)throw new Error('De werkruimte kon niet veilig uit Supabase worden geladen.');applyTheme();$('lang').value=db.settings.language||'nl';$('depart').value=(db.dayDepartures||{})[todayIso()]||'08:00';$('blockStart').value=todayIso();$('blockEnd').value=addDaysIso(todayIso(),1);$('blockEnd').min=addDaysIso(todayIso(),1);$('menuBtn').onclick=()=>$('menuPanel').classList.toggle('open');const uid=window.GJ_AUTH?.profile?.id;const savedProfilePhoto=uid?localStorage.getItem('gj_profile_photo_'+uid):null;if(savedProfilePhoto){$('profileImage').src=savedProfilePhoto;$('profileButton').classList.add('hasPhoto')}/* v10.5: profielfoto uitsluitend via Instellingen → Profiel */$('menuLogout').onclick=async()=>{try{sessionStorage.removeItem('gj_impersonate_user_v102');sessionStorage.removeItem('gj_workspace_storage_id');sessionStorage.removeItem('gj_authenticated_user_id');sessionStorage.removeItem('gj_app_open_session');if(window.GJ_AUTH?.sb)await GJ_AUTH.sb.auth.signOut()}finally{location.reload()}};$('syncBtn').onclick=()=>manualSync(true);$('btnTakePhoto').onclick=()=>$('finishCamera').click();$('btnChoosePhoto').onclick=()=>$('finishPhotos').click();$('finishCamera').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};$('finishPhotos').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manualSync(false)});window.addEventListener('focus',()=>manualSync(false));document.querySelectorAll('#menuPanel button[data-screen]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(b.dataset.screen).classList.add('active');document.querySelectorAll('#menuPanel button[data-screen]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('menuPanel').classList.remove('open');renderAll()});document.addEventListener('click',e=>{const r=e.target.closest('.routeBtn');if(r){location.href=navUrl(r.dataset.q);return}const f=e.target.closest('.finishBtn');if(f){openFinish(f.dataset.id);return}const up=e.target.closest('.moveUp');if(up){move(up.dataset.id,-1);return}const down=e.target.closest('.moveDown');if(down){move(down.dataset.id,1);return}const eye=e.target.closest('.eyeBtn');if(eye){editingTime=eye.dataset.id;renderToday();return}const sv=e.target.closest('.saveTimeBtn');if(sv){const v=db.visits.find(x=>x.id===sv.dataset.id);if(v){v.time=$('editStart-'+v.id).value;v.end=$('editEnd-'+v.id).value;editingTime=null;save();renderAll();syncPlanningToSupabase().catch(console.error)}return}const rem=e.target.closest('.removePlan');if(rem){if(confirm(t('removeConfirm'))){const v=db.visits.find(x=>x.id===rem.dataset.id);if(v){v.status='Uit planning';save();renderAll()}}return}const day=e.target.closest('.monthDay');if(day){openDay(day.dataset.date);return}if(e.target.id==='finishOverlay')closeFinish()});$('depart').onchange=async()=>{try{await saveDepartureToSupabase(todayIso(),$('depart').value)}catch(e){alert('Vertrektijd opslaan mislukt: '+e.message)}};$('fullRouteBtn').onclick=()=>{location.href=fullRouteUrl()};$('togglePause').onclick=()=>{db.visits.filter(v=>v.pause&&v.date===todayIso()).forEach(v=>v.active=v.active===false?true:false);save();renderAll()};$('recalcBtn').onclick=()=>manualSync(true);$('prevMonth').onclick=()=>{monthOffset--;renderAll()};$('nextMonth').onclick=()=>{monthOffset++;renderAll()};$('search').oninput=renderOverview;$('finishClose').onclick=closeFinish;$('btnDone').onclick=()=>finish('Uitgevoerd');$('btnNotDone').onclick=()=>finish('Niet uitgevoerd');$('blockStart').onchange=()=>{const end=addDaysIso($('blockStart').value,1);$('blockEnd').value=end;$('blockEnd').min=end};$('blockEnd').onchange=()=>{const min=addDaysIso($('blockStart').value,1);if($('blockEnd').value<min)$('blockEnd').value=min};$('saveBlock').onclick=async()=>{if(!$('blockStart').value)return alert('Vul startdatum in.');if(!$('blockEnd').value)$('blockEnd').value=$('blockStart').value;const b={id:'b-'+Date.now(),type:$('blockType').value,start:$('blockStart').value,end:$('blockEnd').value||$('blockStart').value,startTime:$('blockStartTime').value,endTime:$('blockEndTime').value,note:$('blockNote').value};try{await saveAbsenceToSupabase(b);db.blocks.push(b);save();renderAll();alert(t('absenceSaved'))}catch(e){alert('Afwezigheid opslaan mislukt: '+e.message)}};$('lang').onchange=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);save();location.reload()};$('saveSettings').onclick=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);if($('defaultSettings').checked)localStorage.setItem('gj_theme',db.settings.theme);save();location.reload()};renderAll();openDay(selectedCalendarDate);setTimeout(()=>{const sp=$('splash'); if(sp){sp.classList.add('hide'); sp.style.display='none'}},700)}
+let appInitialized=false;async function initAfterAuth(){if(appInitialized||!window.GJ_AUTH?.profile||!window.GJ_AUTH?.sb)return;appInitialized=true;sb=window.GJ_AUTH.sb;try{await init()}catch(e){appInitialized=false;console.error(e);alert('Planning laden mislukt: '+e.message)}}window.addEventListener('gj-auth-ready',initAfterAuth);window.addEventListener('load',initAfterAuth);setTimeout(()=>{const s=$('splash');if(s){s.classList.add('hide');s.style.display='none'}},2000);
+})();
+</script>
+
+<script id="gjMobileAdminScript">
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const setStatus=(id,text,kind='')=>{const e=$(id);if(!e)return;e.textContent=text;e.className='adminStatus '+kind};
+
+  async function adminCall(body){
+    const a=window.GJ_AUTH;
+    if(!a?.isAdmin) throw new Error('Alleen beheerders hebben toegang.');
+    const {data,error}=await a.sb.functions.invoke('admin-users',{body});
+    if(error) throw error;
+    if(data?.error) throw new Error(data.error);
+    return data||{};
+  }
+
+  async function loadMobileUsers(){
+    try{
+      setStatus('mAdminUserStatus','Gebruikers laden…','busy');
+      const r=await adminCall({action:'list'});
+      const users=r.users||[];
+      $('mAdminUsers').innerHTML=users.length?users.map(u=>{
+        const name=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.email;
+        return `<div class="adminUser">
+          <div class="adminUserHead"><div><strong>${esc(name)}</strong><div class="muted">${esc(u.email)}</div></div><span class="pill">${u.role==='admin'?'Beheerder':'Gebruiker'}</span></div>
+          <div class="muted">${u.is_active===false?'Uitgeschakeld':'Actief'}</div>
+          <div class="adminUserActions">
+            <button type="button" class="secondary mToggleUser" data-id="${esc(u.id)}" data-active="${u.is_active!==false}">${u.is_active===false?'Inschakelen':'Uitschakelen'}</button>
+            <button type="button" class="secondary mPasswordUser" data-id="${esc(u.id)}">Wachtwoord</button>
+          </div>
+        </div>`;
+      }).join(''):'<div class="card empty">Geen gebruikers gevonden.</div>';
+      setStatus('mAdminUserStatus',`${users.length} gebruikers geladen.`,'ok');
+    }catch(e){setStatus('mAdminUserStatus',e.message,'err')}
+  }
+
+  async function loadTomTomStatus(){
+    try{
+      const {data,error}=await GJ_AUTH.sb.rpc('get_tomtom_status');
+      if(error)throw error;
+      const enabled=!!(data===true||data?.enabled===true);
+      window.GJ_TOMTOM_ENABLED=enabled;
+      setStatus('mTomTomStatus',enabled?'TomTom staat online voor alle gebruikers.':'TomTom staat uit.',enabled?'ok':'busy');
+    }catch(e){setStatus('mTomTomStatus',e.message,'err')}
+  }
+
+  function requireConfirm(label){
+    const value=prompt(`${label}\n\nTyp exact BEVESTIG om door te gaan.`);
+    return value==='BEVESTIG';
+  }
+
+  async function deleteAll(table, filter){
+    let q=GJ_AUTH.sb.from(table).delete();
+    if(filter?.column) q=q.eq(filter.column,filter.value);
+    else q=q.neq('id','00000000-0000-0000-0000-000000000000');
+    const {error}=await q;
+    if(error)throw error;
+  }
+
+  async function clearAction(action){
+    if(!GJ_AUTH?.isAdmin)throw new Error('Geen beheerdersrechten.');
+    const labels={
+      planning:'Alle planning verwijderen?',
+      fixed:'Alle vaste bezoeken verwijderen?',
+      unplanned:'Alle niet-ingeplande regels verwijderen?',
+      history:'Alle historie en fotoverwijzingen verwijderen?',
+      database:'De volledige klantendatabase en bijbehorende planning verwijderen?',
+      all:'Alle planningsdata, klanten, historie, vaste afspraken en afwezigheden verwijderen?'
+    };
+    if(action!=='routes'&&!requireConfirm(labels[action]||'Definitief verwijderen?'))return;
+    setStatus('mAdminSystemStatus','Bezig met verwijderen…','busy');
+    try{
+      if(action==='planning') await deleteAll('planning');
+      if(action==='fixed'){
+        await deleteAll('fixed_appointments');
+        const {error}=await GJ_AUTH.sb.from('planning').delete().eq('vast',true);if(error)throw error;
+      }
+      if(action==='unplanned'){
+        const {error}=await GJ_AUTH.sb.from('planning').delete().in('status',['Uit planning','Niet ingepland']);if(error)throw error;
+      }
+      if(action==='history'){
+        await deleteAll('visit_photos');
+        await deleteAll('visit_history');
+      }
+      if(action==='routes'){
+        try{
+          Object.keys(localStorage).filter(k=>/route|tomtom|geocode/i.test(k)).forEach(k=>localStorage.removeItem(k));
+          if(window.db?.visits)window.db.visits.forEach(v=>{delete v.distanceKm;delete v.travelMin;delete v.routeMode;});
+        }catch(_){}
+      }
+      if(action==='database'){
+        await deleteAll('visit_photos');await deleteAll('visit_history');await deleteAll('planning');await deleteAll('fixed_appointments');await deleteAll('customers');
+      }
+      if(action==='all'){
+        await deleteAll('visit_photos');await deleteAll('visit_history');await deleteAll('planning');await deleteAll('fixed_appointments');await deleteAll('customers');await deleteAll('app_absences');
+        const {error}=await GJ_AUTH.sb.from('app_day_settings').delete().neq('datum','1900-01-01');if(error)throw error;
+        try{localStorage.clear()}catch(_){}
+      }
+      setStatus('mAdminSystemStatus','Actie succesvol uitgevoerd.','ok');
+      if(typeof window.manualSync==='function')await window.manualSync(false);
+    }catch(e){setStatus('mAdminSystemStatus',e.message,'err')}
+  }
+
+  async function makeBackup(){
+    try{
+      setStatus('mAdminSystemStatus','Back-up wordt gemaakt…','busy');
+      const tables=['customers','planning','fixed_appointments','visit_history','visit_photos','app_absences','app_day_settings'];
+      const backup={version:'7.3',created_at:new Date().toISOString(),tables:{}};
+      for(const table of tables){
+        const {data,error}=await GJ_AUTH.sb.from(table).select('*');
+        if(error)throw error;
+        backup.tables[table]=data||[];
+      }
+      const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Planningv1-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);
+      setStatus('mAdminSystemStatus','Back-up is gedownload.','ok');
+    }catch(e){setStatus('mAdminSystemStatus',e.message,'err')}
+  }
+
+  async function restoreBackup(file){
+    try{
+      if(!requireConfirm('De back-up wordt teruggezet. Bestaande regels met hetzelfde ID worden overschreven.'))return;
+      setStatus('mAdminSystemStatus','Back-up wordt hersteld…','busy');
+      const parsed=JSON.parse(await file.text());
+      if(!parsed?.tables)throw new Error('Ongeldig back-upbestand.');
+      const order=['customers','fixed_appointments','planning','visit_history','visit_photos','app_absences','app_day_settings'];
+      for(const table of order){
+        const rows=parsed.tables[table]||[];
+        if(!rows.length)continue;
+        for(let i=0;i<rows.length;i+=250){
+          const {error}=await GJ_AUTH.sb.from(table).upsert(rows.slice(i,i+250));
+          if(error)throw new Error(`${table}: ${error.message}`);
+        }
+      }
+      setStatus('mAdminSystemStatus','Back-up is hersteld.','ok');
+      if(typeof window.manualSync==='function')await window.manualSync(false);
+    }catch(e){setStatus('mAdminSystemStatus',e.message,'err')}
+  }
+
+  window.addEventListener('gj-auth-ready',async ev=>{
+    const p=ev.detail.profile;
+    const displayName=p?.full_name||[p?.first_name,p?.last_name].filter(Boolean).join(' ')||p?.email||'Gebruiker';const headerName=document.getElementById('headerUserName');if(headerName)headerName.textContent=displayName;
+    const isAdmin=window.GJ_AUTH?.isAdmin===true;
+    document.body.classList.toggle('gj-admin',isAdmin);
+    document.querySelectorAll('.gjAdminOnly').forEach(el=>{el.style.removeProperty('display')});
+    if(isAdmin){await loadMobileUsers();await loadTomTomStatus();}
+  });
+
+  document.addEventListener('click',async e=>{
+    const tab=e.target.closest('#adminMobile .adminTab');
+    if(tab){
+      document.querySelectorAll('#adminMobile .adminTab').forEach(x=>x.classList.remove('active'));tab.classList.add('active');
+      document.querySelectorAll('#adminMobile .adminPane').forEach(x=>x.hidden=true);
+      $('adminPane'+tab.dataset.adminTab[0].toUpperCase()+tab.dataset.adminTab.slice(1)).hidden=false;
+      return;
+    }
+    if(e.target.id==='mAdminRefreshUsers')return loadMobileUsers();
+    if(e.target.id==='mAdminCreateUser'){
+      try{
+        const body={action:'create',first_name:$('mAdminFirstName').value.trim(),last_name:$('mAdminLastName').value.trim(),email:$('mAdminEmail').value.trim(),password:$('mAdminPassword').value,role:'user',is_active:true};
+        if(!body.email||!body.password)throw new Error('Vul e-mailadres en tijdelijk wachtwoord in.');
+        if(body.password.length<8)throw new Error('Gebruik minimaal 8 tekens voor het wachtwoord.');
+        await adminCall(body);
+        ['mAdminFirstName','mAdminLastName','mAdminEmail','mAdminPassword'].forEach(id=>$(id).value='');
+        alert('Gebruiker is aangemaakt.');await loadMobileUsers();
+      }catch(err){alert('Gebruiker aanmaken mislukt: '+err.message)}
+      return;
+    }
+    const toggle=e.target.closest('.mToggleUser');
+    if(toggle){try{await adminCall({action:'set_active',user_id:toggle.dataset.id,is_active:toggle.dataset.active!=='true'});await loadMobileUsers()}catch(err){alert(err.message)}return}
+    const pw=e.target.closest('.mPasswordUser');
+    if(pw){const password=prompt('Nieuw tijdelijk wachtwoord (minimaal 8 tekens):');if(!password)return;if(password.length<8)return alert('Minimaal 8 tekens.');try{await adminCall({action:'set_password',user_id:pw.dataset.id,password});alert('Wachtwoord aangepast.')}catch(err){alert(err.message)}return}
+    const clear=e.target.closest('[data-admin-clear]');
+    if(clear)return clearAction(clear.dataset.adminClear);
+  });
+
+  $('mTomTomSave')?.addEventListener('click',async()=>{
+    try{
+      const key=$('mTomTomKey').value.trim();if(!key)throw new Error('Vul eerst de TomTom API-sleutel in.');
+      const {error}=await GJ_AUTH.sb.rpc('set_tomtom_secret',{p_key:key,p_enabled:true});if(error)throw error;
+      $('mTomTomKey').value='';await loadTomTomStatus();alert('TomTom is beveiligd opgeslagen en ingeschakeld.');
+    }catch(e){alert(e.message)}
+  });
+  $('mTomTomDisable')?.addEventListener('click',async()=>{
+    try{if(!requireConfirm('TomTom voor alle gebruikers uitschakelen?'))return;const {error}=await GJ_AUTH.sb.rpc('set_tomtom_secret',{p_key:'',p_enabled:false});if(error)throw error;await loadTomTomStatus()}catch(e){alert(e.message)}
+  });
+  $('mTomTomTest')?.addEventListener('click',async()=>{
+    try{
+      setStatus('mTomTomStatus','TomTom wordt getest…','busy');
+      const {data,error}=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:'Neerstraat 1, Den Bosch',country:'NL'}});
+      if(error)throw error;if(data?.error)throw new Error(data.error);
+      const found=Array.isArray(data?.results)&&data.results.length>0;
+      if(!found)throw new Error('TomTom gaf geen adresresultaat terug.');
+      setStatus('mTomTomStatus','TomTom werkt en gaf een geldig adresresultaat terug.','ok');
+    }catch(e){setStatus('mTomTomStatus',e.message,'err')}
+  });
+  $('mAdminBackup')?.addEventListener('click',makeBackup);
+  $('mAdminRestore')?.addEventListener('click',()=>$('mAdminRestoreFile').click());
+  $('mAdminRestoreFile')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)restoreBackup(f);e.target.value=''});
+})();
+</script>
+
+
+<script id="v102ContactThreadsMobile">
+(function(){
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const fmt=v=>{try{return new Intl.DateTimeFormat('nl-NL',{dateStyle:'medium',timeStyle:'short'}).format(new Date(v))}catch{return v||''}};
+ const lab=s=>({nieuw:'Nieuw',in_behandeling:'In behandeling',beantwoord:'Beantwoord',gesloten:'Gesloten'}[s]||s);
+ let channel=null;
+ async function fetchThreads(admin=false){
+   let q=GJ_AUTH.sb.from('contact_threads').select('*,contact_messages(*)').order('updated_at',{ascending:false});
+   if(!admin)q=q.eq('user_id',GJ_AUTH.profile.id);
+   const {data,error}=await q;if(error)throw error;
+   return (data||[]).map(t=>({...t,contact_messages:(t.contact_messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))}));
+ }
+ const messagesHtml=t=>(t.contact_messages||[]).map(m=>`<div class="mContactText" style="margin-top:8px;padding:10px;border-radius:10px;background:${m.sender_role==='admin'?'#fff4d6':'#f3f6fa'}"><strong>${m.sender_role==='admin'?'Beheerder':'Gebruiker'}</strong><div>${esc(m.message)}</div><small class="muted">${fmt(m.created_at)}</small></div>`).join('');
+ async function mine(){
+   if(!GJ_AUTH?.profile)return;const box=document.getElementById('mContactMessages');if(!box)return;
+   try{const rows=await fetchThreads(false);box.innerHTML=rows.length?rows.map(t=>`<article class="mContactCard" data-thread-id="${esc(t.id)}"><div class="mContactHead"><div><strong>${esc(t.subject)}</strong><div class="muted">${fmt(t.created_at)}</div></div><span class="pill">${esc(lab(t.status))}</span></div>${messagesHtml(t)}</article>`).join(''):'<div class="muted">Nog geen contactgesprekken.</div>'}catch(e){box.innerHTML='<div class="adminStatus err">'+esc(e.message)+'</div>'}
+ }
+ async function inbox(){
+   if(!GJ_AUTH?.isAdmin)return;const box=document.getElementById('mAdminContactInbox');if(!box)return;
+   try{const rows=await fetchThreads(true),open=rows.filter(x=>x.status!=='gesloten').length;const b=document.getElementById('mAdminContactBadge');if(b)b.innerHTML=open?`<span class="mContactBadge">${open}</span>`:'';box.innerHTML=rows.length?rows.map(t=>`<article class="mContactCard" data-thread-id="${esc(t.id)}"><div class="mContactHead"><div><strong>${esc(t.subject)}</strong><div class="muted">${esc(t.sender_name||t.sender_email||'Gebruiker')} · ${fmt(t.created_at)}</div></div><span class="pill">${esc(lab(t.status))}</span></div>${messagesHtml(t)}<div class="mContactActions"><label>Status<select class="mContactState"><option value="nieuw" ${t.status==='nieuw'?'selected':''}>Nieuw</option><option value="in_behandeling" ${t.status==='in_behandeling'?'selected':''}>In behandeling</option><option value="beantwoord" ${t.status==='beantwoord'?'selected':''}>Beantwoord</option><option value="gesloten" ${t.status==='gesloten'?'selected':''}>Gesloten</option></select></label><label>Antwoord<textarea class="mContactReplyInput" placeholder="Typ antwoord..."></textarea></label><button type="button" class="mContactSave">Opslaan en versturen</button></div></article>`).join(''):'<div class="muted">De contact-inbox is leeg.</div>'}catch(e){box.innerHTML='<div class="adminStatus err">'+esc(e.message)+'</div>'}
+ }
+ async function send(){const st=document.getElementById('mContactStatus'),msg=document.getElementById('mContactMessage').value.trim();if(msg.length<3){st.textContent='Vul een duidelijke vraag in.';st.className='adminStatus err';return}st.textContent='Wordt verstuurd…';st.className='adminStatus busy';const {error}=await GJ_AUTH.sb.rpc('create_contact_thread',{p_subject:document.getElementById('mContactSubject').value,p_message:msg});if(error){st.textContent=error.message;st.className='adminStatus err';return}document.getElementById('mContactMessage').value='';st.textContent='Je bericht is verstuurd.';st.className='adminStatus ok';await mine()}
+ document.addEventListener('click',async e=>{if(e.target.id==='mContactSend')return send();if(e.target.id==='mContactRefresh')return mine();if(e.target.id==='mAdminContactRefresh')return inbox();const b=e.target.closest('.mContactSave');if(!b)return;const c=b.closest('[data-thread-id]'),reply=c.querySelector('.mContactReplyInput').value.trim(),status=c.querySelector('.mContactState').value;if(!reply&&status==='beantwoord')return alert('Typ eerst een antwoord.');b.disabled=true;try{if(reply){const r=await GJ_AUTH.sb.from('contact_messages').insert({thread_id:c.dataset.threadId,sender_id:GJ_AUTH.profile.id,sender_role:'admin',message:reply});if(r.error)throw r.error}const u=await GJ_AUTH.sb.from('contact_threads').update({status,updated_at:new Date().toISOString(),closed_at:status==='gesloten'?new Date().toISOString():null}).eq('id',c.dataset.threadId);if(u.error)throw u.error;await inbox();await mine()}catch(err){alert(err.message)}finally{b.disabled=false}});
+ window.addEventListener('gj-auth-ready',async()=>{await mine();if(GJ_AUTH.isAdmin)await inbox();if(channel)GJ_AUTH.sb.removeChannel(channel);channel=GJ_AUTH.sb.channel('contact-threads-v102').on('postgres_changes',{event:'*',schema:'public',table:'contact_threads'},()=>{mine();if(GJ_AUTH.isAdmin)inbox()}).on('postgres_changes',{event:'*',schema:'public',table:'contact_messages'},()=>{mine();if(GJ_AUTH.isAdmin)inbox()}).subscribe()});
+})();
+</script>
+
+
+<script id="v101ProfileRoleSync">
+(function(){
+  const isAdminProfile=p=>window.GJ_AUTH?.isAdmin===true;
+  const dataUrlToBlob=dataUrl=>{const [head,body]=String(dataUrl||'').split(',');const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';const bytes=atob(body||'');const arr=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);return new Blob([arr],{type:mime})};
+  const applyPhoto=url=>{
+    if(!url)return;
+    const pairs=[['desktopProfileImage','desktopProfileButton'],['profileImage','profileButton']];
+    for(const [imgId,btnId] of pairs){const img=document.getElementById(imgId),btn=document.getElementById(btnId);if(img&&btn){img.src=url;btn.classList.add('hasPhoto')}}
+    try{const uid=window.GJ_AUTH?.profile?.id;if(uid)localStorage.setItem('gj_profile_photo_'+uid,url)}catch(_){ }
+  };
+  async function refreshProfile(){
+    const a=window.GJ_AUTH;if(!a?.sb||!a?.profile?.id)return;
+    const {data,error}=await a.sb.from('profiles').select('*').eq('id',a.profile.id).single();
+    if(error||!data)return;
+    a.profile=data;a.isAdmin=isAdminProfile(data);document.body.classList.toggle('gj-admin',a.isAdmin);
+    document.querySelectorAll('.gjAdminOnly').forEach(el=>{if(a.isAdmin)el.style.removeProperty('display')});
+    applyPhoto(data.avatar_url);
+  }
+  async function uploadProfilePhoto(dataUrl){
+    const a=window.GJ_AUTH;if(!a?.sb||!a?.profile?.id||!dataUrl)return;
+    try{
+      const path=a.profile.id+'/profile.jpg';
+      const {error:upErr}=await a.sb.storage.from('profile-photos').upload(path,dataUrlToBlob(dataUrl),{contentType:'image/jpeg',upsert:true,cacheControl:'3600'});
+      if(upErr)throw upErr;
+      const pub=a.sb.storage.from('profile-photos').getPublicUrl(path).data.publicUrl+'?v='+Date.now();
+      const {data,error}=await a.sb.from('profiles').update({avatar_url:pub,updated_at:new Date().toISOString()}).eq('id',a.profile.id).select().single();
+      if(error)throw error;if(data)a.profile=data;applyPhoto(pub);
+    }catch(err){console.error('Profielfoto synchroniseren mislukt',err);alert('De profielfoto is lokaal opgeslagen, maar synchroniseren is mislukt: '+err.message)}
+  }
+  window.addEventListener('gj-auth-ready',refreshProfile);
+  window.addEventListener('gj-profile-photo-changed',e=>uploadProfilePhoto(e.detail));
+  window.addEventListener('focus',refreshProfile);
+  window.addEventListener('gj-auth-ready',()=>{const a=window.GJ_AUTH;if(!a?.profile?.id)return;a.sb.channel('profile-photo-'+a.profile.id).on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+a.profile.id},payload=>{if(payload.new?.avatar_url){a.profile=payload.new;applyPhoto(payload.new.avatar_url)}}).subscribe()});
+})();
+</script>
+
+<script src="auth.js?v=10800"></script>
+
+<script id="v102CoreScript">
+(()=>{
+ const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const ready=()=>window.GJ_AUTH?.profile&&window.GJ_AUTH?.sb;
+ function passwordScore(v){return {len:v.length>=10,upper:/[A-Z]/.test(v),lower:/[a-z]/.test(v),num:/\d/.test(v),symbol:/[^A-Za-z0-9]/.test(v)}}
+ function renderCriteria(prefix){const el=$(prefix+'PasswordCriteria'),v=$(prefix+'NewPassword')?.value||'',c=passwordScore(v);if(el)el.innerHTML=`<div class="${c.len?'ok':'bad'}">${c.len?'✓':'○'} minimaal 10 tekens</div><div class="${c.upper&&c.lower?'ok':'bad'}">${c.upper&&c.lower?'✓':'○'} hoofdletter en kleine letter</div><div class="${c.num?'ok':'bad'}">${c.num?'✓':'○'} minimaal één cijfer</div><div class="${c.symbol?'ok':'bad'}">${c.symbol?'✓':'○'} minimaal één speciaal teken</div>`;return Object.values(c).every(Boolean)}
+ async function changePassword(prefix){if(!ready())return;const current=$(prefix+'CurrentPassword').value,nw=$(prefix+'NewPassword').value,again=$(prefix+'NewPasswordAgain').value,status=$(prefix+'PasswordStatus');try{status.textContent='Controleren…';if(!renderCriteria(prefix))throw new Error('Het nieuwe wachtwoord voldoet nog niet aan alle beveiligingscriteria.');if(nw!==again)throw new Error('De twee nieuwe wachtwoorden zijn niet gelijk.');const email=GJ_AUTH.profile.email;const check=await GJ_AUTH.sb.auth.signInWithPassword({email,password:current});if(check.error)throw new Error('Het huidige wachtwoord is niet correct.');const up=await GJ_AUTH.sb.auth.updateUser({password:nw});if(up.error)throw up.error;status.textContent='Wachtwoord is gewijzigd.';status.className='adminStatus ok';['CurrentPassword','NewPassword','NewPasswordAgain'].forEach(x=>$(prefix+x).value='')}catch(e){status.textContent=e.message;status.className='adminStatus err'}}
+ function bindSettings(prefix){$(prefix+'NewPassword')?.addEventListener('input',()=>renderCriteria(prefix));$(prefix+'ChangePassword')?.addEventListener('click',()=>changePassword(prefix));$(prefix+'ChooseProfile')?.addEventListener('click',()=>$(prefix+'ProfileFile')?.click());$(prefix+'ProfileFile')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>window.dispatchEvent(new CustomEvent('gj-profile-photo-changed',{detail:r.result}));r.readAsDataURL(f);e.target.value=''})}
+ function disableHeaderPhoto(){['desktopProfileButton','profileButton'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopImmediatePropagation()};b.setAttribute('aria-label','Profielfoto. Wijzigen via Instellingen → Profiel');b.style.pointerEvents='none'}})}
+ async function showImpersonation(){if(!GJ_AUTH?.impersonating)return;document.body.classList.add('v102Impersonating');let name='gebruiker';try{const r=await GJ_AUTH.sb.from('profiles').select('full_name,email').eq('id',GJ_AUTH.workspaceUserId).maybeSingle();name=r.data?.full_name||r.data?.email||name}catch(_){}document.body.insertAdjacentHTML('afterbegin',`<div class="v102Impersonation">Voordoen als: ${esc(name)} <button id="v102BackAdmin" type="button">Terug naar beheer</button></div>`);$('v102BackAdmin').onclick=()=>{sessionStorage.removeItem('gj_impersonate_user_v102');location.reload()}}
+ function injectImpersonateButtons(){if(!GJ_AUTH?.isAdmin)return;document.querySelectorAll('.adminUser').forEach(card=>{if(card.querySelector('.v102Impersonate'))return;const id=card.querySelector('[data-id]')?.dataset.id||card.querySelector('[data-admin-user]')?.dataset.adminUser||card.dataset.id;const email=card.textContent; if(!id||email.includes(GJ_AUTH.profile.email))return;const b=document.createElement('button');b.type='button';b.className='secondary v102Impersonate';b.textContent='Voordoen als gebruiker';b.onclick=()=>{sessionStorage.setItem('gj_impersonate_user_v102',id);location.reload()};(card.querySelector('.adminUserActions')||card).appendChild(b)})}
+ function syncProfilePreviews(){const src=$('desktopProfileImage')||$('profileImage');if(!src)return;['v102ProfilePreview','mV102ProfilePreview'].forEach(id=>{const x=$(id);if(x&&src.src)x.src=src.src})}
+ window.addEventListener('gj-auth-ready',async()=>{disableHeaderPhoto();bindSettings('v102');bindSettings('mV102');await showImpersonation();setTimeout(()=>{injectImpersonateButtons();syncProfilePreviews()},700);new MutationObserver(()=>injectImpersonateButtons()).observe(document.body,{subtree:true,childList:true})});
+})();
+</script>
+<script src="v105.js?v=10500"></script>
+<script src="v106.js?v=10700"></script>
+<script src="v108.js?v=10800"></script>
+</body></html>

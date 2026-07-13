@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+runtime-config.js
+node_modules/
+dist/
+*.zip
+test-results/
+
