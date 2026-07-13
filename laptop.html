@@ -1667,6 +1667,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
     </script>
     <div class="productVersion">v10.8.1 DEV</div>
   </div>
+  <button id="desktopLogout" type="button" class="desktopLogout">Uitloggen</button>
 </aside>
 <div id="profileCropOverlay" class="profileCropOverlay" aria-hidden="true"><div class="profileCropDialog"><h2>Profielfoto aanpassen</h2><div id="cropViewport" class="cropViewport"><img id="cropImage" alt="Uitsnede"></div><input id="cropZoom" class="cropZoom" type="range" min="1" max="3" step="0.01" value="1"><div class="cropActions"><button id="cropCancel" type="button" class="cancel">Annuleren</button><button id="cropSave" type="button">Opslaan</button></div></div></div>
 <main class="main">
@@ -5527,6 +5528,29 @@ async function drawVisitPdfLayout(doc,visit){
     await initAdmin(p);
   });
   document.addEventListener('click',async e=>{
+    const logout=e.target.closest('#desktopLogout');
+    if(logout){
+      if(logout.disabled)return;
+      logout.disabled=true;
+      logout.textContent='Uitloggen…';
+      try{
+        window.GJ_LOCATION_MANAGER?.destroy?.();
+        const a=window.GJ_AUTH;
+        if(!a?.sb)throw new Error('De aanmeldsessie is niet beschikbaar.');
+        const {error}=await a.sb.auth.signOut({scope:'local'});
+        if(error)throw error;
+        sessionStorage.removeItem('gj_impersonate_user_v102');
+        sessionStorage.removeItem('gj_workspace_storage_id');
+        sessionStorage.removeItem('gj_authenticated_user_id');
+        sessionStorage.removeItem('gj_app_open_session');
+        location.replace('./index.html');
+      }catch(err){
+        logout.disabled=false;
+        logout.textContent='Uitloggen';
+        alert('Uitloggen mislukt: '+err.message);
+      }
+      return;
+    }
     const tab=e.target.closest('.adminTab');
     if(tab){document.querySelectorAll('.adminTab').forEach(x=>x.classList.remove('active'));tab.classList.add('active');document.querySelectorAll('.adminPane').forEach(x=>x.hidden=true);$('adminPane'+tab.dataset.adminTab[0].toUpperCase()+tab.dataset.adminTab.slice(1)).hidden=false;return}
     if(e.target.id==='btnAdminRefreshUsers') return loadUsers();
