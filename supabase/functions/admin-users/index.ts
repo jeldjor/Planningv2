@@ -65,9 +65,51 @@ Deno.serve(async (request) => {
       if (error) throw error;
       return json({ ok: true });
     }
+    if (body.action === 'delete') {
+      const target = String(body.user_id || '');
+      if (!target || target === userResult.user.id) return json({ error: 'Je kunt je eigen beheerdersaccount niet verwijderen.' }, 400);
+
+      const { data: targetProfile, error: targetProfileError } = await admin.from('profiles').select('role').eq('id', target).maybeSingle();
+      if (targetProfileError) throw targetProfileError;
+      if (targetProfile?.role === 'admin') return json({ error: 'Een beheerdersaccount kan hier niet worden verwijderd.' }, 400);
+
+      // Verzamel bestandspaden voordat de databasecascade de bijbehorende rijen verwijdert.
+      const [{ data: visitPhotos }, { data: ownedThreads }] = await Promise.all([
+        admin.from('visit_photos').select('file_path').eq('user_id', target),
+        admin.from('contact_threads').select('id').eq('user_id', target)
+      ]);
+      const threadIds = (ownedThreads || []).map((row) => row.id);
+      let attachmentPaths: string[] = [];
+      if (threadIds.length) {
+        const { data: attachments } = await admin.from('contact_attachments').select('storage_path').in('thread_id', threadIds);
+        attachmentPaths = (attachments || []).map((row) => row.storage_path).filter(Boolean);
+      }
+
+      const { error: deleteError } = await admin.auth.admin.deleteUser(target);
+      if (deleteError) throw deleteError;
+
+      // Databasegegevens verdwijnen door ON DELETE CASCADE. Storage wordt apart opgeruimd.
+      const cleanupWarnings: string[] = [];
+      const visitPaths = (visitPhotos || []).map((row) => row.file_path).filter(Boolean);
+      if (visitPaths.length) {
+        const { error } = await admin.storage.from('visit-photos').remove(visitPaths);
+        if (error) cleanupWarnings.push('Niet alle bezoekfoto’s konden worden verwijderd.');
+      }
+      if (attachmentPaths.length) {
+        const { error } = await admin.storage.from('contact-attachments').remove(attachmentPaths);
+        if (error) cleanupWarnings.push('Niet alle contactbijlagen konden worden verwijderd.');
+      }
+      const { data: profileFiles, error: profileListError } = await admin.storage.from('profile-photos').list(target, { limit: 100 });
+      if (profileListError) cleanupWarnings.push('Profielfoto controleren mislukt.');
+      const profilePaths = (profileFiles || []).map((file) => `${target}/${file.name}`);
+      if (profilePaths.length) {
+        const { error } = await admin.storage.from('profile-photos').remove(profilePaths);
+        if (error) cleanupWarnings.push('De profielfoto kon niet worden verwijderd.');
+      }
+      return json({ ok: true, warnings: cleanupWarnings });
+    }
     return json({ error: 'Onbekende actie.' }, 400);
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
-

@@ -789,6 +789,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
           <div class="adminUserActions">
             <button type="button" class="secondary mToggleUser" data-id="${esc(u.id)}" data-active="${u.is_active!==false}">${u.is_active===false?'Inschakelen':'Uitschakelen'}</button>
             <button type="button" class="secondary mPasswordUser" data-id="${esc(u.id)}">Wachtwoord</button>
+            ${u.role!=='admin'?`<button type="button" class="secondary mDeleteUser" data-id="${esc(u.id)}" data-email="${esc(u.email)}">Verwijderen</button>`:''}
           </div>
         </div>`;
       }).join(''):'<div class="card empty">Geen gebruikers gevonden.</div>';
@@ -946,6 +947,8 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     if(toggle){try{await adminCall({action:'set_active',user_id:toggle.dataset.id,is_active:toggle.dataset.active!=='true'});await loadMobileUsers()}catch(err){alert(err.message)}return}
     const pw=e.target.closest('.mPasswordUser');
     if(pw){const password=prompt('Nieuw tijdelijk wachtwoord (minimaal 8 tekens):');if(!password)return;if(password.length<8)return alert('Minimaal 8 tekens.');try{await adminCall({action:'set_password',user_id:pw.dataset.id,password});alert('Wachtwoord aangepast.')}catch(err){alert(err.message)}return}
+    const del=e.target.closest('.mDeleteUser');
+    if(del){const value=prompt(`Gebruiker ${del.dataset.email} en alle bijbehorende gegevens definitief verwijderen?\n\nTyp exact VERWIJDER om door te gaan.`);if(value!=='VERWIJDER')return;try{const result=await adminCall({action:'delete',user_id:del.dataset.id});alert(result.warnings?.length?'Gebruiker verwijderd. Let op: '+result.warnings.join(' '):'Gebruiker en bijbehorende gegevens zijn verwijderd.');await loadMobileUsers()}catch(err){alert('Gebruiker verwijderen mislukt: '+err.message)}return}
     const clear=e.target.closest('[data-admin-clear]');
     if(clear)return clearAction(clear.dataset.adminClear);
   });
