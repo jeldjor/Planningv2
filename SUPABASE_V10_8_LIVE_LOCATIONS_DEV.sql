@@ -38,6 +38,7 @@ on conflict (id) do nothing;
 
 create table if not exists public.user_location_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
+  admin_enabled boolean not null default false,
   route_location_enabled boolean not null default false,
   app_prompt_state text not null default 'not_asked'
     check (app_prompt_state in ('not_asked', 'deferred', 'accepted')),
@@ -52,6 +53,9 @@ create table if not exists public.user_location_settings (
   last_error text,
   updated_at timestamptz not null default now()
 );
+
+alter table public.user_location_settings
+  add column if not exists admin_enabled boolean not null default false;
 
 create table if not exists public.user_live_locations (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -217,6 +221,9 @@ begin
   if not found or not v_preference.route_location_enabled or v_preference.app_prompt_state <> 'accepted' then
     raise exception 'Routefunctionaliteit is niet ingeschakeld';
   end if;
+  if not v_preference.admin_enabled then
+    raise exception 'Live Locaties staat voor deze gebruiker uit';
+  end if;
   if p_latitude is null or p_latitude not between -90 and 90
      or p_longitude is null or p_longitude not between -180 and 180 then
     raise exception 'Ongeldige coördinaten';
@@ -319,13 +326,60 @@ begin
 end
 $$;
 
-create or replace function public.get_admin_live_locations()
+create or replace function public.set_user_location_enabled(
+  p_user_id uuid,
+  p_enabled boolean
+)
+returns public.user_location_settings
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_row public.user_location_settings;
+begin
+  if (select auth.uid()) is null or not public.is_app_admin() then
+    raise exception 'Alleen beheerders mogen Live Locaties per gebruiker wijzigen';
+  end if;
+  if p_user_id is null or not exists(select 1 from public.profiles where id=p_user_id and coalesce(is_active,true)) then
+    raise exception 'Gebruiker bestaat niet of is uitgeschakeld';
+  end if;
+
+  insert into public.user_location_settings as settings (
+    user_id, admin_enabled, route_location_enabled, app_prompt_state,
+    permission_state, disabled_at, updated_at
+  ) values (
+    p_user_id, coalesce(p_enabled,false), false, 'not_asked',
+    'unknown', case when not coalesce(p_enabled,false) then now() else null end, now()
+  )
+  on conflict(user_id) do update set
+    admin_enabled = excluded.admin_enabled,
+    route_location_enabled = case when excluded.admin_enabled then settings.route_location_enabled else false end,
+    app_prompt_state = case
+      when excluded.admin_enabled and not settings.admin_enabled then 'not_asked'
+      else settings.app_prompt_state
+    end,
+    permission_state = case
+      when excluded.admin_enabled and not settings.admin_enabled then 'unknown'
+      else settings.permission_state
+    end,
+    disabled_at = case when not excluded.admin_enabled then now() else settings.disabled_at end,
+    last_error = null,
+    updated_at = now()
+  returning * into v_row;
+  return v_row;
+end
+$$;
+
+drop function if exists public.get_admin_live_locations();
+create function public.get_admin_live_locations()
 returns table (
   user_id uuid,
   full_name text,
   email text,
   avatar_url text,
   is_active boolean,
+  admin_enabled boolean,
   route_location_enabled boolean,
   app_prompt_state text,
   permission_state text,
@@ -354,6 +408,7 @@ begin
     p.email,
     p.avatar_url,
     coalesce(p.is_active, true),
+    coalesce(s.admin_enabled, false),
     coalesce(s.route_location_enabled, false),
     coalesce(s.app_prompt_state, 'not_asked'),
     coalesce(s.permission_state, 'unknown'),
@@ -430,6 +485,7 @@ $$;
 revoke all on function public.set_my_location_preference(boolean, text, text, text) from public, anon;
 revoke all on function public.save_my_live_location(double precision, double precision, double precision, timestamptz, double precision, double precision) from public, anon;
 revoke all on function public.set_location_system_config(boolean, integer) from public, anon;
+revoke all on function public.set_user_location_enabled(uuid, boolean) from public, anon;
 revoke all on function public.get_admin_live_locations() from public, anon;
 revoke all on function public.get_admin_location_history(uuid, integer) from public, anon;
 revoke all on function public.cleanup_location_history() from public, anon, authenticated;
@@ -437,6 +493,7 @@ revoke all on function public.cleanup_location_history() from public, anon, auth
 grant execute on function public.set_my_location_preference(boolean, text, text, text) to authenticated;
 grant execute on function public.save_my_live_location(double precision, double precision, double precision, timestamptz, double precision, double precision) to authenticated;
 grant execute on function public.set_location_system_config(boolean, integer) to authenticated;
+grant execute on function public.set_user_location_enabled(uuid, boolean) to authenticated;
 grant execute on function public.get_admin_live_locations() to authenticated;
 grant execute on function public.get_admin_location_history(uuid, integer) to authenticated;
 grant execute on function public.cleanup_location_history() to service_role;

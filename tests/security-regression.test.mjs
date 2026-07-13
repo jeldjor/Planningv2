@@ -31,6 +31,8 @@ test('locatieschrijven gebruikt geen vrije user_id en SQL bindt aan auth.uid()',
   assert.doesNotMatch(sql, /cron\.schedule/);
   assert.doesNotMatch(sql, /grant\s+(insert|update|delete)[^;]*user_(live_locations|location_history|location_settings)/i);
   assert.match(sql, /raise exception 'Alleen beheerders mogen Live Locaties wijzigen'/);
+  assert.match(sql, /create or replace function public\.set_user_location_enabled/);
+  assert.match(sql, /admin_enabled boolean not null default false/);
   assert.match(sql, /p_hours not in \(1, 4, 8, 24\)/);
   assert.match(sql, /insert into public\.user_live_locations[\s\S]*insert into public\.user_location_history/);
 });
@@ -71,11 +73,18 @@ test('beide apparaten laden runtimeconfig, v10.8-module en developmentversie', a
   for (const name of ['laptop.html', 'mobile.html']) {
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
-    assert.match(html, /app-config\.js\?v=10800/);
-    assert.match(html, /v108\.css\?v=10800/);
-    assert.match(html, /v108\.js\?v=10800/);
-    assert.match(html, /v10\.8 DEV/);
+    assert.match(html, /app-config\.js\?v=10801/);
+    assert.match(html, /v108\.css\?v=10801/);
+    assert.match(html, /v108\.js\?v=10801/);
+    assert.match(html, /v10\.8\.1 DEV/);
   }
+});
+
+test('iPhone beheer blijft hard verborgen zonder beheerrol', async () => {
+  const html = await read('mobile.html');
+  assert.match(html, /body\.gj-admin \.menuPanel button\[data-screen="adminMobile"\]\{display:grid!important/);
+  assert.doesNotMatch(html, /\n\.menuPanel button\[data-screen="adminMobile"\]\{display:grid!important/);
+  assert.match(html, /el\.style\.display=isAdmin\?'':'none'/);
 });
 
 test('alle inline scripts in laptop en iPhone zijn syntactisch compileerbaar', async () => {

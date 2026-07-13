@@ -33,7 +33,7 @@ test('centraal uit toont geen toestemmingsmelding en vraagt geen GPS', async () 
   await manager.reconcile({ direct: true });
   assert.equal(dom.window.document.getElementById('v108Consent'), null);
   assert.equal(gpsCalls, 0);
-  assert.match(dom.window.document.getElementById('v108OwnMessage').textContent, /centraal uit/i);
+  assert.equal(dom.window.document.getElementById('v108LocationSettings'), null);
   manager.destroy();
 });
 
@@ -48,7 +48,7 @@ test('toestemmingsmelding gebruikt exact de afgesproken tekst en Nu niet opent g
   const manager = dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
   manager.initialized = true;
   manager.central = { enabled: true, update_interval_minutes: 10 };
-  manager.own = null;
+  manager.own = { admin_enabled: true, route_location_enabled: false, app_prompt_state: 'not_asked', permission_state: 'unknown' };
   manager.installOwnSettingsUi();
   manager.setOwn = async (value) => {
     manager.own = {
@@ -93,7 +93,7 @@ test('Toestaan start de officiële locatievraag en schrijft zonder gekozen user_
     async rpc(name, args) {
       rpcCalls.push({ name, args });
       if (name === 'set_my_location_preference') return { data: {
-        user_id: 'user-a', route_location_enabled: true, app_prompt_state: 'accepted',
+        user_id: 'user-a', admin_enabled: true, route_location_enabled: true, app_prompt_state: 'accepted',
         permission_state: args.p_permission_state, last_error: null
       }, error: null };
       return { data: { received_at: new Date().toISOString() }, error: null };
@@ -103,7 +103,7 @@ test('Toestaan start de officiële locatievraag en schrijft zonder gekozen user_
   const manager = dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
   manager.initialized = true;
   manager.central = { enabled: true, update_interval_minutes: 10 };
-  manager.own = null;
+  manager.own = { admin_enabled: true, route_location_enabled: false, app_prompt_state: 'not_asked', permission_state: 'unknown' };
   manager.installOwnSettingsUi();
   manager.showConsent();
   dom.window.document.getElementById('v108ConsentAllow').click();
@@ -126,3 +126,22 @@ test('Beheer → Live Locaties wordt alleen voor de bestaande beheerrol opgebouw
   assert.ok(dom.window.document.getElementById('adminPaneLiveLocations'));
 });
 
+test('zonder inschakeling door beheer verschijnt geen melding of gebruikersinstelling', async () => {
+  const dom = createDom();
+  let gpsCalls = 0;
+  Object.defineProperty(dom.window.navigator, 'geolocation', {
+    configurable: true,
+    value: { getCurrentPosition() { gpsCalls += 1; } }
+  });
+  dom.window.GJ_AUTH = { profile: { id: 'user-a' }, realUserId: 'user-a', impersonating: false, identitySb: {} };
+  const manager = dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
+  manager.initialized = true;
+  manager.central = { enabled: true, update_interval_minutes: 10 };
+  manager.own = { admin_enabled: false, route_location_enabled: false, app_prompt_state: 'not_asked', permission_state: 'unknown' };
+  manager.installOwnSettingsUi();
+  await manager.reconcile({ direct: true });
+  assert.equal(dom.window.document.getElementById('v108LocationSettings'), null);
+  assert.equal(dom.window.document.getElementById('v108Consent'), null);
+  assert.equal(gpsCalls, 0);
+  manager.destroy();
+});

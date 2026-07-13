@@ -1,4 +1,4 @@
-# Planning-GJsystems v10.8 – Live Locaties
+# Planning-GJsystems v10.8.1 – Live Locaties
 
 Dit is een zelfstandige development/testversie, inhoudelijk gebaseerd op `Planning-GJsystems v10.7 COMPLETE`. Gebruik deze repository uitsluitend met een **nieuw, leeg Supabase development/testproject**. De productie-repository, productie-app en productiedatabase horen niet bij deze installatie.
 
@@ -34,13 +34,19 @@ Dit is een zelfstandige development/testversie, inhoudelijk gebaseerd op `Planni
 
 Er is vanuit deze oplevering geen SQL uitgevoerd en geen Supabase-project gekoppeld.
 
+### Bijwerken van een bestaande v10.8-testinstallatie
+
+Heb je de oorspronkelijke v10.8-SQL al in het development/testproject uitgevoerd, voer dan daarna uitsluitend [SUPABASE_V10_8_1_ADMIN_PER_USER_LOCATIONS_DEV.sql](SUPABASE_V10_8_1_ADMIN_PER_USER_LOCATIONS_DEV.sql) uit. Dit voegt de beheerderkeuze per gebruiker toe. Voer dit bestand nooit op productie uit.
+
+Bij een volledig nieuwe testinstallatie is dit losse correctiebestand niet nodig: de correctie zit al in `SUPABASE_V10_8_LIVE_LOCATIONS_DEV.sql`.
+
 ## Configuratie
 
 Kopieer `.env.example` naar een lokaal `.env`-bestand en vul alleen waarden van het nieuwe testproject in:
 
 ```text
 APP_ENV=development
-APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.8 DEV
+APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.8.1 DEV
 SUPABASE_URL=https://<nieuwe-project-ref>.supabase.co
 SUPABASE_ANON_KEY=<anon-of-publishable-key-van-het-testproject>
 SUPABASE_PROJECT_REF=<nieuwe-project-ref>
@@ -95,10 +101,17 @@ De migratie maakt `public.cleanup_location_history()` en geeft alleen `service_r
 
 iOS mag een web/PWA volledig pauzeren. De app probeert volgens het ingestelde interval te verzenden zolang uitvoering mogelijk is en direct bij openen of terugkeer naar de voorgrond. Zij beweert niet dat iOS in gepauzeerde toestand exact op tijd blijft bijwerken. Beheer toont daarom altijd meettijd, ontvangsttijd, ouderdom, nauwkeurigheid en status.
 
+## Beheer en locatiekeuze per gebruiker
+
+- Alleen de centrale rol `profiles.role = 'admin'` ziet en opent Beheer.
+- De beheerder zet Live Locaties eerst centraal aan en schakelt daarna per gebruiker in of uit.
+- Een gebruiker kan de beheerderkeuze niet zelf wijzigen. De database controleert dit in de locatie-RPC.
+- Gewone gebruikers zien geen onderdeel Routefunctionaliteit in Instellingen.
+- Alleen voor een door de beheerder ingeschakelde gebruiker kan de eenmalige toestemmingsmelding verschijnen.
+
 ## Documentatie
 
 - [ANALYSE_EN_BOUWPLAN_V10.8.md](ANALYSE_EN_BOUWPLAN_V10.8.md)
 - [CONTROLELIJST_V10.8.md](CONTROLELIJST_V10.8.md)
 - [CHANGELOG_V10.8.md](CHANGELOG_V10.8.md)
 - [ROLLBACK_EN_PRODUCTIEMIGRATIE.md](ROLLBACK_EN_PRODUCTIEMIGRATIE.md)
-

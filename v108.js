@@ -98,7 +98,6 @@
       if (this.initialized || !identityClient() || !realUserId()) return;
       this.initialized = true;
       this.installDevelopmentLabel();
-      this.installOwnSettingsUi();
       if (isAdmin()) this.installAdminUi();
       this.bindGlobalLifecycle();
       await this.loadCentral();
@@ -111,9 +110,9 @@
     },
 
     installDevelopmentLabel() {
-      document.title = 'Planning-GJsystems v10.8 DEV';
+      document.title = 'Planning-GJsystems v10.8.1 DEV';
       document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach((element) => {
-        element.innerHTML = element.classList.contains('settingsVersion') ? 'Versie: v10.8 DEV<br>Supabase: development/test' : 'v10.8 DEV';
+        element.innerHTML = element.classList.contains('settingsVersion') ? 'Versie: v10.8.1 DEV<br>Supabase: development/test' : 'v10.8.1 DEV';
       });
       if ($('v108DevBanner')) return;
       const config = window.GJ_CONFIG_API?.result()?.config;
@@ -122,28 +121,10 @@
     },
 
     installOwnSettingsUi() {
-      const root = $('settings');
-      if (!root || $('v108LocationSettings')) return;
-      const block = document.createElement('section');
-      block.id = 'v108LocationSettings';
-      block.className = 'settingsBlock v108LocationSettings';
-      block.innerHTML = `
-        <h3>Routefunctionaliteit</h3>
-        <p class="muted">Locatie wordt alleen gebruikt wanneer Live Locaties centraal aanstaat, je dit zelf hebt geaccepteerd en de browser/iPhone toestemming geeft.</p>
-        <div class="v108StatusGrid">
-          <div class="v108StatusItem"><span>Centrale functie</span><strong id="v108OwnCentral">Laden…</strong></div>
-          <div class="v108StatusItem"><span>Eigen keuze</span><strong id="v108OwnChoice">Laden…</strong></div>
-          <div class="v108StatusItem"><span>Officiële toestemming</span><strong id="v108OwnPermission">Laden…</strong></div>
-          <div class="v108StatusItem"><span>Laatst succesvol verzonden</span><strong id="v108OwnLastSent">Nog nooit</strong></div>
-        </div>
-        <div class="v108Actions">
-          <button type="button" id="v108OwnRetry">Toestemming / locatie opnieuw proberen</button>
-          <button type="button" id="v108OwnDisable" class="secondary">Routefunctionaliteit uitschakelen</button>
-        </div>
-        <div id="v108OwnMessage" class="v108Error" aria-live="polite"></div>`;
-      root.appendChild(block);
-      $('v108OwnRetry').addEventListener('click', () => this.acceptAndRequest());
-      $('v108OwnDisable').addEventListener('click', () => this.disableOwn());
+      // v10.8.1: gewone gebruikers krijgen geen locatiebeheer in Instellingen.
+      // Toestemming blijft via de eenmalige melding lopen; beheer vindt plaats
+      // onder Beheer → Live Locaties.
+      $('v108LocationSettings')?.remove();
     },
 
     installAdminUi() {
@@ -180,6 +161,10 @@
       $('v108HistoryRefresh').addEventListener('click', () => this.loadHistory());
       $('v108HistoryUser').addEventListener('change', (event) => { this.selectedHistoryUser = event.target.value || null; this.loadHistory(); });
       $('v108HistoryHours').addEventListener('change', (event) => { this.selectedHistoryHours = Number(event.target.value) || 24; this.loadHistory(); });
+      $('v108LocationList').addEventListener('click', (event) => {
+        const button = event.target.closest('.v108UserLocationToggle');
+        if (button) this.setAdminUserEnabled(button.dataset.userId, button.dataset.enabled !== 'true', button);
+      });
       tab.addEventListener('click', () => setTimeout(() => { this.invalidateMaps(); this.refreshAdmin(); }, 30));
     },
 
@@ -243,28 +228,7 @@
     },
 
     renderOwn() {
-      if (!$('v108LocationSettings')) return;
-      const centralEnabled = Boolean(this.central?.enabled);
-      $('v108OwnCentral').textContent = centralEnabled ? 'Actief' : 'Uit';
-      $('v108OwnChoice').textContent = this.own?.route_location_enabled ? `Ingeschakeld · ${promptLabel(this.own.app_prompt_state)}` : promptLabel(this.own?.app_prompt_state);
-      $('v108OwnPermission').textContent = permissionLabel(this.own?.permission_state);
-      $('v108OwnLastSent').textContent = this.ownLive?.captured_at ? `${formatDate(this.ownLive.captured_at)} (${ageLabel(this.ownLive.captured_at)})` : 'Nog nooit';
-      const message = $('v108OwnMessage');
-      if (!centralEnabled) {
-        message.textContent = 'Live Locaties staat centraal uit. Er wordt geen locatie opgevraagd of verzonden.';
-        message.className = 'v108Neutral';
-      } else if (isImpersonating()) {
-        message.textContent = 'Locatieverzending is volledig gepauzeerd tijdens Voordoen als gebruiker.';
-        message.className = 'v108Neutral';
-      } else if (this.own?.last_error) {
-        message.textContent = this.own.last_error;
-        message.className = 'v108Error';
-      } else {
-        message.textContent = '';
-        message.className = 'v108Error';
-      }
-      $('v108OwnRetry').disabled = !centralEnabled || isImpersonating();
-      $('v108OwnDisable').disabled = !this.own?.route_location_enabled;
+      // Geen gebruikersinterface in Instellingen; beheer ziet de status centraal.
     },
 
     async saveCentral() {
@@ -295,7 +259,7 @@
       if (!this.initialized) return;
       if (!this.central) await this.loadCentral();
       this.renderOwn();
-      if (!this.central?.enabled || isImpersonating()) {
+      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) {
         this.stopLocationCycle();
         this.closeConsent();
         return;
@@ -318,7 +282,7 @@
     },
 
     showConsent() {
-      if ($('v108Consent') || !this.central?.enabled || isImpersonating()) return;
+      if ($('v108Consent') || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) return;
       document.body.insertAdjacentHTML('beforeend', `
         <div id="v108Consent" class="v108Consent" role="dialog" aria-modal="true" aria-labelledby="v108ConsentTitle">
           <div class="v108ConsentCard"><h2 id="v108ConsentTitle">Routefunctionaliteit inschakelen</h2><p>Deze app gebruikt je locatie voor route- en navigatiefuncties met Google Maps, Waze en Kaarten.</p><div class="v108ConsentActions"><button type="button" id="v108ConsentAllow">Toestaan</button><button type="button" id="v108ConsentLater" class="secondary">Nu niet</button></div></div>
@@ -343,7 +307,7 @@
     },
 
     async acceptAndRequest() {
-      if (!this.central?.enabled || isImpersonating()) return;
+      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) return;
       try {
         this.closeConsent();
         await this.setOwn({ enabled: true, promptState: 'accepted', permissionState: 'prompt' });
@@ -369,7 +333,7 @@
     },
 
     startLocationCycle() {
-      if (!this.central?.enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') {
+      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') {
         this.stopLocationCycle();
         return;
       }
@@ -380,7 +344,7 @@
     restartLocationTimer() {
       if (this.locationTimer) clearInterval(this.locationTimer);
       this.locationTimer = null;
-      if (!this.central?.enabled || isImpersonating() || !this.own?.route_location_enabled) return;
+      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled) return;
       const minutes = ALLOWED_INTERVALS.includes(Number(this.central.update_interval_minutes)) ? Number(this.central.update_interval_minutes) : 10;
       this.locationTimer = setInterval(() => {
         if (document.visibilityState !== 'hidden') this.triggerLocation('ingestelde interval');
@@ -428,7 +392,7 @@
             const state = this.own.permission_state === 'granted' ? 'revoked' : 'blocked';
             await this.recordPermissionFailure(state, 'Locatietoestemming is in de browser/iPhone geblokkeerd.');
             this.stopLocationCycle();
-          } else if (handle.state === 'granted' && this.central?.enabled && this.own?.route_location_enabled && !isImpersonating()) {
+          } else if (handle.state === 'granted' && this.central?.enabled && this.own?.admin_enabled && this.own?.route_location_enabled && !isImpersonating()) {
             await this.setOwn({ enabled: true, promptState: 'accepted', permissionState: 'granted' });
             this.startLocationCycle();
             this.triggerLocation('toestemming hersteld', true);
@@ -453,7 +417,7 @@
     async triggerLocation(reason, force = false) {
       const now = Date.now();
       if (!force && now - this.lastTriggerAt < EVENT_DEDUP_MS) return false;
-      if (this.requestInFlight || !this.central?.enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') return false;
+      if (this.requestInFlight || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') return false;
       this.lastTriggerAt = now;
       if (!navigator.onLine) {
         this.setLocalError('Geen internet. Bij het volgende geschikte moment wordt opnieuw geprobeerd.');
@@ -603,16 +567,34 @@
       this.renderCentral();
     },
 
+    async setAdminUserEnabled(userId, enabled, button) {
+      if (!isAdmin() || !userId) return;
+      const original = button?.textContent;
+      if (button) { button.disabled = true; button.textContent = 'Opslaan…'; }
+      try {
+        const { error } = await identityClient().rpc('set_user_location_enabled', {
+          p_user_id: userId,
+          p_enabled: Boolean(enabled)
+        });
+        if (error) throw error;
+        await this.refreshAdmin();
+      } catch (error) {
+        alert(`Live Locaties wijzigen mislukt: ${error.message}`);
+        if (button) { button.disabled = false; button.textContent = original; }
+      }
+    },
+
     renderAdminList() {
       const list = $('v108LocationList');
       if (!list) return;
       const centralEnabled = Boolean(this.central?.enabled);
       const interval = Number(this.central?.update_interval_minutes || 10);
       list.innerHTML = this.adminRows.length ? this.adminRows.map((row) => {
-        const status = locationStatus(row.captured_at, interval, centralEnabled);
+        const userEnabled = row.admin_enabled === true;
+        const status = userEnabled ? locationStatus(row.captured_at, interval, centralEnabled) : { key: 'disabled', label: 'Uit voor gebruiker' };
         const avatar = row.avatar_url ? `<img src="${esc(row.avatar_url)}" alt="">` : esc(initials(row));
         const maps = row.latitude == null ? '' : `<a class="btnlink" target="_blank" rel="noopener" href="${esc(googleMapsUrl(row.latitude, row.longitude))}">Openen in Google Maps</a>`;
-        return `<article class="v108LocationCard"><div class="v108LocationHead"><div class="v108Avatar">${avatar}</div><div><div class="v108LocationName">${esc(row.full_name || row.email)}</div><div class="v108LocationMeta">${esc(row.email || '')}</div></div><span class="v108Pill ${status.key}">${status.label}</span></div><div class="v108Permission">App: ${esc(promptLabel(row.app_prompt_state))} · iPhone/browser: ${esc(permissionLabel(row.permission_state))}</div><div class="v108LocationMeta">Gemeten: ${esc(formatDate(row.captured_at))}<br>Ontvangen: ${esc(formatDate(row.received_at))}<br>Ouderdom: ${esc(ageLabel(row.captured_at))}<br>Nauwkeurigheid: ${row.accuracy == null ? 'onbekend' : `${Math.round(row.accuracy)} meter`}</div>${row.last_error ? `<div class="v108Error">${esc(row.last_error)}</div>` : ''}${maps}</article>`;
+        return `<article class="v108LocationCard"><div class="v108LocationHead"><div class="v108Avatar">${avatar}</div><div><div class="v108LocationName">${esc(row.full_name || row.email)}</div><div class="v108LocationMeta">${esc(row.email || '')}</div></div><span class="v108Pill ${status.key}">${status.label}</span></div><div class="v108Permission">Toestemming: ${esc(promptLabel(row.app_prompt_state))} · iPhone/browser: ${esc(permissionLabel(row.permission_state))}</div><div class="v108LocationMeta">Gemeten: ${esc(formatDate(row.captured_at))}<br>Ontvangen: ${esc(formatDate(row.received_at))}<br>Ouderdom: ${esc(ageLabel(row.captured_at))}<br>Nauwkeurigheid: ${row.accuracy == null ? 'onbekend' : `${Math.round(row.accuracy)} meter`}</div>${row.last_error ? `<div class="v108Error">${esc(row.last_error)}</div>` : ''}<div class="v108Actions"><button type="button" class="v108UserLocationToggle ${userEnabled ? 'secondary' : ''}" data-user-id="${esc(row.user_id)}" data-enabled="${userEnabled}">${userEnabled ? 'Live Locaties uitzetten' : 'Live Locaties aanzetten'}</button>${maps}</div></article>`;
       }).join('') : '<div class="v108Neutral">Geen gebruikers gevonden.</div>';
     },
 

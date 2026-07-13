@@ -1,4 +1,4 @@
-# Controlelijst Planning-GJsystems v10.8
+# Controlelijst Planning-GJsystems v10.8.1
 
 Betekenis:
 
@@ -6,7 +6,7 @@ Betekenis:
 - 🟨 **Statisch gecontroleerd**: code/SQL aantoonbaar gecontroleerd, maar nog niet tegen een echt Supabase-testproject of echte iPhone uitgevoerd.
 - ❌ **Nog niet uitgevoerd**: vereist het nieuwe testproject, echte accounts, netwerk/deployment of een iPhone/PWA.
 
-De automatische testopdracht was `npm test`: **19 tests geslaagd, 0 mislukt**. Ook zijn de runtimeconfiguratiegenerator en volledige deploybuild met fictieve testwaarden succesvol uitgevoerd; de gegenereerde waarden zijn daarna verwijderd. Er is geen SQL uitgevoerd.
+De automatische testopdracht was `npm test`: **21 tests geslaagd, 0 mislukt**. Ook zijn de runtimeconfiguratiegenerator en volledige deploybuild met fictieve testwaarden succesvol uitgevoerd; de gegenereerde waarden zijn daarna verwijderd. Er is geen SQL uitgevoerd.
 
 ## Scheiding en configuratie
 
@@ -25,13 +25,16 @@ De automatische testopdracht was `npm test`: **19 tests geslaagd, 0 mislukt**. O
 | Live Locaties staat standaard uit | 🟨 Statisch gecontroleerd | SQL-default en singleton-insert zijn `false`; nog niet op test-DB uitgevoerd. |
 | Zolang uit: geen melding, GPS, opslag, timer of locatielisteners | ✅ Geslaagd | Geautomatiseerde DOM/managertest voor melding, GPS, timer en listeners; RPC-blokkade statisch gecontroleerd. |
 | Beheerder kan centraal aanzetten | 🟨 Statisch gecontroleerd | UI en admin-RPC aanwezig; echte DB-test ontbreekt. |
+| Beheerder kan Live Locaties per gebruiker aan/uit zetten | 🟨 Statisch gecontroleerd | Beheerknop en admin-only RPC aanwezig; uitvoering tegen echte DEV-database ontbreekt. |
+| Gewone gebruiker kan de beheerderkeuze niet wijzigen | 🟨 Statisch gecontroleerd | Directe writes zijn ingetrokken en RPC controleert de centrale adminrol; echte JWT-test ontbreekt. |
 | Gewone gebruiker kan centraal niet wijzigen of beheer-URL openen | 🟨 Statisch gecontroleerd | UI-rolpoort, admin-RPC en RLS/GRANT-contract gecontroleerd; gemanipuleerde echte sessie nog testen. |
 | Eenmalige melding gebruikt exact de afgesproken tekst | ✅ Geslaagd | Geautomatiseerde DOM-test. |
 | Nu niet opent geen officiële locatievraag | ✅ Geslaagd | Geautomatiseerde DOM/geolocation-test. |
 | Toestaan opent de officiële locatievraag | ✅ Geslaagd | Geautomatiseerde DOM/geolocation-test. |
 | Toestemming resulteert direct in locatie | 🟨 Statisch gecontroleerd | Flow en directe aanroep getest met mocks; echte iPhone + DB ontbreekt. |
 | Geweigerd/geblokkeerd/services uit/timeout/intrekking crasht niet | 🟨 Statisch gecontroleerd | Alle foutpaden en statusopslag aanwezig; echte browservarianten ontbreken. |
-| Instellingen toont centrale, eigen en officiële status | 🟨 Statisch gecontroleerd | Gedeelde laptop/iPhone-DOM gecontroleerd. |
+| Gewone gebruiker ziet Routefunctionaliteit niet in Instellingen | ✅ Geslaagd | Automatische DOM-test voor laptop/iPhone en verwijdering van eventueel oud locatieblok. |
+| Gewone gebruiker ziet Beheer niet | ✅ Geslaagd | Automatische mobiele CSS-/auth-regressietest en laptoprolpoort. |
 
 ## Locatie, timer en PWA
 

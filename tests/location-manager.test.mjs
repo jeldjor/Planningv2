@@ -52,7 +52,7 @@ test('herinitialiseren van de locatiecyclus houdt precies één interval en éé
   const { api, activeIntervals, windowListeners, documentListeners } = loadModule();
   const manager = api.manager;
   manager.central = { enabled: true, update_interval_minutes: 10 };
-  manager.own = { route_location_enabled: true, app_prompt_state: 'accepted', permission_state: 'granted' };
+  manager.own = { admin_enabled: true, route_location_enabled: true, app_prompt_state: 'accepted', permission_state: 'granted' };
   manager.startLocationCycle();
   manager.startLocationCycle();
   assert.equal(activeIntervals.size, 1);
@@ -69,7 +69,7 @@ test('herinitialiseren van de locatiecyclus houdt precies één interval en éé
 test('centraal uit en Voordoen als gebruiker starten geen locatietimer', () => {
   const { api, window, activeIntervals } = loadModule();
   const manager = api.manager;
-  manager.own = { route_location_enabled: true, app_prompt_state: 'accepted', permission_state: 'granted' };
+  manager.own = { admin_enabled: true, route_location_enabled: true, app_prompt_state: 'accepted', permission_state: 'granted' };
   manager.central = { enabled: false, update_interval_minutes: 10 };
   manager.startLocationCycle();
   assert.equal(activeIntervals.size, 0);
@@ -78,4 +78,3 @@ test('centraal uit en Voordoen als gebruiker starten geen locatietimer', () => {
   manager.startLocationCycle();
   assert.equal(activeIntervals.size, 0);
 });
-
