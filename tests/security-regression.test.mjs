@@ -79,7 +79,9 @@ test('beide apparaten laden runtimeconfig, correctiemodule en developmentversie'
     assert.match(html, /v108\.js\?v=10801/);
     assert.match(html, /v1082\.css\?v=10820/);
     assert.match(html, /v1082\.js\?v=10820/);
-    assert.match(html, /v10\.8\.2 DEV/);
+    assert.match(html, /v109\.css\?v=10900/);
+    assert.match(html, /v109\.js\?v=10900/);
+    assert.match(html, /v10\.9 DEV/);
   }
 });
 

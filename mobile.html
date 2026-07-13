@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Planning-GJsystems v10.8.2 DEV</title>
+<title>Planning-GJsystems v10.9 DEV</title>
 <script>
 // v6: failsafe tegen blijven hangen op beginscherm/logo
 window.__GJ_APP_VERSION__='8.4';
@@ -443,6 +443,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v106.css?v=10700">
 <link rel="stylesheet" href="v108.css?v=10801">
 <link rel="stylesheet" href="v1082.css?v=10820">
+<link rel="stylesheet" href="v109.css?v=10900">
 </head>
 <body>
 <div id="splash" class="splash"><div class="logoBox"><img src="logo-menu.png?v=10820" alt="GJ Systems — The Smarter Way"></div></div>
@@ -455,7 +456,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <button type="button" data-screen="settings"><span class="navIcon">⚙</span><span class="navLabel" data-key="settings">Instellingen</span></button>
 <button type="button" data-screen="contactMobile"><span class="navIcon">✉</span><span class="navLabel">Contact</span></button>
 <button type="button" data-screen="adminMobile" class="gjAdminOnly"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.7-2.9 8.2-7 10-4.1-1.8-7-5.3-7-10V6l7-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="navLabel" data-key="admin">Beheer</span></button>
-<div class="menuSpacer"></div><div class="menuBrand"><img src="logo-menu.png?v=10801" alt="GJ Systems — The Smarter Way"></div><button id="menuLogout" type="button" class="menuLogout"><span class="navIcon">↪</span><span class="navLabel" data-key="logout">Uitloggen</span></button><div class="version">v10.8.2 DEV</div></nav>
+<div class="menuSpacer"></div><div class="menuBrand"><img src="logo-menu.png?v=10801" alt="GJ Systems — The Smarter Way"></div><button id="menuLogout" type="button" class="menuLogout"><span class="navIcon">↪</span><span class="navLabel" data-key="logout">Uitloggen</span></button><div class="version">v10.9 DEV</div></nav>
 <div id="profileCropOverlay" class="profileCropOverlay" aria-hidden="true"><div class="profileCropDialog"><h2 data-key="editProfilePhoto">Profielfoto aanpassen</h2><p class="cropHelp">Schuif de foto in het ronde kader en gebruik de regelaar om in of uit te zoomen.</p><div id="cropViewport" class="cropViewport"><img id="cropImage" alt="Uitsnede"></div><label class="cropZoomLabel">Zoom<input id="cropZoom" class="cropZoom" type="range" min="1" max="3" step="0.01" value="1"></label><div class="cropActions"><button id="cropCancel" type="button" class="cancel" data-key="cancel">Annuleren</button><button id="cropSave" type="button" data-key="save">Opslaan</button></div></div></div>
 <main>
 <section id="today" class="screen active"><h1 data-key="today">Vandaag</h1><p class="muted" id="todayDate"></p><div class="panel"><div class="grid2 todayControls"><label class="compactTimeField fieldWithIcon"><span data-key="depart">Vertrektijd</span><span class="fieldIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg></span><input id="depart" type="time" value="08:00"></label><label class="compactRouteField fieldWithIcon"><span data-key="routeApp">Route-app</span><span class="fieldIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3.5-1 4-4 4-7s1.5-5 5-5h4"></path><path d="M15 4l3 3-3 3"></path><circle cx="5" cy="19" r="1.5"></circle></svg></span><select id="navApp"><option>Waze</option><option>Google Maps</option><option>Apple Kaarten</option></select></label></div><div class="stats"><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="16.5" cy="9" r="2.5"></circle><path d="M3.5 19c.6-3.2 2.6-5 5.5-5s4.9 1.8 5.5 5"></path><path d="M14 14.5c2.7 0 4.5 1.5 5 4.5"></path></svg></div><strong id="statVisits">0</strong><span data-key="customers">klanten</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"></path><circle cx="12" cy="10" r="2"></circle></svg></div><strong id="statKm">–</strong><span>km</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 16z"></path><path d="M4 16v3h2v-2h12v2h2v-3"></path><circle cx="8" cy="16" r="1"></circle><circle cx="16" cy="16" r="1"></circle></svg></div><strong id="statTravel">–</strong><span data-key="travelTime">reistijd</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.2l2.6 2.6L16.5 9"></path></svg></div><strong id="statDone">0</strong><span data-key="ready">klaar</span></div></div><button id="fullRouteBtn" class="todayMainButton" type="button"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 16z"></path><path d="M4 16v3h2v-2h12v2h2v-3"></path><circle cx="8" cy="16" r="1"></circle><circle cx="16" cy="16" r="1"></circle></svg><span class="buttonLabel" data-key="openFullRoute">Volledige route openen</span></button><div class="smallBtns" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button id="togglePause" type="button" class="todayActionButton"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6.5A3.5 3.5 0 0 1 12.5 18h-4A3.5 3.5 0 0 1 5 14.5V8z"></path><path d="M16 10h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5c0-1 1-1 1-2M11 5c0-1 1-1 1-2"></path></svg><span class="buttonLabel" data-key="togglePause">Pauze aan/uit</span></button><button id="recalcBtn" type="button" class="todayActionButton"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path><path d="M7 4H4v3"></path><path d="M4.8 7A9 9 0 0 1 20 9"></path></svg><span class="buttonLabel" data-key="recalc">Tijden</span></button></div></div><div id="todayRoute"></div></section>
@@ -463,7 +464,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <section id="overview" class="screen"><h1 data-key="overview">Overzicht</h1><label><span data-key="search">Zoeken</span><input id="search" data-ph="searchPh" placeholder="Zoek klant, plaats of postcode"></label><div id="overviewList" style="margin-top:8px"></div></section>
 <section id="absence" class="screen"><h1 data-key="absence">Afwezigheid</h1><div class="panel"><div class="form"><label><span data-key="type">Type</span><select id="blockType"><option>Verlof</option><option>Ziekte</option><option>Training</option><option>Overig</option></select></label><div class="formRow absenceDates"><label class="compactDateField"><span data-key="startDate">Startdatum</span><input id="blockStart" type="date"></label><label class="compactDateField"><span data-key="endDate">Einddatum</span><input id="blockEnd" type="date"></label></div><div class="formRow absenceTimes"><label class="compactTimeField"><span data-key="startTime">Starttijd</span><input id="blockStartTime" type="time" placeholder="09:00"></label><label class="compactTimeField"><span data-key="endTime">Eindtijd</span><input id="blockEndTime" type="time" placeholder="12:30"></label></div><label><span data-key="description">Omschrijving</span><textarea id="blockNote" data-ph="absencePh" placeholder="Bijv. tandarts, verlof ochtend of training"></textarea></label><button id="saveBlock" type="button" data-key="save">Opslaan</button></div></div><div id="absenceList"></div></section>
 <section id="settings" class="screen"><h1 data-key="settings">Instellingen</h1><div class="v102SettingsGrid">
-<div class="v102Card"><h3>Profiel</h3><p class="muted">Wijzig hier je centraal gesynchroniseerde profielfoto.</p><img id="mV102ProfilePreview" class="v102ProfilePreview" alt="Profielfoto"><input id="mV102ProfileFile" type="file" accept="image/*" hidden><button id="mV102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
+<div class="v102Card"><h3>Profiel</h3><p class="muted">Wijzig hier je centraal gesynchroniseerde profielfoto.</p><div class="v109ProfilePreview"><span>Profielfoto</span><img id="mV102ProfilePreview" class="v102ProfilePreview" alt=""></div><input id="mV102ProfileFile" type="file" accept="image/*" hidden><button id="mV102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
 <div class="v102Card"><h3>Wachtwoord wijzigen</h3><label>Huidig wachtwoord<input id="mV102CurrentPassword" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="mV102NewPassword" type="password" autocomplete="new-password"></label><label>Nieuw wachtwoord herhalen<input id="mV102NewPasswordAgain" type="password" autocomplete="new-password"></label><div id="mV102PasswordCriteria" class="v102Criteria"></div><button id="mV102ChangePassword" type="button">Wachtwoord wijzigen</button><div id="mV102PasswordStatus" class="adminStatus"></div></div></div><div class="panel form"><label><span data-key="language">Taal</span><select id="lang"><option value="nl">Nederlands</option><option value="de">Deutsch</option><option value="en">English</option></select></label><div class="muted">Vaste uitstraling: blauw met gouden accenten.</div><label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:8px"><input id="defaultSettings" type="checkbox" style="width:auto;height:auto"> <span data-key="useDefault">Als standaard gebruiken</span></label><button id="saveSettings" type="button" data-key="saveSettings">Instellingen opslaan</button><div class="settingsVersion">Versie: v10.5<br>Supabase: nog niet gekoppeld</div></div></section>
 
 
@@ -549,7 +550,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 </main>
 <script>
 (function(){
-const VERSION='v10.8.2 DEV',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
+const VERSION='v10.9 DEV',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
 let sb=null;
 window.addEventListener('gj-auth-ready',()=>{if(window.GJ_AUTH?.sb)sb=window.GJ_AUTH.sb});
 const COLORS={blue:['#083b86','#052d68','#eef4ff']};
@@ -557,7 +558,7 @@ const TR={nl:{today:'Vandaag',calendar:'Kalender',overview:'Overzicht',absence:'
 const $=id=>document.getElementById(id);
 function localIso(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function parseLocalDate(iso){const [y,m,d]=String(iso||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1)}
-const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,pendingFinishFiles=[];
+const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,pendingFinishFiles=[],finishBusy=false;
 function t(k){return (TR[db?.settings?.language||'nl']||TR.nl)[k]||TR.nl[k]||k}
 function ts(status){
   const m={Gepland:'planned',Uitgevoerd:'executed','Niet uitgevoerd':'notExecuted','Uit planning':'remove'};
@@ -605,7 +606,50 @@ async function saveDepartureToSupabase(date,value){
   if(delta){for(const v of rows){const shift=x=>{if(!x)return x;let n=Number(x.slice(0,2))*60+Number(x.slice(3,5))+delta;return String(Math.floor(n/60)%24).padStart(2,'0')+':'+String((n%60+60)%60).padStart(2,'0')};v.time=shift(v.time);v.end=shift(v.end)}}
   const d=await sb.from('app_day_settings').upsert({datum:date,vertrektijd:value+':00',updated_at:new Date().toISOString()},{onConflict:'datum'});if(d.error)throw d.error;
   for(const v of rows){const u=await sb.from('planning').update({starttijd:v.time||null,eindtijd:v.end||null,updated_at:new Date().toISOString()}).eq('id',v.planningId);if(u.error)throw u.error}
+  await recalculateMobileDayRoute(date);
   save();renderAll();
+}
+async function mobileTomTomLeg(from,to,mode='car'){
+  if(!sb||![from?.lat,from?.lng,to?.lat,to?.lng].every(x=>Number.isFinite(Number(x))))return null;
+  const {data,error}=await sb.functions.invoke('tomtom-proxy',{body:{action:'route',fromLat:Number(from.lat),fromLon:Number(from.lng),toLat:Number(to.lat),toLon:Number(to.lng),mode}});
+  if(error||data?.error)return null;
+  const summary=data?.routes?.[0]?.summary;
+  if(!summary)return null;
+  return {min:Math.max(1,Math.round(Number(summary.travelTimeInSeconds)/60)),km:Math.round(Number(summary.lengthInMeters)/100)/10,live:true};
+}
+function mobileDistanceKm(a,b){
+  const lat1=Number(a?.lat),lon1=Number(a?.lng),lat2=Number(b?.lat),lon2=Number(b?.lng);
+  if(![lat1,lon1,lat2,lon2].every(Number.isFinite))return Infinity;
+  const rad=x=>x*Math.PI/180,R=6371,dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);
+  const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+async function recalculateMobileDayRoute(date){
+  if(!sb)return false;
+  const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning').sort((a,b)=>(a.order||999)-(b.order||999));
+  let previous={lat:51.6889,lng:5.3039};
+  for(let i=0;i<rows.length;i++){
+    const visit=rows[i],to=customer(visit.customerId),mode=i>0&&mobileDistanceKm(previous,to)<=.3?'walk':'car';
+    const route=await mobileTomTomLeg(previous,to,mode);
+    const patch={route_volgorde:i+1,route_mode:mode,route_live:!!route,updated_at:new Date().toISOString()};
+    if(route){patch.reistijd_min=route.min+(mode==='car'?15:0);patch.afstand_km=route.km;visit.travel=patch.reistijd_min;visit.mode=mode==='walk'?'walk':'drive';visit.leg=(mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(patch.reistijd_min)+(route.km?' · '+fmtKm(route.km):'')}
+    const update=await sb.from('planning').update(patch).eq('id',visit.planningId);
+    if(update.error)throw update.error;
+    previous=to;
+  }
+  save();renderAll();return true;
+}
+async function saveMobileVisitTimeToSupabase(v){
+  if(!sb||!v?.planningId)return;
+  const update=await sb.from('planning').update({starttijd:v.time||null,eindtijd:v.end||null,bezoekduur_min:durationOf(v),updated_at:new Date().toISOString()}).eq('id',v.planningId);
+  if(update.error)throw update.error;
+  await recalculateMobileDayRoute(v.date);
+}
+async function manualSync(showMessage=false){
+  const button=$('syncBtn');
+  if(button)button.disabled=true;
+  try{const ok=await loadPlanningFromSupabase();if(!ok)throw new Error('Synchroniseren mislukt.');renderAll();if(showMessage)alert('Planning is bijgewerkt.');return true}
+  finally{if(button)button.disabled=false}
 }
 async function saveAbsenceToSupabase(b){
   const {data,error}=await sb.from('app_absences').insert({type:b.type,start_date:b.start,end_date:b.end,start_time:b.startTime||null,end_time:b.endTime||null,note:b.note||''}).select('*').single();
@@ -663,7 +707,7 @@ function routeTotals(){
   if(vs.length){const ret=parseLegInfo(vs[vs.length-1].returnLeg);km+=ret.km;min+=ret.min;}
   return {km,min};
 }
-function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals();const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;$('statKm').textContent=real.length?Math.round(tot.km):'–';$('statTravel').textContent=real.length?fmtTravel(tot.min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
+function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals(),done=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=done+'/'+real.length;$('statKm').textContent=real.length?Math.round(tot.km):'–';$('statTravel').textContent=real.length?fmtTravel(tot.min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
 function cardHtml(v){if(v.pause)return '<div class="leg pause">'+esc(v.leg||'☕ Pauze')+' <span style="margin-left:auto">'+esc((v.time||'')+' - '+(v.end||''))+'</span><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button></div></div>';const c=customer(v.customerId),q=encodeURIComponent(address(c)),done=v.status==='Uitgevoerd',nd=v.status==='Niet uitgevoerd',out=v.status==='Uit planning',cls=done?'done':(nd?'notdone':(out?'out':'')),mode=v.mode==='walk'?'walk':'drive';const timeHtml=editingTime===v.id?'<div class="timeEdit"><input id="editStart-'+esc(v.id)+'" type="time" value="'+esc(v.time||'')+'"><input id="editEnd-'+esc(v.id)+'" type="time" value="'+esc(v.end||'')+'"><button class="saveTimeBtn" data-id="'+esc(v.id)+'">✓</button></div>':'<div class="timeLine"><span class="pill">'+esc((v.time||'')+' - '+(v.end||''))+'</span><button class="eyeBtn secondary" data-id="'+esc(v.id)+'">👁️</button></div>';return (v.leg?'<div class="leg '+(mode==='walk'?'walk':'')+'">'+esc(v.leg)+'</div>':'')+'<div class="card visitCard '+cls+'"><div class="visitTop"><strong>'+esc(c.name||'Klant')+'</strong><span class="pill">'+esc(ts(v.status||'Gepland'))+'</span></div>'+timeHtml+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0"><span class="routeMode '+(mode==='walk'?'walk':'')+'">'+(mode==='walk'?'🚶 '+t('routeWalk'):'🚗 '+t('routeAuto'))+'</span></div><div class="muted">'+esc(c.city||'')+'</div><div>'+esc([c.street,c.nr,c.postal].filter(Boolean).join(' '))+'</div>'+((done||nd)?'<div class="savedLine">'+(done?'✓':'!')+' '+esc(ts(v.status))+' '+t('saved')+((v.photos&&v.photos.length)?' · 📷 '+v.photos.length+' foto(s)':'')+'</div>':'')+'<div class="btnRow"><button class="routeBtn" data-q="'+q+'">'+t('route')+'</button><button class="finishBtn secondary" data-id="'+esc(v.id)+'">'+((done||nd)?t('edit'):t('finish'))+'</button></div><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button><button class="removePlan red" data-id="'+esc(v.id)+'">'+t('remove')+'</button></div></div>'+(v.returnLeg?'<div class="leg home">'+esc(v.returnLeg)+'</div>':'')}
 function renderCalendar(){const base=new Date();base.setMonth(base.getMonth()+monthOffset,1);const year=base.getFullYear(),month=base.getMonth(),locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';$('monthTitle').textContent=base.toLocaleDateString(locale,{month:'long',year:'numeric'});const first=new Date(year,month,1),start=new Date(first);start.setDate(first.getDate()-((first.getDay()+6)%7));const dows=db.settings.language==='en'?['mo','tu','we','th','fr','sa','su']:db.settings.language==='de'?['mo','di','mi','do','fr','sa','so']:['ma','di','wo','do','vr','za','zo'];let out='<div class="monthGrid">'+dows.map(d=>'<div class="monthDow">'+d+'</div>').join('');for(let i=0;i<42;i++){const cur=new Date(start);cur.setDate(start.getDate()+i);const iso=localIso(cur),vis=db.visits.filter(v=>v.date===iso&&!v.pause&&v.status!=='Uit planning'),cls=['monthDay',cur.getMonth()===month?'':'other',iso===todayIso()?'today':'',iso===selectedCalendarDate?'selected':''].join(' ');out+='<div class="'+cls+'" data-date="'+iso+'"><div class="monthNo">'+cur.getDate()+'</div>';if(vis.length)out+='<span class="customerCount">👥 '+vis.length+'</span>';out+='</div>'}out+='</div>';$('calendarList').innerHTML=out}
 function openDay(iso){
@@ -677,7 +721,7 @@ function openDay(iso){
   $('calendarDetail').innerHTML='<div class="card calendarDayCard"><div class="calendarDayHead"><div><div class="calendarDayTitle">'+esc(title)+'</div><div class="calendarDaySummary">'+summary+'</div></div><span class="pill">'+real.length+' 👥</span></div>'+(!vs.length?'<div class="calendarEmpty">'+t('dayNoPlan')+'</div>':vs.map(v=>{if(v.pause)return '<div class="leg pause calendarPause">'+esc((v.time||'')+' - '+(v.end||'')+' '+(v.leg||'Pauze'))+'</div>';const c=customer(v.customerId),q=encodeURIComponent(address(c));return '<div class="calendarVisit"><div class="calendarVisitTime">'+esc(v.time||'--:--')+'<br>'+esc(v.end||'--:--')+'</div><div><div class="calendarVisitName">'+esc(c.name||'Klant')+'</div><div class="calendarVisitMeta">'+esc([c.city,ts(v.status||'Gepland')].filter(Boolean).join(' · '))+'</div></div><button class="routeBtn" data-q="'+q+'">↗</button></div>'}).join(''))+'</div>';
   renderCalendar();
 }
-function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();renderToday();renderCalendar();renderOverview();renderAbsence()}function move(id,dir){const vs=todayVisits(true),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const tmp=vs[i].order;vs[i].order=vs[j].order;vs[j].order=tmp;vs.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((v,idx)=>v.order=idx+1);save();renderAll();saveVisitOrderToSupabase().then(()=>manualSync(false)).catch(console.error)}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){for(const f of Array.from(files||[])){if(f&&String(f.type||'').startsWith('image/'))pendingFinishFiles.push(f)}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
+function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();renderToday();renderCalendar();renderOverview();renderAbsence()}function move(id,dir){const vs=todayVisits(true),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const tmp=vs[i].order;vs[i].order=vs[j].order;vs[j].order=tmp;vs.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((v,idx)=>v.order=idx+1);save();renderAll();saveVisitOrderToSupabase().then(()=>manualSync(false)).catch(console.error)}function photoFingerprint(f){return [f?.name||'',f?.size||0,f?.lastModified||0,f?.type||''].join('|')}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){const known=new Set(pendingFinishFiles.map(photoFingerprint));for(const f of Array.from(files||[])){const key=photoFingerprint(f);if(f&&String(f.type||'').startsWith('image/')&&!known.has(key)){known.add(key);pendingFinishFiles.push(f)}}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
  // Bewaar het originele bestand ongewijzigd. Zo blijven resolutie, kwaliteit,
  // bestandstype en metadata behouden bij openen en opslaan op de laptop.
  if(!file || !String(file.type||'').startsWith('image/')) return file;
@@ -688,34 +732,47 @@ async function uploadVisitPhotos(historyId,planningId,files){
  for(let i=0;i<files.length;i++){
   const file=await prepareVisitPhoto(files[i]);
   const safe=(file.name||('foto-'+(i+1)+'.jpg')).replace(/[^a-zA-Z0-9._-]/g,'_');
-  const path=String(planningId||'zonder-planning')+'/'+String(historyId)+'/'+Date.now()+'-'+i+'-'+safe;
+  let hash=2166136261;for(const ch of photoFingerprint(file)){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619)}
+  const path=String(planningId||'zonder-planning')+'/'+String(historyId)+'/'+(hash>>>0).toString(16)+'-'+safe;
+  const existing=await sb.from('visit_photos').select('id').eq('history_id',historyId).eq('file_path',path).maybeSingle();
+  if(existing.error)throw new Error('Fotocontrole mislukt: '+existing.error.message);
   const up=await sb.storage.from('visit-photos').upload(path,file,{contentType:file.type||'image/jpeg',upsert:false});
-  if(up.error){console.error('Foto upload mislukt:',up.error);throw new Error('Foto upload mislukt: '+up.error.message)}
-  const row=await sb.from('visit_photos').insert({history_id:historyId,file_path:path});
-  if(row.error){console.error('Fotokoppeling opslaan mislukt:',row.error);throw new Error('Foto kon niet aan bezoek worden gekoppeld: '+row.error.message)}
+  const duplicate=up.error&&(Number(up.error.statusCode)===409||/duplicate|already exists/i.test(String(up.error.message||up.error.error||'')));
+  if(up.error&&!duplicate){console.error('Foto upload mislukt:',up.error);throw new Error('Foto upload mislukt: '+up.error.message)}
+  if(!existing.data){const row=await sb.from('visit_photos').insert({history_id:historyId,file_path:path});if(row.error){console.error('Fotokoppeling opslaan mislukt:',row.error);throw new Error('Foto kon niet aan bezoek worden gekoppeld: '+row.error.message)}}
   const pub=sb.storage.from('visit-photos').getPublicUrl(path).data.publicUrl;
   saved.push({name:file.name||safe,data:pub,path});
  }
  return saved;
 }
 async function finish(status){
+ if(finishBusy)return;
  const v=db.visits.find(x=>x.id===activeVisitId);if(!v)return;
- const selectedFiles=pendingFinishFiles.slice();
- v.status=status;v.activity=$('finishActivity').value.trim();v.summary=$('finishSummary').value.trim();v.completedAt=new Date().toISOString();
- let uploaded=[];
- if(sb && v.planningId){
-   const upd=await sb.from('planning').update({status:status,uitgevoerd:status==='Uitgevoerd'}).eq('id',v.planningId);
-   if(upd.error){console.error('Status opslaan mislukt:',upd.error);alert('Status niet opgeslagen in Supabase: '+upd.error.message);return;}
-   const hist=await sb.from('visit_history').insert({customer_id:v.customerId,planning_id:v.planningId,bezoekdatum:v.date,starttijd:v.time||null,eindtijd:v.end||null,activiteit:v.activity,samenvatting:v.summary,opmerkingen:status,duur_min:durationOf(v),afgerond:true}).select('id').single();
-   if(hist.error){console.error('Historie opslaan mislukt:',hist.error);alert('Bezoekhistorie opslaan mislukt: '+hist.error.message);return;}
-   if(selectedFiles.length){
-    try{uploaded=await uploadVisitPhotos(hist.data.id,v.planningId,selectedFiles)}catch(e){alert('Het bezoek is opgeslagen, maar niet alle foto’s zijn geüpload. '+e.message)}
-   }
- }
- v.photos=(v.photos||[]).concat(uploaded.length?uploaded:selectedFiles.map(f=>({name:f.name,size:f.size,type:f.type})));
- const item={visitId:v.id,planningId:v.planningId||v.id,customerId:v.customerId,status,activity:v.activity,summary:v.summary,photos:v.photos,createdAt:v.completedAt};
- const idx=db.history.findIndex(h=>h.visitId===v.id);if(idx>=0)db.history[idx]=item;else db.history.push(item);
- save();closeFinish();renderAll();alert(ts(status)+' '+t('saved'))}
+ finishBusy=true;$('btnDone').classList.add('v109Busy');$('btnNotDone').classList.add('v109Busy');
+ try{
+  const selectedFiles=pendingFinishFiles.slice();
+  v.status=status;v.activity=$('finishActivity').value.trim();v.summary=$('finishSummary').value.trim();v.completedAt=new Date().toISOString();
+  let uploaded=[];
+  if(sb&&v.planningId){
+    const upd=await sb.from('planning').update({status,uitgevoerd:status==='Uitgevoerd',updated_at:new Date().toISOString()}).eq('id',v.planningId).select('id,status,uitgevoerd').single();
+    if(upd.error)throw new Error('Status niet opgeslagen: '+upd.error.message);
+    if(upd.data.status!==status)throw new Error('De opgeslagen status kon niet worden bevestigd.');
+    const historyRow={customer_id:v.customerId,planning_id:v.planningId,bezoekdatum:v.date,starttijd:v.time||null,eindtijd:v.end||null,activiteit:v.activity,samenvatting:v.summary,opmerkingen:status,duur_min:durationOf(v),afgerond:true,updated_at:new Date().toISOString()};
+    const existing=await sb.from('visit_history').select('id').eq('planning_id',v.planningId).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(existing.error)throw new Error('Bezoekhistorie controleren mislukt: '+existing.error.message);
+    let historyId=existing.data?.id;
+    if(historyId){const hist=await sb.from('visit_history').update(historyRow).eq('id',historyId);if(hist.error)throw new Error('Bezoekhistorie bijwerken mislukt: '+hist.error.message)}
+    else{const hist=await sb.from('visit_history').insert(historyRow).select('id').single();if(hist.error)throw new Error('Bezoekhistorie opslaan mislukt: '+hist.error.message);historyId=hist.data.id}
+    if(selectedFiles.length)uploaded=await uploadVisitPhotos(historyId,v.planningId,selectedFiles);
+  }
+  v.status=status;
+  const knownPaths=new Set((v.photos||[]).map(p=>p.path).filter(Boolean));
+  v.photos=(v.photos||[]).concat(uploaded.filter(p=>!knownPaths.has(p.path)));
+  const item={visitId:v.id,planningId:v.planningId||v.id,customerId:v.customerId,status,activity:v.activity,summary:v.summary,photos:v.photos,createdAt:v.completedAt};
+  const idx=db.history.findIndex(h=>h.visitId===v.id);if(idx>=0)db.history[idx]=item;else db.history.push(item);
+  pendingFinishFiles=[];save();closeFinish();renderAll();alert(ts(status)+' '+t('saved'));
+ }catch(err){console.error(err);alert(err.message)}finally{finishBusy=false;$('btnDone').classList.remove('v109Busy');$('btnNotDone').classList.remove('v109Busy')}
+}
 
 function setupProfileCropper(fileInput,button,imageEl){
   const overlay=document.getElementById('profileCropOverlay'), viewport=document.getElementById('cropViewport'), cropImg=document.getElementById('cropImage'), zoom=document.getElementById('cropZoom');
@@ -789,7 +846,6 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
           <div class="adminUserActions">
             <button type="button" class="secondary mToggleUser" data-id="${esc(u.id)}" data-active="${u.is_active!==false}">${u.is_active===false?'Inschakelen':'Uitschakelen'}</button>
             <button type="button" class="secondary mPasswordUser" data-id="${esc(u.id)}">Wachtwoord</button>
-            ${u.role!=='admin'?`<button type="button" class="secondary mDeleteUser" data-id="${esc(u.id)}" data-email="${esc(u.email)}">Verwijderen</button>`:''}
           </div>
         </div>`;
       }).join(''):'<div class="card empty">Geen gebruikers gevonden.</div>';
@@ -804,10 +860,8 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
       const enabled=!!(data===true||data?.enabled===true);
       window.GJ_TOMTOM_ENABLED=enabled;
       setStatus('mTomTomStatus',enabled?'TomTom staat online voor alle gebruikers.':'TomTom staat uit.',enabled?'ok':'busy');
-      return enabled;
-    }catch(e){window.GJ_TOMTOM_ENABLED=false;setStatus('mTomTomStatus',e.message,'err');return false}
+    }catch(e){setStatus('mTomTomStatus',e.message,'err')}
   }
-  window.GJ_REFRESH_TOMTOM_STATUS=loadTomTomStatus;
 
   function requireConfirm(label){
     const value=prompt(`${label}\n\nTyp exact BEVESTIG om door te gaan.`);
@@ -917,10 +971,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById('today')?.classList.add('active');
     }
-    // De status is voor routeberekeningen van iedere ingelogde gebruiker nodig.
-    // Alleen gebruikersbeheer en de TomTom-knoppen blijven beheerdersfuncties.
-    await loadTomTomStatus();
-    if(isAdmin)await loadMobileUsers();
+    if(isAdmin){await loadMobileUsers();await loadTomTomStatus();}
   });
 
   document.addEventListener('click',async e=>{
@@ -947,8 +998,6 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     if(toggle){try{await adminCall({action:'set_active',user_id:toggle.dataset.id,is_active:toggle.dataset.active!=='true'});await loadMobileUsers()}catch(err){alert(err.message)}return}
     const pw=e.target.closest('.mPasswordUser');
     if(pw){const password=prompt('Nieuw tijdelijk wachtwoord (minimaal 8 tekens):');if(!password)return;if(password.length<8)return alert('Minimaal 8 tekens.');try{await adminCall({action:'set_password',user_id:pw.dataset.id,password});alert('Wachtwoord aangepast.')}catch(err){alert(err.message)}return}
-    const del=e.target.closest('.mDeleteUser');
-    if(del){const value=prompt(`Gebruiker ${del.dataset.email} en alle bijbehorende gegevens definitief verwijderen?\n\nTyp exact VERWIJDER om door te gaan.`);if(value!=='VERWIJDER')return;try{const result=await adminCall({action:'delete',user_id:del.dataset.id});alert(result.warnings?.length?'Gebruiker verwijderd. Let op: '+result.warnings.join(' '):'Gebruiker en bijbehorende gegevens zijn verwijderd.');await loadMobileUsers()}catch(err){alert('Gebruiker verwijderen mislukt: '+err.message)}return}
     const clear=e.target.closest('[data-admin-clear]');
     if(clear)return clearAction(clear.dataset.adminClear);
   });
@@ -1057,7 +1106,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
  function disableHeaderPhoto(){['desktopProfileButton','profileButton'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopImmediatePropagation()};b.setAttribute('aria-label','Profielfoto. Wijzigen via Instellingen → Profiel');b.style.pointerEvents='none'}})}
  async function showImpersonation(){if(!GJ_AUTH?.impersonating)return;document.body.classList.add('v102Impersonating');let name='gebruiker';try{const r=await GJ_AUTH.sb.from('profiles').select('full_name,email').eq('id',GJ_AUTH.workspaceUserId).maybeSingle();name=r.data?.full_name||r.data?.email||name}catch(_){}document.body.insertAdjacentHTML('afterbegin',`<div class="v102Impersonation">Voordoen als: ${esc(name)} <button id="v102BackAdmin" type="button">Terug naar beheer</button></div>`);$('v102BackAdmin').onclick=()=>{sessionStorage.removeItem('gj_impersonate_user_v102');location.reload()}}
  function injectImpersonateButtons(){if(!GJ_AUTH?.isAdmin)return;document.querySelectorAll('.adminUser').forEach(card=>{if(card.querySelector('.v102Impersonate'))return;const id=card.querySelector('[data-id]')?.dataset.id||card.querySelector('[data-admin-user]')?.dataset.adminUser||card.dataset.id;const email=card.textContent; if(!id||email.includes(GJ_AUTH.profile.email))return;const b=document.createElement('button');b.type='button';b.className='secondary v102Impersonate';b.textContent='Voordoen als gebruiker';b.onclick=()=>{sessionStorage.setItem('gj_impersonate_user_v102',id);location.reload()};(card.querySelector('.adminUserActions')||card).appendChild(b)})}
- function syncProfilePreviews(){const src=$('desktopProfileImage')||$('profileImage');if(!src)return;['v102ProfilePreview','mV102ProfilePreview'].forEach(id=>{const x=$(id);if(x&&src.src)x.src=src.src})}
+ function syncProfilePreviews(){const src=$('desktopProfileImage')||$('profileImage');if(!src)return;const url=src.getAttribute('src');['v102ProfilePreview','mV102ProfilePreview'].forEach(id=>{const x=$(id);if(!x)return;if(url)x.src=url;else x.removeAttribute('src')})}
  window.addEventListener('gj-auth-ready',async()=>{disableHeaderPhoto();bindSettings('v102');bindSettings('mV102');await showImpersonation();setTimeout(()=>{injectImpersonateButtons();syncProfilePreviews()},700);new MutationObserver(()=>injectImpersonateButtons()).observe(document.body,{subtree:true,childList:true})});
 })();
 </script>
@@ -1065,4 +1114,5 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v1082.js?v=10820"></script>
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=10801"></script>
+<script src="v109.js?v=10900"></script>
 </body></html>

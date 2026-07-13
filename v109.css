@@ -1,0 +1,75 @@
+/* Planning-GJsystems v10.9: route, day-drag and interface corrections */
+.v109ProfilePreview{
+  position:relative;
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  background:#eef2f6;
+  border:4px solid var(--logoOrange,#ef7d00);
+  color:#123b73;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.1;
+}
+.v109ProfilePreview>span{grid-area:1/1;padding:8px;z-index:0}
+.v109ProfilePreview>.v102ProfilePreview{
+  grid-area:1/1;
+  width:100%!important;
+  height:100%!important;
+  border:0!important;
+  border-radius:50%!important;
+  object-fit:cover!important;
+  background:transparent!important;
+  display:none;
+  z-index:1;
+}
+.v109ProfilePreview>.v102ProfilePreview[src]{display:block}
+
+/* Laptop: logo duidelijker, zonder de vaste menubalk te laten scrollen. */
+body:has(#calendarBody) .productBrand .productCard{
+  width:166px!important;
+  max-width:88%!important;
+  margin-bottom:4px!important;
+}
+body:has(#calendarBody) .productBrand .productCard img{
+  width:146px!important;
+  max-height:92px!important;
+}
+body:has(#calendarBody) .bottomDivider{margin:5px 0 6px!important;height:10px!important}
+body:has(#calendarBody) .productVersion{margin-top:0!important}
+
+/* Hele dagen zijn herkenbaar als één sleepbaar kalenderblok. */
+.dayCell.v109DayDraggable,.weekCol.v109DayDraggable{cursor:grab}
+.dayCell.v109DayDraggable:active,.weekCol.v109DayDraggable:active{cursor:grabbing}
+.dayCell.v109DayDragging,.weekCol.v109DayDragging{opacity:.5;outline:2px dashed #ef7d00!important}
+.dayCell.v109DayDrop,.weekCol.v109DayDrop{outline:3px solid #ef7d00!important;background:#fff5e8!important}
+.v109DayHandle{float:right;color:#ef7d00;font-size:14px;line-height:1;font-weight:950}
+
+/* iPhone: rode Dagroute/volledige-routeknop met zilveren inhoud. */
+body:not(:has(#calendarBody)) #fullRouteBtn{
+  background:linear-gradient(135deg,#c62828,#8e1515)!important;
+  border-color:#d9e0e8!important;
+  color:#d9e0e8!important;
+  box-shadow:0 5px 15px rgba(142,21,21,.2)!important;
+}
+body:not(:has(#calendarBody)) #fullRouteBtn .uiIcon,
+body:not(:has(#calendarBody)) #fullRouteBtn .buttonLabel{
+  color:#d9e0e8!important;
+  stroke:#d9e0e8!important;
+}
+
+/* iPhone: rustige, herkenbare kleur per dagroutestatistiek. */
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(1){background:#eaf2ff!important;border-color:#b8cff2!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(2){background:#e9f8ef!important;border-color:#b9dfc7!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(3){background:#fff4df!important;border-color:#efd3a0!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(4){background:#f2ecff!important;border-color:#d2c1f2!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(1) .statIcon{color:#245da8!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(2) .statIcon{color:#26734d!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(3) .statIcon{color:#a26100!important}
+body:not(:has(#calendarBody)) #today .stats .stat:nth-child(4) .statIcon{color:#6742a5!important}
+
+.v109Busy{opacity:.65!important;pointer-events:none!important}

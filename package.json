@@ -1,8 +1,8 @@
 {
-  "name": "planning-gjsystems-v10.8-live-locations",
-  "version": "10.8.2",
+  "name": "planning-gjsystems-v10.9-route-day-fixes",
+  "version": "10.9.0",
   "private": true,
-  "description": "Afzonderlijke development/testversie van Planning-GJsystems v10.8 Live Locaties",
+  "description": "Planning-GJsystems v10.9 met live-route-, dagverplaatsings- en synchronisatiecorrecties",
   "scripts": {
     "config:generate": "node scripts/generate-runtime-config.mjs",
     "build": "node scripts/prepare-dist.mjs",

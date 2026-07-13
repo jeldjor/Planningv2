@@ -1,4 +1,4 @@
-# Planning-GJsystems v10.8.2 – Live Locaties
+# Planning-GJsystems v10.9 – Route- en dagroutecorrecties
 
 Dit is een zelfstandige development/testversie, inhoudelijk gebaseerd op `Planning-GJsystems v10.7 COMPLETE`. Gebruik deze repository uitsluitend met een **nieuw, leeg Supabase development/testproject**. De productie-repository, productie-app en productiedatabase horen niet bij deze installatie.
 
@@ -46,7 +46,7 @@ Kopieer `.env.example` naar een lokaal `.env`-bestand en vul alleen waarden van 
 
 ```text
 APP_ENV=development
-APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.8.2 DEV
+APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.9 DEV
 SUPABASE_URL=https://<nieuwe-project-ref>.supabase.co
 SUPABASE_ANON_KEY=<anon-of-publishable-key-van-het-testproject>
 SUPABASE_PROJECT_REF=<nieuwe-project-ref>

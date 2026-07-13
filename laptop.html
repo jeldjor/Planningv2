@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Planning-GJsystems v10.8.2 DEV</title>
+<title>Planning-GJsystems v10.9 DEV</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="runtime-config.js"></script>
@@ -1612,6 +1612,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v106.css?v=10700">
 <link rel="stylesheet" href="v108.css?v=10801">
 <link rel="stylesheet" href="v1082.css?v=10820">
+<link rel="stylesheet" href="v109.css?v=10900">
 </head>
 <body>
 <aside class="sidebar">
@@ -1666,7 +1667,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
       });
     })();
     </script>
-    <div class="productVersion">v10.8.2 DEV</div>
+    <div class="productVersion">v10.9 DEV</div>
   </div>
   <button id="desktopLogout" type="button" class="desktopLogout">Uitloggen</button>
 </aside>
@@ -1836,7 +1837,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 
 <section id="settings" class="screen"><div class="panel"><h2>Instellingen</h2>
 <div class="v102SettingsGrid">
- <div class="v102Card"><h3>Profiel</h3><p class="muted">De profielfoto wordt centraal gesynchroniseerd tussen laptop en iPhone.</p><img id="v102ProfilePreview" class="v102ProfilePreview" alt="Profielfoto"><input id="v102ProfileFile" type="file" accept="image/*" hidden><button id="v102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
+ <div class="v102Card"><h3>Profiel</h3><p class="muted">De profielfoto wordt centraal gesynchroniseerd tussen laptop en iPhone.</p><div class="v109ProfilePreview"><span>Profielfoto</span><img id="v102ProfilePreview" class="v102ProfilePreview" alt=""></div><input id="v102ProfileFile" type="file" accept="image/*" hidden><button id="v102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
  <div class="v102Card"><h3>Wachtwoord wijzigen</h3><label>Huidig wachtwoord<input id="v102CurrentPassword" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="v102NewPassword" type="password" autocomplete="new-password"></label><label>Nieuw wachtwoord herhalen<input id="v102NewPasswordAgain" type="password" autocomplete="new-password"></label><div id="v102PasswordCriteria" class="v102Criteria"></div><button id="v102ChangePassword" type="button">Wachtwoord wijzigen</button><div id="v102PasswordStatus" class="adminStatus"></div></div>
 </div>
   <div class="settingsBlock" style="margin-top:0;padding-top:0;border-top:0">
@@ -3404,17 +3405,12 @@ function optimizeDayOrder(date){
   if(best.ok)applyFeasibleOrder(date,best); else optimizeDayOrderLegacy(date);
 }
 async function generatePlanning(){
-  // Haal de centrale TomTom-status vlak voor het plannen opnieuw op. Zo gebruikt
-  // ook een gewone gebruiker de beveiligde proxy en niet stil de schatting.
-  if(typeof window.GJ_REFRESH_TOMTOM_STATUS==='function'){
-    await window.GJ_REFRESH_TOMTOM_STATUS();
-  }
   if(!db.customers.length)return alert('Importeer eerst klanten.');
   const from=parseDisplayDate($('planFrom').value),to=parseDisplayDate($('planTo').value);
   if(!from||!to)return alert('Gebruik datumformaat dd-mm-jjjj.');
   const start=dateObj(from),end=dateObj(to); if(end<start)return alert('Tot datum ligt vóór van datum.');
   const replace=$('planReplace').checked;
-  if(replace)db.visits=db.visits.filter(v=>v.status==='Vast'||!v.date||!(v.date>=from&&v.date<=to));
+  if(replace)db.visits=db.visits.filter(v=>v.status==='Vast'||['Uitgevoerd','Niet uitgevoerd','Bezocht'].includes(v.status)||!v.date||!(v.date>=from&&v.date<=to));
   db.unplanned=(db.unplanned||[]).filter(u=>!u.generatedByPlanner||!(u.oldDate>=from&&u.oldDate<=to));
   const activeCustomers=db.customers.filter(isActive);
   await ensurePlanningCoordinates(activeCustomers,true);
@@ -5510,7 +5506,7 @@ async function drawVisitPdfLayout(doc,visit){
       setUserStatus('Gebruikers laden…','busy');
       const r=await adminCall({action:'list'});
       const rows=r.users||[];
-      $('adminUsersTable').innerHTML=`<thead><tr><th>Naam</th><th>E-mail</th><th>Rol</th><th>Status</th><th>Acties</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${esc([u.first_name,u.last_name].filter(Boolean).join(' ')||'-')}</td><td>${esc(u.email)}</td><td>${u.role==='admin'?'Beheerder':'Gebruiker'}</td><td>${u.is_active===false?'Uitgeschakeld':'Actief'}</td><td><button class="secondary adminToggleUser" data-id="${esc(u.id)}" data-active="${u.is_active!==false}">${u.is_active===false?'Inschakelen':'Uitschakelen'}</button> <button class="secondary adminPasswordUser" data-id="${esc(u.id)}">Wachtwoord</button>${u.role!=='admin'?` <button class="secondary adminDeleteUser" data-id="${esc(u.id)}" data-email="${esc(u.email)}">Verwijderen</button>`:''}</td></tr>`).join('')}</tbody>`;
+      $('adminUsersTable').innerHTML=`<thead><tr><th>Naam</th><th>E-mail</th><th>Rol</th><th>Status</th><th>Acties</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${esc([u.first_name,u.last_name].filter(Boolean).join(' ')||'-')}</td><td>${esc(u.email)}</td><td>${u.role==='admin'?'Beheerder':'Gebruiker'}</td><td>${u.is_active===false?'Uitgeschakeld':'Actief'}</td><td><button class="secondary adminToggleUser" data-id="${esc(u.id)}" data-active="${u.is_active!==false}">${u.is_active===false?'Inschakelen':'Uitschakelen'}</button> <button class="secondary adminPasswordUser" data-id="${esc(u.id)}">Wachtwoord</button></td></tr>`).join('')}</tbody>`;
       setUserStatus(`${rows.length} gebruikers geladen`,'ok');
     }catch(e){setUserStatus(e.message,'err')}
   }
@@ -5519,18 +5515,12 @@ async function drawVisitPdfLayout(doc,visit){
     document.body.classList.toggle('gj-admin',isAdmin);
     document.querySelectorAll('.gjAdminOnly').forEach(e=>e.style.display=isAdmin?'':'none');
     if(!isAdmin && state?.screen==='admin') nav('calendar');
-    await loadTomTomAvailability();
     if(!isAdmin)return;
     await loadUsers();
-  }
-  async function loadTomTomAvailability(){
     const st=await GJ_AUTH.sb.rpc('get_tomtom_status');
-    if(st.error){window.GJ_TOMTOM_ENABLED=false;console.warn('TomTom-status:',st.error);return false}
     window.GJ_TOMTOM_ENABLED=!!(st.data===true||st.data?.enabled===true);
     if($('tomtomSecureStatus')){$('tomtomSecureStatus').textContent=window.GJ_TOMTOM_ENABLED?'TomTom staat online voor alle gebruikers.':'TomTom staat uit.';$('tomtomSecureStatus').className='syncStatus '+(window.GJ_TOMTOM_ENABLED?'ok':'busy')}
-    return window.GJ_TOMTOM_ENABLED;
   }
-  window.GJ_REFRESH_TOMTOM_STATUS=loadTomTomAvailability;
   window.addEventListener('gj-auth-ready',async ev=>{
     const p=ev.detail.profile;
     const name=p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')||p.email;
@@ -5578,8 +5568,6 @@ async function drawVisitPdfLayout(doc,visit){
     if(toggle){try{await adminCall({action:'set_active',user_id:toggle.dataset.id,is_active:toggle.dataset.active!=='true'});await loadUsers()}catch(err){alert(err.message)}return}
     const pw=e.target.closest('.adminPasswordUser');
     if(pw){const password=prompt('Nieuw tijdelijk wachtwoord (minimaal 8 tekens):');if(!password)return;if(password.length<8)return alert('Minimaal 8 tekens.');try{await adminCall({action:'set_password',user_id:pw.dataset.id,password});alert('Wachtwoord aangepast.')}catch(err){alert(err.message)}return}
-    const del=e.target.closest('.adminDeleteUser');
-    if(del){const value=prompt(`Gebruiker ${del.dataset.email} en alle bijbehorende gegevens definitief verwijderen?\n\nTyp exact VERWIJDER om door te gaan.`);if(value!=='VERWIJDER')return;try{const result=await adminCall({action:'delete',user_id:del.dataset.id});alert(result.warnings?.length?'Gebruiker verwijderd. Let op: '+result.warnings.join(' '):'Gebruiker en bijbehorende gegevens zijn verwijderd.');await loadUsers()}catch(err){alert('Gebruiker verwijderen mislukt: '+err.message)}return}
   });
   $('saveTomTomSecure')?.addEventListener('click',async()=>{try{if(!GJ_AUTH?.isAdmin)throw new Error('Geen beheerdersrechten.');const key=$('setLive').value.trim();if(!key)throw new Error('Vul eerst de TomTom API-sleutel in.');const {error}=await GJ_AUTH.sb.rpc('set_tomtom_secret',{p_key:key,p_enabled:true});if(error)throw error;$('setLive').value='';window.GJ_TOMTOM_ENABLED=true;$('tomtomSecureStatus').textContent='TomTom staat online voor alle gebruikers.';$('tomtomSecureStatus').className='syncStatus ok';alert('TomTom is beveiligd opgeslagen en ingeschakeld.')}catch(e){alert(e.message)}});
   $('disableTomTomSecure')?.addEventListener('click',async()=>{try{if(!GJ_AUTH?.isAdmin)throw new Error('Geen beheerdersrechten.');const {error}=await GJ_AUTH.sb.rpc('set_tomtom_secret',{p_key:'',p_enabled:false});if(error)throw error;window.GJ_TOMTOM_ENABLED=false;$('tomtomSecureStatus').textContent='TomTom staat uit.';$('tomtomSecureStatus').className='syncStatus busy';}catch(e){alert(e.message)}});
@@ -5661,7 +5649,7 @@ async function drawVisitPdfLayout(doc,visit){
  function disableHeaderPhoto(){['desktopProfileButton','profileButton'].forEach(id=>{const b=$(id);if(b){b.onclick=e=>{e.preventDefault();e.stopImmediatePropagation()};b.setAttribute('aria-label','Profielfoto. Wijzigen via Instellingen → Profiel');b.style.pointerEvents='none'}})}
  async function showImpersonation(){if(!GJ_AUTH?.impersonating)return;document.body.classList.add('v102Impersonating');let name='gebruiker';try{const r=await GJ_AUTH.sb.from('profiles').select('full_name,email').eq('id',GJ_AUTH.workspaceUserId).maybeSingle();name=r.data?.full_name||r.data?.email||name}catch(_){}document.body.insertAdjacentHTML('afterbegin',`<div class="v102Impersonation">Voordoen als: ${esc(name)} <button id="v102BackAdmin" type="button">Terug naar beheer</button></div>`);$('v102BackAdmin').onclick=()=>{sessionStorage.removeItem('gj_impersonate_user_v102');location.reload()}}
  function injectImpersonateButtons(){if(!GJ_AUTH?.isAdmin)return;document.querySelectorAll('.adminUser').forEach(card=>{if(card.querySelector('.v102Impersonate'))return;const id=card.querySelector('[data-id]')?.dataset.id||card.querySelector('[data-admin-user]')?.dataset.adminUser||card.dataset.id;const email=card.textContent; if(!id||email.includes(GJ_AUTH.profile.email))return;const b=document.createElement('button');b.type='button';b.className='secondary v102Impersonate';b.textContent='Voordoen als gebruiker';b.onclick=()=>{sessionStorage.setItem('gj_impersonate_user_v102',id);location.reload()};(card.querySelector('.adminUserActions')||card).appendChild(b)})}
- function syncProfilePreviews(){const src=$('desktopProfileImage')||$('profileImage');if(!src)return;['v102ProfilePreview','mV102ProfilePreview'].forEach(id=>{const x=$(id);if(x&&src.src)x.src=src.src})}
+ function syncProfilePreviews(){const src=$('desktopProfileImage')||$('profileImage');if(!src)return;const url=src.getAttribute('src');['v102ProfilePreview','mV102ProfilePreview'].forEach(id=>{const x=$(id);if(!x)return;if(url)x.src=url;else x.removeAttribute('src')})}
  window.addEventListener('gj-auth-ready',async()=>{disableHeaderPhoto();bindSettings('v102');bindSettings('mV102');await showImpersonation();setTimeout(()=>{injectImpersonateButtons();syncProfilePreviews()},700);new MutationObserver(()=>injectImpersonateButtons()).observe(document.body,{subtree:true,childList:true})});
 })();
 </script>
@@ -5669,5 +5657,6 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v1082.js?v=10820"></script>
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=10801"></script>
+<script src="v109.js?v=10900"></script>
 </body>
 </html>
