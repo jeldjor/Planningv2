@@ -803,8 +803,10 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
       const enabled=!!(data===true||data?.enabled===true);
       window.GJ_TOMTOM_ENABLED=enabled;
       setStatus('mTomTomStatus',enabled?'TomTom staat online voor alle gebruikers.':'TomTom staat uit.',enabled?'ok':'busy');
-    }catch(e){setStatus('mTomTomStatus',e.message,'err')}
+      return enabled;
+    }catch(e){window.GJ_TOMTOM_ENABLED=false;setStatus('mTomTomStatus',e.message,'err');return false}
   }
+  window.GJ_REFRESH_TOMTOM_STATUS=loadTomTomStatus;
 
   function requireConfirm(label){
     const value=prompt(`${label}\n\nTyp exact BEVESTIG om door te gaan.`);
@@ -914,7 +916,10 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
       document.getElementById('today')?.classList.add('active');
     }
-    if(isAdmin){await loadMobileUsers();await loadTomTomStatus();}
+    // De status is voor routeberekeningen van iedere ingelogde gebruiker nodig.
+    // Alleen gebruikersbeheer en de TomTom-knoppen blijven beheerdersfuncties.
+    await loadTomTomStatus();
+    if(isAdmin)await loadMobileUsers();
   });
 
   document.addEventListener('click',async e=>{

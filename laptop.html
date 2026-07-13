@@ -3404,6 +3404,11 @@ function optimizeDayOrder(date){
   if(best.ok)applyFeasibleOrder(date,best); else optimizeDayOrderLegacy(date);
 }
 async function generatePlanning(){
+  // Haal de centrale TomTom-status vlak voor het plannen opnieuw op. Zo gebruikt
+  // ook een gewone gebruiker de beveiligde proxy en niet stil de schatting.
+  if(typeof window.GJ_REFRESH_TOMTOM_STATUS==='function'){
+    await window.GJ_REFRESH_TOMTOM_STATUS();
+  }
   if(!db.customers.length)return alert('Importeer eerst klanten.');
   const from=parseDisplayDate($('planFrom').value),to=parseDisplayDate($('planTo').value);
   if(!from||!to)return alert('Gebruik datumformaat dd-mm-jjjj.');
@@ -5514,12 +5519,18 @@ async function drawVisitPdfLayout(doc,visit){
     document.body.classList.toggle('gj-admin',isAdmin);
     document.querySelectorAll('.gjAdminOnly').forEach(e=>e.style.display=isAdmin?'':'none');
     if(!isAdmin && state?.screen==='admin') nav('calendar');
+    await loadTomTomAvailability();
     if(!isAdmin)return;
     await loadUsers();
+  }
+  async function loadTomTomAvailability(){
     const st=await GJ_AUTH.sb.rpc('get_tomtom_status');
+    if(st.error){window.GJ_TOMTOM_ENABLED=false;console.warn('TomTom-status:',st.error);return false}
     window.GJ_TOMTOM_ENABLED=!!(st.data===true||st.data?.enabled===true);
     if($('tomtomSecureStatus')){$('tomtomSecureStatus').textContent=window.GJ_TOMTOM_ENABLED?'TomTom staat online voor alle gebruikers.':'TomTom staat uit.';$('tomtomSecureStatus').className='syncStatus '+(window.GJ_TOMTOM_ENABLED?'ok':'busy')}
+    return window.GJ_TOMTOM_ENABLED;
   }
+  window.GJ_REFRESH_TOMTOM_STATUS=loadTomTomAvailability;
   window.addEventListener('gj-auth-ready',async ev=>{
     const p=ev.detail.profile;
     const name=p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')||p.email;
