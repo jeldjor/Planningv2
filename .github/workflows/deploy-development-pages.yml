@@ -1,4 +1,4 @@
-name: Deploy v10.8 development
+name: Test en deploy Planning-GJsystems v11.1.2
 
 on:
   workflow_dispatch:
@@ -20,36 +20,27 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
-
-      - run: npm install
-
+      - run: npm ci
       - run: npm test
-
       - name: Maak uitsluitend development-runtimeconfig
         env:
           APP_ENV: development
-          APP_DEPLOYMENT_LABEL: Development / test
+          APP_DEPLOYMENT_LABEL: Planning-GJsystems v11.1.2
           SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
           SUPABASE_PROJECT_REF: ${{ secrets.DEV_SUPABASE_PROJECT_REF }}
           MAP_PROVIDER: openstreetmap
         run: npm run config:generate
-
       - run: npm run build
-
       - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-
       - id: deployment
         uses: actions/deploy-pages@v4
