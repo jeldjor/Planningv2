@@ -96,11 +96,17 @@
       // Supabase bestonden. Sla die voorstap over; na opslaan berekent v11 de
       // routes met de echte database-ID's atomair en volledig live.
       const tomtomWasEnabled=window.GJ_TOMTOM_ENABLED===true;
+      const priorCalculateRoutesForDates=window.calculateRoutesForDates;
       window.GJ_TOMTOM_ENABLED=false;
+      // ensurePlanningCoordinates kan de centrale TomTom-status tijdens de
+      // oude planner opnieuw op true zetten. Blokkeer daarom ook expliciet de
+      // oude losse routecyclus. Na centrale opslag rekent makeDatesLive de dag
+      // éénmaal compleet huis-klanten-huis met de gedeelde v11-engine.
+      window.calculateRoutesForDates=async()=>true;
       beginMutation();
       try{
         result=await priorGenerate.apply(this,arguments);
-      }finally{window.GJ_TOMTOM_ENABLED=tomtomWasEnabled;pendingRemoteReload=false;await endMutation()}
+      }finally{window.calculateRoutesForDates=priorCalculateRoutesForDates;window.GJ_TOMTOM_ENABLED=tomtomWasEnabled;pendingRemoteReload=false;await endMutation()}
       // De planner voegt rijen in Supabase toe. Lees daarna éénmaal de echte
       // database-ID's terug voordat de atomische v11-routeopslag begint.
       await window.loadPlanningFromSupabase?.();
