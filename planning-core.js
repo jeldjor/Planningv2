@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='11.1.0';
+  const VERSION='11.1.1';
   const dayLocks=new Map();
   const pad=n=>String(n).padStart(2,'0');
   const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -35,6 +35,11 @@
   const pointFromCustomer=customer=>({lat:number(customer?.lat??customer?.Latitude,NaN),lng:number(customer?.lng??customer?.Longitude,NaN)});
   const hasPoint=point=>Number.isFinite(number(point?.lat,NaN))&&Number.isFinite(number(point?.lng,NaN));
   const visitPoint=visit=>pointFromCustomer(visit.customer||visit);
+  function withTimeout(promise,milliseconds,message){
+    let timer;
+    const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message||'De bewerking duurde te lang.')),milliseconds)});
+    return Promise.race([Promise.resolve(promise),deadline]).finally(()=>clearTimeout(timer));
+  }
 
   function absenceWindows(absences,date){
     const windows=[];
@@ -128,11 +133,7 @@
       fromLat:number(request.from.lat),fromLon:number(request.from.lng),
       toLat:number(request.to.lat),toLon:number(request.to.lng),mode:request.mode
     }));
-    let timer;
-    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('De live routeberekening duurde te lang. Controleer de TomTom Edge Function.')),30000)});
-    let batch;
-    try{batch=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),timeout])}
-    finally{clearTimeout(timer)}
+    const batch=await withTimeout(sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),25000,'TomTom reageerde niet binnen 25 seconden. Probeer de planning opnieuw.');
     if(batch.error||batch.data?.error)throw new Error(batch.data?.error||batch.error?.message||'Live route kon niet worden berekend.');
     if(!Array.isArray(batch.data?.legs)||batch.data.legs.length!==requests.length)throw new Error('TomTom gaf geen complete dagroute terug.');
     return batch.data.legs.map((leg,index)=>({
@@ -200,7 +201,7 @@
   async function persistDay(sb,{workspaceId,date,departure,result,pauseEnabled=true}){
     const summary={...result.totals,end:result.end,live:result.live,returnLeg:result.returnLeg,calculatedAt:result.calculatedAt,hash:stableHash({date,departure,rows:result.rows})};
     const rows=result.rows.map(row=>({id:row.id,route_volgorde:row.order,starttijd:row.start,eindtijd:row.end,reistijd_min:row.travelMin,parking_min:row.parkingMin,afstand_km:row.distanceKm,route_mode:row.routeMode,route_live:row.routeLive}));
-    const rpc=await sb.rpc('save_day_route',{p_workspace_id:workspaceId||null,p_date:date,p_departure:departure,p_rows:rows,p_summary:summary,p_pause_enabled:pauseEnabled});
+    const rpc=await withTimeout(sb.rpc('save_day_route',{p_workspace_id:workspaceId||null,p_date:date,p_departure:departure,p_rows:rows,p_summary:summary,p_pause_enabled:pauseEnabled}),15000,'De dagroute kon niet binnen 15 seconden in Supabase worden opgeslagen.');
     if(!rpc.error)return summary;
     if(/function .* does not exist|schema cache/i.test(String(rpc.error.message||''))){
       throw new Error('De centrale routeopslag ontbreekt. Voer SUPABASE_V11_1_RELEASE.sql uit en vernieuw daarna de Supabase schema-cache.');
@@ -248,5 +249,5 @@
     return response.data?.signedUrl||null;
   }
 
-  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
+  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,withTimeout,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
 });

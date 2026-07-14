@@ -1,4 +1,11 @@
-# Changelog Planning-GJsystems v11.1.0
+# Changelog Planning-GJsystems v11.1.1
+
+## Hotfix 11.1.1
+
+- Een ontbrekende timeout rond `save_day_route` is toegevoegd.
+- TomTom heeft een deadline van 25 seconden, Supabase-routeopslag 15 seconden en de complete dag 45 seconden.
+- Het voortgangsvenster sluit altijd via `finally`; een dag kan niet onbeperkt op “1 van 4” blijven staan.
+- Nieuwe regressietest met een bewust nooit antwoordende netwerkcall.
 
 ## Opgeloste fouten
 
@@ -19,6 +26,7 @@
 - De app-shellcache is verhoogd naar v11.1.0.
 - Gebruikersaanmaak rolt een Auth-account terug als het profiel niet kan worden opgeslagen; beheerders kunnen niet-admin testgebruikers veilig verwijderen.
 - TomTom-geocodering heeft nu invoergrenzen en een timeout van 15 seconden.
+- TomTom-dagroutes, Supabase-routeopslag en de complete dagbewerking hebben afzonderlijke harde deadlines; het voortgangsvenster kan niet onbeperkt op dag 1 blijven staan.
 
 ## Database
 

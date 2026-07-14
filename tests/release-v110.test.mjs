@@ -12,7 +12,7 @@ const [script,laptop,mobile,manifestText,pkgText]=await Promise.all([
 
 test('v10.10 modules zijn syntactisch geldig en lokaal geladen',()=>{
   new vm.Script(script,{filename:'v110.js'});
-  assert.equal(JSON.parse(pkgText).version,'11.1.0');
+  assert.equal(JSON.parse(pkgText).version,'11.1.1');
   for(const html of [laptop,mobile]){
     assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=11000/);assert.match(html,/v110\.js\?v=11001/);
     assert.doesNotMatch(html,/cdn\.jsdelivr\.net\/npm\/jspdf/);

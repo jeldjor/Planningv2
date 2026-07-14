@@ -26,6 +26,11 @@ test('gewone synchronisatie start geen herberekening van alle geplande dagen',()
   assert.match(v110,/makeDatesLive\(\[newDate\]/);
 });
 
+test('iedere route- en Supabasefase heeft een harde deadline',()=>{
+  assert.match(v110,/Dagroute .* is na 45 seconden afgebroken/);
+  assert.match(v110,/maximaal 45 seconden/);
+});
+
 test('Realtime is op laptop en iPhone begrensd tot de actieve werkruimte',()=>{
   assert.match(v11,/const filter=`user_id=eq\.\$\{workspace\(\)\}`/);
   assert.match(laptop,/const filter='user_id=eq\.'\+workspaceId/);

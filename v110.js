@@ -11,6 +11,7 @@
     document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach(el=>el.remove());
   }
   function beginMutation(){mutationDepth++;window.__GJ_LOCAL_MUTATION__=true}
+  function withDeadline(promise,milliseconds,message){let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),milliseconds)})]).finally(()=>clearTimeout(timer))}
   async function endMutation(){
     mutationDepth=Math.max(0,mutationDepth-1);window.__GJ_LOCAL_MUTATION__=mutationDepth>0;
     if(!mutationDepth&&pendingRemoteReload){pendingRemoteReload=false;await window.loadPlanningFromSupabase?.()}
@@ -66,7 +67,7 @@
     const enabled=window.gjEnsureCentralTomTom?await window.gjEnsureCentralTomTom():window.GJ_TOMTOM_ENABLED===true;
     if(!enabled)throw new Error('TomTom staat niet online. Live routes konden niet worden berekend.');
     if(force&&window.gjInvalidateDayRouteCache)window.gjInvalidateDayRouteCache(date);
-    await calculateDayRoutes(date,false);
+    await withDeadline(calculateDayRoutes(date,false),45000,`Dagroute ${displayDate(date)} is na 45 seconden afgebroken. Controleer TomTom/Supabase en probeer opnieuw.`);
     const stats=routeStatsForDay(date);
     if(!stats?.live)throw new Error(`De live route voor ${displayDate(date)} is niet volledig ontvangen.`);
     saveRouteStats(date);save();render();
@@ -110,7 +111,7 @@
       if(dates.length&&progress&&!progress.open)progress.showModal();
       try{
         const ok=await makeDatesLive(dates,{persist:true,force:true,quiet:false,onProgress:(current,total)=>{
-          if($('progressText'))$('progressText').textContent=`Dagroute ${current} van ${total} live berekenen...`;
+          if($('progressText'))$('progressText').textContent=`Dagroute ${current} van ${total} live berekenen (maximaal 45 seconden)...`;
           if($('progressFill'))$('progressFill').style.width=Math.round(current/total*100)+'%';
         }});
         if(ok&&dates.length){if($('progressText'))$('progressText').textContent=`Klaar: ${dates.length} dagroutes live berekend.`;if($('progressFill'))$('progressFill').style.width='100%';await new Promise(resolve=>setTimeout(resolve,350))}
