@@ -23,11 +23,11 @@ const [mobile,laptop,auth,app,css,legacyLocation,sql,baseline,edge,serviceWorker
 
 test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten geladen',()=>{
   new vm.Script(app,{filename:'v11.js'});
-  assert.equal(JSON.parse(pkg).version,'11.1.2');
+  assert.equal(JSON.parse(pkg).version,'11.1.3');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=111002/);
-    assert.match(html,/v11\.css\?v=111002/);
-    assert.match(html,/v11\.js\?v=111002/);
+    assert.match(html,/planning-core\.js\?v=111003/);
+    assert.match(html,/v11\.css\?v=111003/);
+    assert.match(html,/v11\.js\?v=111003/);
   }
 });
 
@@ -73,6 +73,21 @@ test('live route gebruikt één complete batch en accepteert geen gedeeltelijk a
   const legs=await core.requestRouteBatch(ok,requests);assert.equal(calls,1);assert.equal(legs.length,2);assert.equal(legs[0].km,12);
   const partial={functions:{invoke:async()=>({data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000,live:true}]},error:null})}};
   await assert.rejects(()=>core.requestRouteBatch(partial,requests),/geen complete dagroute/);
+});
+
+test('oude TomTom Edge Function valt terug op losse live trajecten',async()=>{
+  let calls=0;
+  const legacy={functions:{invoke:async(_name,{body})=>{
+    calls++;
+    if(body.action==='route-batch')return{data:null,error:{message:'Edge Function returned a non-2xx status code',context:new Response(JSON.stringify({error:'Onbekende actie.'}),{status:400})}};
+    return{data:{routes:[{summary:{travelTimeInSeconds:300,lengthInMeters:4000,live:true}}]},error:null};
+  }}};
+  const requests=[{from:{lat:1,lng:1},to:{lat:2,lng:2},mode:'car'},{from:{lat:2,lng:2},to:{lat:1,lng:1},mode:'car'}];
+  const legs=await core.requestRouteBatch(legacy,requests);
+  assert.equal(calls,3);
+  assert.deepEqual(legs.map(leg=>leg.km),[4,4]);
+  const detail=await core.functionErrorMessage({error:{message:'generic',context:new Response(JSON.stringify({error:'TomTom staat uit.'}),{status:503})}});
+  assert.equal(detail,'TomTom staat uit.');
 });
 
 test('harde deadline beëindigt een vastgelopen netwerkbewerking',async()=>{

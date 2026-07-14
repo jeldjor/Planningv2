@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='11.1.2';
+  const VERSION='11.1.3';
   const dayLocks=new Map();
   const pad=n=>String(n).padStart(2,'0');
   const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -39,6 +39,16 @@
     let timer;
     const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message||'De bewerking duurde te lang.')),milliseconds)});
     return Promise.race([Promise.resolve(promise),deadline]).finally(()=>clearTimeout(timer));
+  }
+  async function functionErrorMessage(result,fallback='Edge Function gaf een fout.'){
+    if(result?.data?.error)return String(result.data.error);
+    const error=result?.error,context=error?.context;
+    if(context){
+      try{const body=await context.clone().json();if(body?.error)return String(body.error);if(body?.message)return String(body.message)}catch(_){}
+      try{const text=await context.clone().text();if(text&&text.length<500)return text}catch(_){}
+      if(context.status)return `${fallback} (HTTP ${context.status})`;
+    }
+    return String(error?.message||fallback);
   }
 
   function absenceWindows(absences,date){
@@ -134,9 +144,21 @@
       toLat:number(request.to.lat),toLon:number(request.to.lng),mode:request.mode
     }));
     const batch=await withTimeout(sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),25000,'TomTom reageerde niet binnen 25 seconden. Probeer de planning opnieuw.');
-    if(batch.error||batch.data?.error)throw new Error(batch.data?.error||batch.error?.message||'Live route kon niet worden berekend.');
-    if(!Array.isArray(batch.data?.legs)||batch.data.legs.length!==requests.length)throw new Error('TomTom gaf geen complete dagroute terug.');
-    return batch.data.legs.map((leg,index)=>({
+    let received=batch.data?.legs;
+    if(batch.error||batch.data?.error){
+      // Oudere deployments kennen route-batch nog niet. Gebruik dan veilig de
+      // bestaande route-actie per traject, zodat de live app blijft werken.
+      const singles=await Promise.all(payload.map(async leg=>{
+        const response=await withTimeout(sb.functions.invoke('tomtom-proxy',{body:{action:'route',...leg}}),25000,'Een TomTom-traject reageerde niet binnen 25 seconden.');
+        if(response.error||response.data?.error)throw new Error(await functionErrorMessage(response,'TomTom-route kon niet worden berekend.'));
+        const summary=response.data?.routes?.[0]?.summary;
+        if(!summary)throw new Error('TomTom gaf geen routegegevens terug.');
+        return summary;
+      }));
+      received=singles;
+    }
+    if(!Array.isArray(received)||received.length!==requests.length)throw new Error('TomTom gaf geen complete dagroute terug.');
+    return received.map((leg,index)=>({
       min:Math.max(1,Math.round(number(leg.travelTimeInSeconds)/60)),
       km:Math.round(number(leg.lengthInMeters)/100)/10,
       live:leg.live===true,mode:requests[index].mode
@@ -249,5 +271,5 @@
     return response.data?.signedUrl||null;
   }
 
-  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,withTimeout,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
+  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,withTimeout,functionErrorMessage,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
 });
