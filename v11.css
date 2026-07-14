@@ -1,7 +1,7 @@
 /* Planning-GJsystems v11.0 — productie-interface */
 .version,.productVersion,.settingsVersion,#v108DevBanner{display:none!important}
-.removePlan,.outAct{background:#7f1d1d!important;color:#d9e0e8!important;border:1px solid #991b1b!important;text-shadow:none!important}
-.removePlan:hover,.outAct:hover{background:#651515!important}
+button.removePlan.red,.smallBtns button.removePlan,.outAct{background:#681319!important;color:#d9e0e8!important;-webkit-text-fill-color:#d9e0e8!important;border:1px solid #8f2630!important;text-shadow:none!important;opacity:1!important}
+button.removePlan.red:hover,.smallBtns button.removePlan:hover,.outAct:hover{background:#500b10!important;color:#eef1f4!important;-webkit-text-fill-color:#eef1f4!important}
 .stats .stat:nth-child(1){background:#eef4ff!important;border-color:#b9d0ef!important}
 .stats .stat:nth-child(2){background:#ecfdf3!important;border-color:#b7e4c7!important}
 .stats .stat:nth-child(3){background:#fff7ed!important;border-color:#fed7aa!important}

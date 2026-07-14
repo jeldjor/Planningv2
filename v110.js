@@ -4,14 +4,13 @@
   const $=id=>document.getElementById(id),isLaptop=!!$('calendarBody');
   const client=()=>window.GJ_AUTH?.sb||null;
   const isUuid=value=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value||''));
-  let mutationDepth=0,pendingRemoteReload=false,liveRouteBusy=false,generationBusy=false;
+  let mutationDepth=0,pendingRemoteReload=false,liveRouteBusy=false,lastLiveRouteError=null;
 
   function setVersion(){
     document.title='Planning-GJsystems';
     document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach(el=>el.remove());
   }
   function beginMutation(){mutationDepth++;window.__GJ_LOCAL_MUTATION__=true}
-  function withDeadline(promise,milliseconds,message){let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),milliseconds)})]).finally(()=>clearTimeout(timer))}
   async function endMutation(){
     mutationDepth=Math.max(0,mutationDepth-1);window.__GJ_LOCAL_MUTATION__=mutationDepth>0;
     if(!mutationDepth&&pendingRemoteReload){pendingRemoteReload=false;await window.loadPlanningFromSupabase?.()}
@@ -67,16 +66,16 @@
     const enabled=window.gjEnsureCentralTomTom?await window.gjEnsureCentralTomTom():window.GJ_TOMTOM_ENABLED===true;
     if(!enabled)throw new Error('TomTom staat niet online. Live routes konden niet worden berekend.');
     if(force&&window.gjInvalidateDayRouteCache)window.gjInvalidateDayRouteCache(date);
-    await withDeadline(calculateDayRoutes(date,false),45000,`Dagroute ${displayDate(date)} is na 45 seconden afgebroken. Controleer TomTom/Supabase en probeer opnieuw.`);
+    await calculateDayRoutes(date,false);
     const stats=routeStatsForDay(date);
     if(!stats?.live)throw new Error(`De live route voor ${displayDate(date)} is niet volledig ontvangen.`);
     saveRouteStats(date);save();render();
     if(persist)await persistLiveDay(date);
     return true;
   }
-  async function makeDatesLive(dates,{persist=true,force=false,quiet=false,throwOnError=false,onProgress=null}={}){
+  async function makeDatesLive(dates,{persist=true,force=false,quiet=false,onProgress=null}={}){
     if(liveRouteBusy)return false;
-    liveRouteBusy=true;
+    liveRouteBusy=true;lastLiveRouteError=null;
     try{
       const unique=[...new Set((dates||[]).filter(Boolean))];
       for(let index=0;index<unique.length;index++){
@@ -84,7 +83,7 @@
         await makeDayLive(unique[index],{persist,force});
       }
       return true;
-    }catch(error){console.error('Live routeberekening:',error);if(throwOnError)throw error;if(!quiet)alert(error.message);return false}
+    }catch(error){lastLiveRouteError=error;console.error('Live routeberekening:',error);if(!quiet)alert(error.message);return false}
     finally{liveRouteBusy=false}
   }
   window.gjMakeDatesLive=makeDatesLive;
@@ -92,41 +91,36 @@
   if(isLaptop){
     const priorGenerate=window.generatePlanning;
     window.generatePlanning=generatePlanning=async function(){
-      if(generationBusy){alert('Planning genereren is al bezig.');return false}
-      generationBusy=true;
-      const button=$('btnRunPlanning'),progress=$('progressDialog'),report=$('planningReportDialog');
-      if(button)button.disabled=true;
-      let result,mutationActive=false,reportWasOpen=false;
-      const from=typeof parseDisplayDate==='function'?parseDisplayDate($('planFrom')?.value):'',to=typeof parseDisplayDate==='function'?parseDisplayDate($('planTo')?.value):'';
+      let result;const from=typeof parseDisplayDate==='function'?parseDisplayDate($('planFrom')?.value):'',to=typeof parseDisplayDate==='function'?parseDisplayDate($('planTo')?.value):'';
+      // De oude planner berekende routes voordat zijn nieuwe lokale regels in
+      // Supabase bestonden. Sla die voorstap over; na opslaan berekent v11 de
+      // routes met de echte database-ID's atomair en volledig live.
+      const tomtomWasEnabled=window.GJ_TOMTOM_ENABLED===true;
+      window.GJ_TOMTOM_ENABLED=false;
+      beginMutation();
       try{
-        // Alleen de oude lokale routevoorstap overslaan. Adrescontrole via
-        // TomTom blijft beschikbaar voordat de definitieve planning is opgeslagen.
-        window.__GJ_SKIP_LEGACY_ROUTE_CALC__=true;
-        beginMutation();mutationActive=true;
-        result=await withDeadline(priorGenerate.apply(this,arguments),120000,'Planning indelen of opslaan duurde langer dan 2 minuten en is afgebroken.');
-        pendingRemoteReload=false;await endMutation();mutationActive=false;
-        reportWasOpen=report?.open===true;if(reportWasOpen)report.close();
-        if(progress&&!progress.open)progress.showModal();
-        if($('progressText'))$('progressText').textContent='Centrale planning opnieuw laden (maximaal 20 seconden)...';
-        const loaded=await withDeadline(window.loadPlanningFromSupabase?.(),20000,'Planning opnieuw laden reageerde niet binnen 20 seconden.');
-        if(loaded===false)throw new Error('De opgeslagen planning kon niet opnieuw worden geladen.');
-        const dates=plannedDates().filter(date=>(!from||date>=from)&&(!to||date<=to));
-        const ok=await makeDatesLive(dates,{persist:true,force:true,quiet:true,throwOnError:true,onProgress:(current,total)=>{
-          if($('progressText'))$('progressText').textContent=`Dagroute ${current} van ${total} live berekenen (maximaal 45 seconden)...`;
+        result=await priorGenerate.apply(this,arguments);
+      }finally{window.GJ_TOMTOM_ENABLED=tomtomWasEnabled;pendingRemoteReload=false;await endMutation()}
+      // De planner voegt rijen in Supabase toe. Lees daarna éénmaal de echte
+      // database-ID's terug voordat de atomische v11-routeopslag begint.
+      await window.loadPlanningFromSupabase?.();
+      const dates=plannedDates().filter(date=>(!from||date>=from)&&(!to||date<=to));
+      const progress=$('progressDialog'),report=$('planningReportDialog'),reportWasOpen=report?.open===true;
+      if(reportWasOpen)report.close();
+      if(dates.length&&progress&&!progress.open)progress.showModal();
+      let routeOk=true;
+      try{
+        routeOk=await makeDatesLive(dates,{persist:true,force:true,quiet:true,onProgress:(current,total)=>{
+          if($('progressText'))$('progressText').textContent=`Dagroute ${current} van ${total} live berekenen...`;
           if($('progressFill'))$('progressFill').style.width=Math.round(current/total*100)+'%';
         }});
-        if(!ok)throw new Error('De live routeberekening is gestopt. Controleer de gemelde TomTom- of Supabase-fout.');
-        if(ok&&dates.length){if($('progressText'))$('progressText').textContent=`Klaar: ${dates.length} dagroutes live berekend.`;if($('progressFill'))$('progressFill').style.width='100%';await new Promise(resolve=>setTimeout(resolve,350))}
-        return result;
-      }catch(error){console.error('Planning genereren:',error);alert(error.message||String(error));return false}
-      finally{
-        window.__GJ_SKIP_LEGACY_ROUTE_CALC__=false;
-        if(mutationActive){pendingRemoteReload=false;await endMutation().catch(()=>{});}
+        if(routeOk&&dates.length){if($('progressText'))$('progressText').textContent=`Klaar: ${dates.length} dagroutes live berekend.`;if($('progressFill'))$('progressFill').style.width='100%';await new Promise(resolve=>setTimeout(resolve,350))}
+      }finally{
         if(progress?.open)progress.close();
         if(reportWasOpen&&!report.open)report.showModal();
-        if(button)button.disabled=false;
-        generationBusy=false;
       }
+      if(!routeOk)alert(lastLiveRouteError?.message||'De live route kon niet volledig worden berekend.');
+      return result;
     };
     const priorRefresh=window.refreshDayRoute;
     window.refreshDayRoute=refreshDayRoute=async function(date){

@@ -13,6 +13,7 @@
   const isImpersonating = () => window.GJ_AUTH?.impersonating === true;
   const isAdmin = () => window.GJ_AUTH?.isAdmin === true;
   const realUserId = () => window.GJ_AUTH?.realUserId || window.GJ_AUTH?.profile?.id || null;
+  const consentKey = () => `gj_location_consent_${realUserId() || 'unknown'}`;
 
   function formatDate(value) {
     if (!value) return 'Nog nooit';
@@ -198,6 +199,9 @@
       if (liveResult.error) throw liveResult.error;
       this.own = settingsResult.data;
       this.ownLive = liveResult.data;
+      if (this.own?.admin_enabled && this.own?.app_prompt_state !== 'accepted' && localStorage.getItem(consentKey()) === 'accepted') {
+        await this.setOwn({ enabled: true, promptState: 'accepted', permissionState: this.own.permission_state || 'unknown' });
+      }
       this.renderOwn();
     },
 
@@ -211,6 +215,7 @@
       });
       if (error) throw error;
       this.own = Array.isArray(data) ? data[0] : data;
+      if (promptState === 'accepted') localStorage.setItem(consentKey(), 'accepted');
       this.renderOwn();
       return data;
     },
@@ -417,6 +422,10 @@
       const now = Date.now();
       if (!force && now - this.lastTriggerAt < EVENT_DEDUP_MS) return false;
       if (this.requestInFlight || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') return false;
+      const trackingUntil=this.own?.tracking_until?new Date(this.own.tracking_until).getTime():0;
+      const intervalMinutes=trackingUntil>now?1:(ALLOWED_INTERVALS.includes(Number(this.central.update_interval_minutes))?Number(this.central.update_interval_minutes):10);
+      const lastCaptured=this.ownLive?.captured_at?new Date(this.ownLive.captured_at).getTime():0;
+      if(!force&&lastCaptured&&now-lastCaptured<intervalMinutes*60000*0.9)return false;
       this.lastTriggerAt = now;
       if (!navigator.onLine) {
         this.setLocalError('Geen internet. Bij het volgende geschikte moment wordt opnieuw geprobeerd.');
