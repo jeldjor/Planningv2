@@ -12,7 +12,7 @@ const [script,laptop,mobile,manifestText,pkgText]=await Promise.all([
 
 test('v10.10 modules zijn syntactisch geldig en lokaal geladen',()=>{
   new vm.Script(script,{filename:'v110.js'});
-  assert.equal(JSON.parse(pkgText).version,'11.1.1');
+  assert.equal(JSON.parse(pkgText).version,'11.1.2');
   for(const html of [laptop,mobile]){
     assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=11000/);assert.match(html,/v110\.js\?v=11001/);
     assert.doesNotMatch(html,/cdn\.jsdelivr\.net\/npm\/jspdf/);
@@ -51,9 +51,9 @@ test('gesimuleerd iPhone-voorbeeldvenster ontvangt een geldige PDF-Blob',async()
 });
 
 test('live routes worden na definitieve planning geforceerd en opgeslagen',()=>{
-  assert.match(script,/window\.GJ_TOMTOM_ENABLED=false/);
-  assert.match(script,/window\.GJ_TOMTOM_ENABLED=tomtomWasEnabled/);
-  assert.match(script,/await window\.loadPlanningFromSupabase\?\.\(\)/);
+  assert.match(script,/window\.__GJ_SKIP_LEGACY_ROUTE_CALC__=true/);
+  assert.match(script,/window\.__GJ_SKIP_LEGACY_ROUTE_CALC__=false/);
+  assert.match(script,/withDeadline\(window\.loadPlanningFromSupabase\?\.\(\),20000/);
   assert.match(script,/const dates=plannedDates\(\)\.filter/);
   assert.match(script,/if\(progress\?\.open\)progress\.close\(\)/);
   assert.match(script,/if\(!stats\?\.live\)throw new Error/);

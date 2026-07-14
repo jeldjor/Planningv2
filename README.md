@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.1.1
+# Planning-GJsystems v11.1.2
 
-Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd- en synchronisatielaag. v11.1.1 herstelt daarnaast Live Locaties, database-eerst bezoekafronding, gelijke dagtotalen en begrenst iedere routeberekening en Supabase-opslag met een harde deadline.
+Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd- en synchronisatielaag. v11.1.2 bewaakt de volledige generatieketen vanaf adrescontrole en bezoeken indelen tot centraal opslaan, terugladen en live routeberekening.
 
 ## Belangrijkste verbeteringen
 

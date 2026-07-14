@@ -29,6 +29,11 @@ test('gewone synchronisatie start geen herberekening van alle geplande dagen',()
 test('iedere route- en Supabasefase heeft een harde deadline',()=>{
   assert.match(v110,/Dagroute .* is na 45 seconden afgebroken/);
   assert.match(v110,/maximaal 45 seconden/);
+  assert.match(v110,/loadPlanningFromSupabase\?\.\(\),20000/);
+  assert.match(laptop,/Planning opslaan reageerde niet binnen 20 seconden/);
+  assert.match(laptop,/Adrescontrole reageerde niet binnen 15 seconden/);
+  assert.match(laptop,/Bezoeken indelen \$\{requestIndex\+1\} van \$\{requests\.length\}/);
+  assert.match(v110,/generationBusy/);
 });
 
 test('Realtime is op laptop en iPhone begrensd tot de actieve werkruimte',()=>{

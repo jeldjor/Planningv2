@@ -1,4 +1,14 @@
-# Changelog Planning-GJsystems v11.1.1
+# Changelog Planning-GJsystems v11.1.2
+
+## Hotfix 11.1.2
+
+- Ook adrescontrole, bezoeken indelen, planning opslaan en centraal terugladen tonen nu hun eigen voortgang.
+- Adrescontrole stopt na 15 seconden, planning opslaan na 20 seconden en terugladen na 20 seconden.
+- De totale voorbereidende generatie wordt na twee minuten gecontroleerd afgebroken.
+- De generator geeft tijdens het indelen na ieder bezoek de browser ruimte om het scherm te verversen.
+- Een tweede klik tijdens genereren wordt geblokkeerd.
+- Het voortgangsvenster sluit vanuit één centrale `finally`, ongeacht in welke fase een fout ontstaat.
+- TomTom blijft beschikbaar voor ontbrekende klantcoördinaten; alleen de verouderde routevoorberekening wordt overgeslagen.
 
 ## Hotfix 11.1.1
 

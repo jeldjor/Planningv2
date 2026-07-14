@@ -10,7 +10,7 @@
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=111001"></script>
+<script src="planning-core.js?v=111002"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1617,7 +1617,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v109.css?v=10900">
 <link rel="stylesheet" href="v110.css?v=11000">
 <link rel="stylesheet" href="v111.css?v=11100">
-<link rel="stylesheet" href="v11.css?v=111001">
+<link rel="stylesheet" href="v11.css?v=111002">
 </head>
 <body>
 <aside class="sidebar">
@@ -3308,7 +3308,8 @@ async function geocodeCustomer(c){
  if(validCoordsForCustomer(c))return true;
  const query=customerAddressQuery(c);if(!query||!window.GJ_TOMTOM_ENABLED)return false;
  try{
-  const {data,error}=await (window.GJ_AUTH?.sb||supa).functions.invoke('tomtom-proxy',{body:{action:'geocode',query,country:countryCodeForCustomer(c)}});
+  const request=(window.GJ_AUTH?.sb||supa).functions.invoke('tomtom-proxy',{body:{action:'geocode',query,country:countryCodeForCustomer(c)}});
+  const {data,error}=await (window.GJPlanningCore?.withTimeout?window.GJPlanningCore.withTimeout(request,15000,'Adrescontrole reageerde niet binnen 15 seconden.'):request);
   if(error||data?.error)throw new Error(error?.message||data.error);
   for(const r of (data.results||[])){
    if(!r?.position)continue;const test={...c,Latitude:r.position.lat,Longitude:r.position.lon};
@@ -3320,22 +3321,19 @@ async function geocodeCustomer(c){
 async function ensurePlanningCoordinates(customers,showProgress=true){
   const missing=[...new Map((customers||[]).filter(c=>!validCoordsForCustomer(c)).map(c=>[c.ID,c])).values()];
   if(!missing.length)return;
-  if(showProgress)$('progressDialog')?.showModal();
-  for(let i=0;i<missing.length;i++){
-    if(showProgress){
-      $('progressText').textContent=`Adres ${i+1} van ${missing.length} opzoeken...`;
-      $('progressFill').style.width=`${Math.round((i+1)/missing.length*100)}%`;
-      await new Promise(r=>setTimeout(r,20));
+  const progress=$('progressDialog');
+  try{
+    if(showProgress&&progress&&!progress.open)progress.showModal();
+    for(let i=0;i<missing.length;i++){
+      if(showProgress){
+        $('progressText').textContent=`Adres ${i+1} van ${missing.length} opzoeken (maximaal 15 seconden)...`;
+        $('progressFill').style.width=`${Math.round((i+1)/missing.length*100)}%`;
+        await new Promise(r=>setTimeout(r,20));
+      }
+      await geocodeCustomer(missing[i]);
     }
-    await geocodeCustomer(missing[i]);
-  }
-  save();
-  if(showProgress){
-    $('progressText').textContent='Adressen gecontroleerd.';
-    $('progressFill').style.width='100%';
-    await new Promise(r=>setTimeout(r,350));
-    $('progressDialog')?.close();
-  }
+    save();
+  }finally{if(showProgress&&progress?.open)progress.close()}
 }
 function planningRoute(a,b,mode='car'){
   if(!hasCoords(a)||!hasCoords(b))return null;
@@ -3430,8 +3428,13 @@ async function generatePlanning(){
   const requests=[];
   activeCustomers.forEach(c=>planningSlotsForCustomer(c,start,end).forEach((slot,i)=>requests.push({customer:c,index:i,slot})));
   requests.sort((a,b)=>iso(a.slot.target).localeCompare(iso(b.slot.target))||num(b.customer.Prio,0)-num(a.customer.Prio,0));
+  const generateProgress=$('progressDialog');if(generateProgress&&!generateProgress.open)generateProgress.showModal();
   let notPlaced=0;
-  for(const req of requests){
+  for(let requestIndex=0;requestIndex<requests.length;requestIndex++){
+    const req=requests[requestIndex];
+    if($('progressText'))$('progressText').textContent=`Bezoeken indelen ${requestIndex+1} van ${requests.length}...`;
+    if($('progressFill'))$('progressFill').style.width=Math.round((requestIndex+1)/Math.max(1,requests.length)*100)+'%';
+    await new Promise(resolve=>setTimeout(resolve,0));
     const c=req.customer;
     if(!validCoordsForCustomer(c)){
       notPlaced++; db.unplanned.push({id:uuid(),customerId:c.ID,customerName:c.Winkel,reason:'Adres niet gevonden op basis van klantnaam en NAW-gegevens',oldDate:iso(req.slot.target),generatedByPlanner:true}); continue;
@@ -3457,9 +3460,11 @@ async function generatePlanning(){
   }
   save(); render();
   const routeDates=[...new Set(db.visits.filter(v=>v.date>=from&&v.date<=to&&v.status!=='Uit planning').map(v=>v.date))];
-  if(window.GJ_TOMTOM_ENABLED===true)await calculateRoutesForDates(routeDates,true);
+  if(window.GJ_TOMTOM_ENABLED===true&&!window.__GJ_SKIP_LEGACY_ROUTE_CALC__)await calculateRoutesForDates(routeDates,true);
   routeDates.forEach(optimizeDayOrder); save(); render();
+  if($('progressText'))$('progressText').textContent='Planning veilig in Supabase opslaan (maximaal 20 seconden)...';
   if(window.savePlanningToSupabase){try{await window.savePlanningToSupabase(from,to,replace)}catch(e){console.error(e);alert('Planning kon niet veilig in Supabase worden opgeslagen: '+(e.message||e));throw e;}}
+  if(generateProgress?.open)generateProgress.close();
   showPlanningReport(buildPlanningReport(from,to,requests.length,notPlaced));
 }
 function bestDate(id){
@@ -4840,7 +4845,8 @@ async function drawVisitPdfLayout(doc,visit){
     });
     if(invalid.length)throw new Error('Planning niet opgeslagen: '+invalid.length+' afspraak/afspraken hebben geen geldige klantkoppeling.');
     if(rows.some(r=>num(r.reistijd_min,0)>720||num(r.afstand_km,0)>600))throw new Error('Planning niet opgeslagen: onrealistische route gevonden.');
-    const result=await client.rpc('replace_planning_period',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_from:from,p_to:to,p_rows:rows,p_replace:replace});
+    const request=client.rpc('replace_planning_period',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_from:from,p_to:to,p_rows:rows,p_replace:replace});
+    const result=await (window.GJPlanningCore?.withTimeout?window.GJPlanningCore.withTimeout(request,20000,'Planning opslaan reageerde niet binnen 20 seconden.'):request);
     if(result.error){if(/does not exist|schema cache|PGRST202/i.test(String(result.error.message||'')))throw new Error('De veilige planningsopslag ontbreekt. Voer SUPABASE_V11_1_RELEASE.sql uit.');throw result.error}
     if(Number(result.data?.inserted)!==rows.length)throw new Error('Niet alle planningregels zijn door de database bevestigd.');
     setSyncStatus(`Supabase: ${rows.length} planningregels atomair opgeslagen`, 'ok');
@@ -5740,6 +5746,6 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v108.js?v=10801"></script>
 <script src="v109.js?v=10900"></script>
 <script src="v110.js?v=11001"></script>
-<script src="v11.js?v=111001"></script>
+<script src="v11.js?v=111002"></script>
 </body>
 </html>

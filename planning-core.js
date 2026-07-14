@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='11.1.1';
+  const VERSION='11.1.2';
   const dayLocks=new Map();
   const pad=n=>String(n).padStart(2,'0');
   const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
