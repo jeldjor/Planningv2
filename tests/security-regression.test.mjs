@@ -69,7 +69,7 @@ test('v10.7 ondersteunende modules en beeldbestanden blijven byte-identiek', asy
   }
 });
 
-test('beide apparaten laden runtimeconfig, correctiemodule en developmentversie', async () => {
+test('beide apparaten laden runtimeconfig en de centrale v11-productiekern', async () => {
   for (const name of ['laptop.html', 'mobile.html']) {
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
@@ -84,7 +84,9 @@ test('beide apparaten laden runtimeconfig, correctiemodule en developmentversie'
     assert.match(html, /v110\.css\?v=11000/);
     assert.match(html, /v110\.js\?v=11000/);
     assert.match(html, /visit-pdf\.js\?v=11000/);
-    assert.match(html, /v10\.10 DEV/);
+    assert.match(html, /planning-core\.js\?v=110000/);
+    assert.match(html, /v11\.js\?v=110000/);
+    assert.doesNotMatch(html, />v10\.\d+ DEV</);
   }
 });
 

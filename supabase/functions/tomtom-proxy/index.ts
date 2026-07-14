@@ -10,6 +10,21 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 });
 const finite = (value: unknown) => Number.isFinite(Number(value));
 
+async function calculateTomTomLeg(settings: { tomtom_api_key: string }, leg: Record<string, unknown>) {
+  if (![leg.fromLat, leg.fromLon, leg.toLat, leg.toLon].every(finite)) throw new Error('Ongeldige routecoördinaten.');
+  const travelMode = leg.mode === 'walk' ? 'pedestrian' : 'car';
+  const path = `${Number(leg.fromLat)},${Number(leg.fromLon)}:${Number(leg.toLat)},${Number(leg.toLon)}`;
+  const endpoint = new URL(`https://api.tomtom.com/routing/1/calculateRoute/${path}/json`);
+  endpoint.searchParams.set('key', settings.tomtom_api_key);
+  endpoint.searchParams.set('travelMode', travelMode);
+  endpoint.searchParams.set('traffic', travelMode === 'car' ? 'true' : 'false');
+  const response = await fetch(endpoint);
+  const result = await response.json();
+  const summary = result.routes?.[0]?.summary;
+  if (!response.ok || !summary) throw new Error(result.error?.description || 'TomTom-route kon niet worden berekend.');
+  return { ...summary, live: true, mode: leg.mode === 'walk' ? 'walk' : 'car' };
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
   try {
@@ -26,17 +41,14 @@ Deno.serve(async (request) => {
     if (settingsError || !settings?.tomtom_enabled || !settings.tomtom_api_key) return json({ error: 'TomTom staat uit.' }, 503);
     const body = await request.json();
     if (body.action === 'route') {
-      if (![body.fromLat, body.fromLon, body.toLat, body.toLon].every(finite)) return json({ error: 'Ongeldige routecoördinaten.' }, 400);
-      const travelMode = body.mode === 'walk' ? 'pedestrian' : 'car';
-      const path = `${Number(body.fromLat)},${Number(body.fromLon)}:${Number(body.toLat)},${Number(body.toLon)}`;
-      const endpoint = new URL(`https://api.tomtom.com/routing/1/calculateRoute/${path}/json`);
-      endpoint.searchParams.set('key', settings.tomtom_api_key);
-      endpoint.searchParams.set('travelMode', travelMode);
-      endpoint.searchParams.set('traffic', travelMode === 'car' ? 'true' : 'false');
-      const response = await fetch(endpoint);
-      const result = await response.json();
-      if (!response.ok || !result.routes?.[0]?.summary) throw new Error(result.error?.description || 'TomTom-route kon niet worden berekend.');
-      return json(result);
+      const summary = await calculateTomTomLeg(settings, body);
+      return json({ routes: [{ summary }] });
+    }
+    if (body.action === 'route-batch') {
+      const legs = Array.isArray(body.legs) ? body.legs : [];
+      if (!legs.length || legs.length > 30) return json({ error: 'Een dagroute moet 1 tot en met 30 trajecten bevatten.' }, 400);
+      const summaries = await Promise.all(legs.map((leg: Record<string, unknown>) => calculateTomTomLeg(settings, leg)));
+      return json({ legs: summaries });
     }
     if (body.action === 'geocode') {
       const query = String(body.query || '').trim();

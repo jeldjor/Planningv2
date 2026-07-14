@@ -17,14 +17,14 @@ test('v10.9 regressiebestanden en alle inline scripts zijn syntactisch geldig',(
     const blocks=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).filter(x=>x.trim());
     blocks.forEach((code,index)=>new vm.Script(code,{filename:`${name}-inline-${index}.js`}));
   }
-  assert.equal(JSON.parse(pkg).version,'10.11.0');
+  assert.equal(JSON.parse(pkg).version,'11.0.0');
 });
 
 test('TomTom wordt centraal gecontroleerd en live routestatus is leidend',()=>{
   assert.match(script,/rpc\('get_tomtom_status'\)/);
   assert.match(script,/stats\.live===true/);
   assert.match(script,/route_live:route\.live===true\|\|route\.source==='TomTom'/);
-  assert.match(mobile,/route_live:!!route/);
+  assert.match(mobile,/visit\.routeLive=row\.routeLive/);
 });
 
 test('complete dag kan met alle daginstellingen worden verplaatst',()=>{

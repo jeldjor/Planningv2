@@ -48,6 +48,7 @@
       ['Bezoeker',value(report,'visitor')],['Bezoekdatum',displayDate(value(report,'visitDate','date'))],
       ['Starttijd',value(report,'startTime')],['Eindtijd',value(report,'endTime')],
       ['Activiteit',value(report,'activity')],['Status',value(report,'status')],
+      ['Reden niet uitgevoerd',value(report,'reason')],
       ['Vervolgactie',value(report,'followUp')],['Opmerkingen',value(report,'remarks')]
     ].filter(([,v])=>v);
   }
@@ -156,8 +157,9 @@
       let lines=doc.splitTextToSize(text,178);
       while(lines.length){
         const capacity=Math.max(1,Math.floor((bottom-y)/4.45));
+        doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(32,37,44);
         const chunk=lines.splice(0,capacity);doc.text(chunk,16,y,{lineHeightFactor:1.22});y+=chunk.length*4.45+4;
-        if(lines.length)y=addPage(doc,report,profile);
+        if(lines.length){y=addPage(doc,report,profile);drawSectionTitle(doc,`${title} - vervolg`,y,profile);y+=7}
       }
     }
     return y;

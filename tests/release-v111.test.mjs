@@ -14,7 +14,7 @@ const [mobile,laptop,script,style,pkgText]=await Promise.all([
 
 test('v10.11 releasebestanden zijn geldig en geladen',()=>{
   new vm.Script(script,{filename:'v111.js'});
-  assert.equal(JSON.parse(pkgText).version,'10.11.0');
+  assert.equal(JSON.parse(pkgText).version,'11.0.0');
   for(const html of [mobile,laptop]){
     assert.match(html,/v111\.css\?v=11100/);
     assert.match(html,/v111\.js\?v=11100/);
@@ -22,12 +22,12 @@ test('v10.11 releasebestanden zijn geldig en geladen',()=>{
 });
 
 test('mobiele dagtotalen gebruiken alle live trajecten inclusief terugrit',()=>{
-  assert.match(mobile,/const returnRoute=await mobileTomTomLeg\(previous,home,'car'\)/);
-  assert.match(mobile,/storedMode=visit\.mode==='walk'\?'walk':visit\.mode==='drive'\?'car':null/);
-  assert.match(mobile,/totalKm\+=returnRoute\.km;totalDriveMin\+=returnRoute\.min/);
+  assert.match(mobile,/GJPlanningCore\.calculateDay/);
+  assert.match(mobile,/walkThresholdMeters/);
+  assert.match(mobile,/totals\.travelMin/);
   assert.match(mobile,/includesReturn:true/);
   assert.match(mobile,/live\?\.live&&live\.includesReturn/);
-  assert.match(mobile,/Math\.max\(0,Number\(v\.travel\|\|0\)-\(v\.mode==='walk'\?0:15\)\)/);
+  assert.match(mobile,/live\?\.live&&live\.includesReturn/);
 });
 
 test('oude development/test-banner is onzichtbaar en wordt verwijderd',()=>{

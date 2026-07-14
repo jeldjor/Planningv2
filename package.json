@@ -1,8 +1,8 @@
 {
-  "name": "planning-gjsystems-v10.11-route-totals",
-  "version": "10.11.0",
+  "name": "planning-gjsystems-v11-production-core",
+  "version": "11.0.0",
   "private": true,
-  "description": "Planning-GJsystems v10.11 met identieke live dagtotalen op laptop en iPhone",
+  "description": "Planning-GJsystems v11 met één centrale route-, tijd- en synchronisatielaag",
   "scripts": {
     "config:generate": "node scripts/generate-runtime-config.mjs",
     "build": "node scripts/prepare-dist.mjs",

@@ -1,128 +1,124 @@
-# Planning-GJsystems v10.10 - Live routes, dagverplaatsing en winkelbezoek-PDF
+# Planning-GJsystems v11.0
 
-Dit is een zelfstandige development/testversie, inhoudelijk gebaseerd op `Planning-GJsystems v10.7 COMPLETE`. Gebruik deze repository uitsluitend met een **nieuw, leeg Supabase development/testproject**. De productie-repository, productie-app en productiedatabase horen niet bij deze installatie.
+Deze versie bundelt de laptop- en iPhone-app rond één centrale route-, tijd- en synchronisatielaag. De bestaande v10.11 blijft ongewijzigd; v11.0 is de afzonderlijke kandidaat die eerst op de ontwikkelomgeving en daarna met echte apparaten moet worden geaccepteerd.
 
-## Architectuur
+## Belangrijkste verbeteringen
 
-- `auth.js` gebruikt één echte Supabase-sessie en houdt de echte `auth.uid()` gescheiden van de eventueel voorgedane werkruimte.
-- `v108.js` bevat één gedeelde locatiemanager voor laptop en iPhone/PWA. Deze beheert toestemming, één timer, voorgrondupdates, Realtime en fallback.
-- Locaties worden uitsluitend via RPC's zonder vrij `user_id` geschreven. PostgreSQL bepaalt de eigenaar met `auth.uid()`.
-- `location_system_settings` bevat de centrale schakelaar en frequentie. De installatie start altijd met Live Locaties **Uit** en 10 minuten.
-- `user_live_locations` bevat één laatst ontvangen punt per gebruiker; `user_location_history` bevat maximaal de functioneel gebruikte 24-uursperiode.
-- De beheerkaart gebruikt Leaflet en OpenStreetMap. Hiervoor is geen geheime kaartkey nodig.
-- Beheer van Auth-gebruikers en de TomTom-proxy draaien als Supabase Edge Functions. De service-role-key blijft uitsluitend server-side.
+- Live dagroutes worden van het ingestelde thuisadres via alle klanten en terug naar huis berekend. Afstand, rijtijd, bezoektijden en de groene live-status komen op laptop en iPhone uit dezelfde berekening.
+- Een gewijzigde volgorde, bezoek- of vertrektijd berekent en bewaart direct de volledige dag opnieuw.
+- `Route optimaliseren` kiest een efficiënte volgorde en berekent daarna alle TomTom-trajecten opnieuw.
+- Een complete dag wordt met één gecontroleerde databasebewerking verplaatst. Daardoor springt de dag niet meer terug na Realtime-synchronisatie.
+- Afwezigheid, pauze, parkeertijd en terugrit worden in de dagtijdlijn verwerkt.
+- De mobiele app toont openstaande opdrachten in Overzicht, heeft een aparte Historie en kan een niet-uitgevoerd bezoek als nieuwe opdracht herplannen zonder de historie te wijzigen.
+- Laptopfilters voor Overzicht en Historie hebben een start- en einddatum.
+- Realtime werkt met gerichte rij-updates en samengevoegde synchronisatieverzoeken, zodat niet na iedere wijziging de hele applicatie opnieuw wordt opgebouwd.
+- Bezoekfoto's en profielfoto's worden privé opgeslagen en met aangemelde downloads of tijdelijke signed URL's gelezen. Dubbele fotopaden worden door de database geblokkeerd.
+- De bestaande PDF-knop maakt een professioneel dynamisch winkelbezoekrapport voor laptop en iPhone.
+- Het zichtbare development-/versielabel is verwijderd en de mobiele pagina kan niet per ongeluk worden ingezoomd.
+- Alleen het e-mailadres kan worden onthouden; wachtwoorden worden nooit in browseropslag bewaard.
 
-## Veilige uitvoervolgorde
+## Installeren of bijwerken
 
-1. Maak een nieuwe GitHub-repository, bijvoorbeeld `Planning-GJsystems-v10.8-live-locations`, en plaats uitsluitend de inhoud van deze map daarin.
-2. Maak een nieuw Supabase development/testproject. Noteer de nieuwe project-ref, project-URL en anon/publishable key. Gebruik nergens productiegegevens.
-3. Open in het **nieuwe project** de SQL Editor en voer [SUPABASE_V10_7_DEV_BASELINE.sql](SUPABASE_V10_7_DEV_BASELINE.sql) uit. Dit maakt de tabellen en beveiliging die een lege v10.7-testomgeving nodig heeft.
-4. Maak in Authentication handmatig drie testaccounts: één beheerder, gebruiker A en gebruiker B. Zet geen wachtwoorden in repositorybestanden.
-5. Controleer de aangemaakte rijen in `public.profiles`. Promoveer alleen het bedoelde testaccount in de SQL Editor van het testproject:
+Maak eerst een databaseback-up en test op een afzonderlijke Supabase-ontwikkelomgeving.
 
-   ```sql
-   update public.profiles
-   set role = 'admin', updated_at = now()
-   where id = '<UUID-VAN-TESTBEHEERDER>';
-   ```
+### Bestaande v10.11-database
 
-6. Voer daarna [SUPABASE_V10_8_LIVE_LOCATIONS_DEV.sql](SUPABASE_V10_8_LIVE_LOCATIONS_DEV.sql) uit. Deze migratie laat Live Locaties standaard uitstaan.
-7. Deploy de functies `admin-users` en `tomtom-proxy` uit `supabase/functions`. Koppel de Supabase CLI uitsluitend nadat de project-ref zichtbaar is gecontroleerd als de nieuwe testproject-ref. Zie [supabase/functions/README.md](supabase/functions/README.md).
-8. Activeer de cleanup pas na controle desgewenst handmatig met [SUPABASE_V10_8_LOCATION_CLEANUP_CRON_OPTIONAL.sql](SUPABASE_V10_8_LOCATION_CLEANUP_CRON_OPTIONAL.sql). De hoofd-migratie plant geen cronjob in.
-9. Configureer en deploy de nieuwe app op een eigen development-URL.
-10. Voer de nog openstaande echte project- en iPhone-tests uit volgens [CONTROLELIJST_V10.8.md](CONTROLELIJST_V10.8.md). Zet productie pas na afzonderlijke goedkeuring in een later migratietraject.
+1. Voer `SUPABASE_V11_0_CORE.sql` uit in de SQL Editor.
+2. Deploy opnieuw de Edge Functions `admin-users` en `tomtom-proxy`.
+3. Configureer de app en bouw de deploymentmap zoals hieronder beschreven.
+4. Voer de live acceptatiepunten uit `TESTCONTROLE_V11.0.md` uit.
 
-Er is vanuit deze oplevering geen SQL uitgevoerd en geen Supabase-project gekoppeld.
+De migratie is herhaalbaar en voegt de nieuwe kolommen, indexen, private Storage-regels en vier beveiligde RPC's toe:
 
-### Bijwerken van een bestaande v10.8-testinstallatie
+- `save_user_app_settings`
+- `save_day_route`
+- `replan_history_visit`
+- `move_planning_day`
 
-Heb je de oorspronkelijke v10.8-SQL al in het development/testproject uitgevoerd, voer dan daarna uitsluitend [SUPABASE_V10_8_1_ADMIN_PER_USER_LOCATIONS_DEV.sql](SUPABASE_V10_8_1_ADMIN_PER_USER_LOCATIONS_DEV.sql) uit. Dit voegt de beheerderkeuze per gebruiker toe. Voer dit bestand nooit op productie uit.
+### Nieuw, leeg Supabase-project
 
-Bij een volledig nieuwe testinstallatie is dit losse correctiebestand niet nodig: de correctie zit al in `SUPABASE_V10_8_LIVE_LOCATIONS_DEV.sql`.
+Voer alleen `SUPABASE_V10_7_DEV_BASELINE.sql` uit. Ondanks de historische bestandsnaam bevat dit bestand de complete v11.0-baseline. Voer `SUPABASE_V11_0_CORE.sql` daarna niet nogmaals uit.
 
-## Configuratie
+Maak geen gebruikers, wachtwoorden, service-role-key of productiegegevens onderdeel van de repository.
 
-Kopieer `.env.example` naar een lokaal `.env`-bestand en vul alleen waarden van het nieuwe testproject in:
+## Configuratie en bouwen
+
+Kopieer `.env.example` naar `.env` en vul de waarden van de ontwikkelomgeving in:
 
 ```text
 APP_ENV=development
-APP_DEPLOYMENT_LABEL=Planning-GJsystems v10.10 DEV
-SUPABASE_URL=https://<nieuwe-project-ref>.supabase.co
-SUPABASE_ANON_KEY=<anon-of-publishable-key-van-het-testproject>
-SUPABASE_PROJECT_REF=<nieuwe-project-ref>
+APP_DEPLOYMENT_LABEL=Planning-GJsystems v11.0
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon-of-publishable-key>
+SUPABASE_PROJECT_REF=<project-ref>
 MAP_PROVIDER=openstreetmap
 ```
 
-Genereer daarna de niet-gecommitte runtimeconfiguratie en bouw de distributiemap:
+Voer daarna uit:
 
 ```bash
 npm ci
 npm run config:generate
 npm test
+npm run test:pdf
 npm run build
 ```
 
-`runtime-config.js`, `.env` en `dist/` worden niet gecommit. De app weigert te starten bij ontbrekende configuratie, een afwijkende project-ref, een productieomgeving of een service-role-JWT. De browser ontvangt nooit een service-role-key.
+`runtime-config.js`, `.env` en `dist/` worden niet gecommit. `runtime-config.js` mag uitsluitend een anon/publishable key bevatten. De service-role-key en TomTom-key blijven in Supabase Secrets.
 
-Voor GitHub Pages gebruikt de workflow uitsluitend deze repositorysecrets:
+## Route- en tijdarchitectuur
 
-- `DEV_SUPABASE_URL`
-- `DEV_SUPABASE_ANON_KEY`
-- `DEV_SUPABASE_PROJECT_REF`
+`planning-core.js` is de gedeelde engine voor laptop en mobiel. De volledige dag bestaat uit:
 
-Controleer vóór iedere deployment dat deze drie waarden bij hetzelfde nieuwe testproject horen. Gebruik een aparte deployment-URL; overschrijf de bestaande productie-URL niet.
+1. thuisadres naar eerste bezoek;
+2. alle bezoeken in de actuele volgorde;
+3. eventuele afwezigheid, pauze en parkeerbuffer;
+4. laatste bezoek terug naar huis.
 
-## Realtime
+De frontend vraagt de trajecten in één batch op bij `tomtom-proxy`. Alleen wanneer ieder traject live is ontvangen, krijgt de dag een live-status. `save_day_route` controleert het aantal actuele planningregels en slaat alle volgorden, tijden, kilometers, vervoersmodi en route-statussen atomair op.
 
-De migraties voegen de benodigde tabellen herhaalbaar toe aan `supabase_realtime`. Controleer in het testproject dat Realtime aanstaat voor:
+Het thuisadres, de coördinaten, parkeerbuffer en loopgrens worden centraal in Instellingen opgeslagen. Er staat geen vaste woonlocatie in de routecode.
 
-- `location_system_settings`
-- `user_location_settings`
-- `user_live_locations`
+## Dynamische winkelbezoek-PDF
 
-Bij uitval haalt de app de centrale instelling en beheerlocaties iedere 60 seconden opnieuw op. Subscriptions en fallbacktimers worden bij uitloggen verwijderd.
+De bestaande PDF-knop gebruikt `visit-pdf.js`. Ketenherkenning gebruikt primair `customers.keten`, normaliseert hoofdletters, accenten en leestekens en kiest daarna een profiel. De winkelnaam bepaalt de template niet.
 
-## Kaart
+Beschikbare profielen:
 
-De kaart gebruikt Leaflet 1.9.4 en OpenStreetMap-tiles. Er is geen browsergeheim of serverkey nodig. Voor een publieke toepassing met veel kaartverkeer moet vóór productie een passende tileprovider en gebruiksbeleid worden gekozen; dat is onderdeel van het latere productieplan.
+- de Bijenkorf
+- Scapino
+- INNO
+- INTERSPORT
+- Van Tilburg Sport
+- Stichd als algemene terugvaltemplate
 
-## Cleanup van 24 uur
+Een nieuw profiel wordt als één configuratieobject aan `chainProfiles` toegevoegd. Zonder goedgekeurd logo toont de generator een tekstheader in de ketenkleuren; een ontbrekende afbeelding verschijnt nooit als kapot element.
 
-De migratie maakt `public.cleanup_location_history()` en geeft alleen `service_role` uitvoerrecht. Automatische scheduling is bewust niet actief. Na handmatige uitvoering van het optionele cronbestand verwijdert Supabase ieder uur historie die ouder is dan de centrale bewaartermijn (v10.8: 24 uur). Controleer dit in `cron.job` en voer een test met oude testdata uit voordat dit als geslaagd wordt afgevinkt.
+De generator gebruikt bestaande data uit `visit_history`, `planning`, `customers`, `profiles` en `visit_photos`. Lege velden worden verborgen. Foto's worden uit de private bucket `visit-photos` gedownload en, indien nodig, met een signed URL van vijf minuten opgehaald. Een ontbrekende foto wordt veilig overgeslagen. Lange tekst en meer dan acht foto's lopen automatisch door op een vervolgpagina.
 
-## Testaccounts en testdata
+Zie `PDF_README_V11.0.md` voor de veldmapping en uitbreidingsinstructies. De map `output/pdf` bevat de veertien gegenereerde controlescenario's.
 
-- Maak accounts alleen via Authentication of via de gedeployde `admin-users`-functie.
-- Maak uitsluitend de beheerder admin in de bestaande centrale bron `profiles.role`.
-- Gebruik verschillende testklanten en planningen voor A en B om werkruimtescheiding te controleren.
-- Gebruik geen echte klantgegevens, locaties of wachtwoorden.
+## Synchronisatie en historie
 
-## Web/PWA-beperking
+- Wijzigingen worden eerst centraal opgeslagen en daarna lokaal bevestigd.
+- Realtime verwerkt alleen het gewijzigde record en voegt snel opeenvolgende signalen samen.
+- Een niet-uitgevoerd historisch bezoek blijft als bewijs in `visit_history` staan. Herplannen maakt een nieuwe `planning`-rij met `rescheduled_from_history_id`.
+- Historie- en overzichtslijsten laden begrensde pagina's om trage volledige tabelrenders te voorkomen.
+- De service worker bewaart alleen de statische app-shell. Runtimeconfiguratie en Supabase-data worden nooit gecachet.
 
-iOS mag een web/PWA volledig pauzeren. De app probeert volgens het ingestelde interval te verzenden zolang uitvoering mogelijk is en direct bij openen of terugkeer naar de voorgrond. Zij beweert niet dat iOS in gepauzeerde toestand exact op tijd blijft bijwerken. Beheer toont daarom altijd meettijd, ontvangsttijd, ouderdom, nauwkeurigheid en status.
+## Teststatus en productieacceptatie
 
-## Live routes en complete dagen
+De repository bevat geautomatiseerde integratie-, beveiligings-, route-, UI- en PDF-tests. De uiteindelijke testresultaten staan in `TESTCONTROLE_V11.0.md`.
 
-Na planninggeneratie wordt de definitieve, geoptimaliseerde volgorde altijd opnieuw volledig via TomTom berekend. Een dag wordt uitsluitend groen als alle trajecten, inclusief de terugroute, live beschikbaar zijn. Bij een complete dagverplaatsing wordt Supabase eerst bijgewerkt en gecontroleerd; pas daarna wijzigt de lokale kalender. Realtime ophalen wordt tijdens deze korte bewerking uitgesteld.
-
-## Winkelbezoek-PDF
-
-De bestaande PDF-knoppen openen de dynamische generator uit `visit-pdf.js`. De generator kiest het ketenprofiel uitsluitend vanuit het centrale klantveld `keten` en gebruikt bij een onbekende waarde de algemene Stichd-template. Op iPhone verschijnt de PDF-actie alleen bij een afgerond bezoek. Zie [PDF_README_V10.10.md](PDF_README_V10.10.md) voor velden, foto-ophaalwijze en uitbreiden van ketenprofielen.
-
-## Beheer en locatiekeuze per gebruiker
-
-- Alleen de centrale rol `profiles.role = 'admin'` ziet en opent Beheer.
-- De beheerder zet Live Locaties eerst centraal aan en schakelt daarna per gebruiker in of uit.
-- Een gebruiker kan de beheerderkeuze niet zelf wijzigen. De database controleert dit in de locatie-RPC.
-- Gewone gebruikers zien geen onderdeel Routefunctionaliteit in Instellingen.
-- Alleen voor een door de beheerder ingeschakelde gebruiker kan de eenmalige toestemmingsmelding verschijnen.
+Een echte iPhone, laptop, TomTom-account en gekoppeld Supabase-project zijn niet beschikbaar in de bouwomgeving. Daarom moet de live acceptatielijst op de eigen ontwikkelomgeving worden uitgevoerd voordat v11.0 de huidige werkversie vervangt. Geen softwareversie kan zonder deze omgevingsproef als foutloos worden gegarandeerd.
 
 ## Documentatie
 
-- [ANALYSE_EN_BOUWPLAN_V10.8.md](ANALYSE_EN_BOUWPLAN_V10.8.md)
-- [CONTROLELIJST_V10.8.md](CONTROLELIJST_V10.8.md)
-- [CHANGELOG_V10.8.md](CHANGELOG_V10.8.md)
-- [CHANGELOG_V10.10.md](CHANGELOG_V10.10.md)
-- [PDF_README_V10.10.md](PDF_README_V10.10.md)
-- [PDF_CONTROLELIJST_V10.10.md](PDF_CONTROLELIJST_V10.10.md)
-- [ROLLBACK_EN_PRODUCTIEMIGRATIE.md](ROLLBACK_EN_PRODUCTIEMIGRATIE.md)
+- `CHANGELOG_V11.0.md` – alle functionele wijzigingen en gewijzigde bestanden
+- `TESTCONTROLE_V11.0.md` – uitgevoerde tests en nog vereiste live acceptatie
+- `PDF_README_V11.0.md` – ketenprofielen, velden en foto-ophaalwijze
+- `SUPABASE_V11_0_CORE.sql` – migratie voor een bestaande v10.11-database
+- `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
+- `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
+
+Oudere changelogs en controledocumenten blijven aanwezig als versiehistorie.

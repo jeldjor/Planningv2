@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Planning-GJsystems v10.10 DEV</title>
+<title>Planning-GJsystems</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="runtime-config.js"></script>
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
+<script src="planning-core.js?v=110000"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1616,6 +1617,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v109.css?v=10900">
 <link rel="stylesheet" href="v110.css?v=11000">
 <link rel="stylesheet" href="v111.css?v=11100">
+<link rel="stylesheet" href="v11.css?v=110000">
 </head>
 <body>
 <aside class="sidebar">
@@ -1670,7 +1672,6 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
       });
     })();
     </script>
-    <div class="productVersion">v10.9 DEV</div>
   </div>
   <button id="desktopLogout" type="button" class="desktopLogout">Uitloggen</button>
 </aside>
@@ -1715,7 +1716,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 
 <section id="today" class="screen"><div class="two"><section class="panel"><h2>Vandaag</h2><div id="todayRoute"></div></section><aside class="panel"><h2>Samenvatting</h2><div id="todayStats"></div></aside></div></section>
 <section id="unplanned" class="screen"><div class="panel"><div class="sectionHead"><div><h2>Niet ingepland</h2><p class="muted">Uitgevallen of verwijderde bezoeken.</p></div></div><div class="filters unplannedActionRow"><input id="unplannedSearch" placeholder="Zoeken..."><button id="btnSelectAll" class="secondary">Alles selecteren</button><button id="btnReplanSelected">Slim herplan selectie</button><button id="btnReplanAll" class="secondary">Slim herplan alles</button></div><div class="tableWrap"><table id="unplannedTable"></table></div></div></section>
-<section id="overview" class="screen"><div class="panel"><h2>Overzicht</h2><div class="filters"><input id="overviewSearch" placeholder="Zoeken..."><select id="statusFilter"><option value="">Alle statussen</option><option>Gepland</option><option>Vast</option><option>Uitgevoerd</option><option>Niet uitgevoerd</option><option>Uit planning</option><option>Niet gepland</option></select><input id="dateFilter" type="date"></div><div class="tableWrap"><table id="overviewTable"></table></div></div></section>
+<section id="overview" class="screen"><div class="panel"><h2>Overzicht</h2><div class="filters"><input id="overviewSearch" placeholder="Zoeken..."><select id="statusFilter"><option value="">Alle statussen</option><option>Gepland</option><option>Vast</option><option>Uitgevoerd</option><option>Niet uitgevoerd</option><option>Uit planning</option><option>Niet gepland</option></select><label>Van<input id="dateFilterFrom" type="date"></label><label>Tot en met<input id="dateFilterTo" type="date"></label><button id="dateFilterClear" type="button" class="secondary">Periode wissen</button><input id="dateFilter" type="date" hidden aria-hidden="true"></div><div class="tableWrap"><table id="overviewTable"></table></div></div></section>
 
 <section id="history" class="screen">
   <div class="panel">
@@ -1735,9 +1736,12 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
         <option>Uitgevoerd</option>
         <option>Niet uitgevoerd</option>
       </select>
-      <input id="historyDateFilter" type="date">
+      <label>Van<input id="historyDateFrom" type="date"></label>
+      <label>Tot en met<input id="historyDateTo" type="date"></label>
+      <button id="historyDateClear" type="button" class="secondary">Periode wissen</button>
+      <input id="historyDateFilter" type="date" hidden aria-hidden="true">
     </div>
-    <div id="historyCards" class="historyCards"></div><div class="tableWrap historyListWrap" style="display:none"><table id="historyTable"></table></div>
+    <div id="historyRenderNotice" class="muted"></div><div id="historyCards" class="historyCards"></div><div class="tableWrap historyListWrap" style="display:none"><table id="historyTable"></table></div>
   </div>
 </section>
 
@@ -1762,7 +1766,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
   </div>
 </section>
 
-<section id="database" class="screen"><div class="panel"><div class="sectionHead"><div><h2>Database</h2><p class="muted">Alle klanten beheren.</p></div><div class="actions"><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button id="btnImport">Excel importeren</button><button id="btnAddCustomer" class="secondary">Nieuwe klant</button><button id="btnSaveDb">Opslaan</button><button id="btnGenerateDb" class="secondary">Planning genereren</button></div></div><div id="syncStatus" class="syncStatus busy">Supabase: verbinden...</div><input id="dbSearch" placeholder="Zoeken in database..."><div class="tableWrap db"><table id="dbTable"></table></div></div></section>
+<section id="database" class="screen"><div class="panel"><div class="sectionHead"><div><h2>Database</h2><p class="muted">Alle klanten beheren.</p></div><div class="actions"><input id="excelFile" type="file" accept=".xlsx,.xls,.csv" hidden><button id="btnImport">Excel importeren</button><button id="btnAddCustomer" class="secondary">Nieuwe klant</button><button id="btnSaveDb">Opslaan</button><button id="btnGenerateDb" class="secondary">Planning genereren</button></div></div><div id="syncStatus" class="syncStatus busy">Supabase: verbinden...</div><input id="dbSearch" placeholder="Zoeken in database..."><div id="dbRenderNotice" class="muted"></div><div class="tableWrap db"><table id="dbTable"></table></div></div></section>
 <section id="availability" class="screen"><div class="verticalStack"><section class="panel"><h2>Afwezigheid / overig toevoegen</h2><div class="formGrid"><label>Type<select id="blockType"><option>Verlof</option><option>Ziekte</option><option>Training</option><option>Overig</option></select></label><label>Startdatum<input id="blockStart" type="date" onchange="syncBlockEndDate()"></label><label>Einddatum<input id="blockEnd" type="date"></label><label>Starttijd<input id="blockStartTime" type="time"></label><label>Eindtijd<input id="blockEndTime" type="time"></label><label class="wide">Omschrijving<input id="blockNote" placeholder="Bijv. verlof ochtend, tandarts..."></label></div><button id="btnAddBlock">Toevoegen</button></section><section class="panel"><h2>Afwezigheid / overig</h2><div class="tableWrap"><table id="blocksTable"></table></div></section></div></section>
 <section id="fixed" class="screen"><div class="verticalStack"><section class="panel"><h2>Vaste afspraak</h2><div class="formGrid"><label class="wide">Klant<input id="fixedCustomer" list="customerList" placeholder="ID of winkelnaam"></label><datalist id="customerList"></datalist><label>Datum<input id="fixedDate" type="date"></label><label>Tijd<input id="fixedTime" type="time"></label><label>Duur min<input id="fixedDuration" type="number" value="60"></label><label class="wide">Opmerking<input id="fixedNote"></label></div><button id="btnAddFixed">Toevoegen</button></section><section class="panel"><h2>Vaste afspraken</h2><div class="tableWrap"><table id="fixedTable"></table></div></section></div></section>
 
@@ -1856,7 +1860,9 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
   </div>
 
   <div class="formGrid settings">
-    <label class="wide">Startlocatie<input id="setStart" value="Neerstraat 1, Den Bosch"><span class="settingHelp">Adres waar de route standaard begint en eindigt.</span></label>
+    <label class="wide">Startlocatie<input id="setStart" placeholder="Vul je start- en eindadres in"><span class="settingHelp">Adres waar de route standaard begint en eindigt.</span></label>
+    <label>Breedtegraad<input id="setStartLat" type="number" step="any"><span class="settingHelp">Wordt bij opslaan automatisch uit het adres bepaald.</span></label>
+    <label>Lengtegraad<input id="setStartLng" type="number" step="any"><span class="settingHelp">Wordt bij opslaan automatisch uit het adres bepaald.</span></label>
     <label>Vertrek<input id="setDepart" type="time" value="08:30"><span class="settingHelp">Standaard vertrektijd van de dag.</span></label>
     <label>Uiterlijk thuis<input id="setHome" type="time" value="18:00"><span class="settingHelp">De planning probeert voor deze tijd klaar te zijn.</span></label>
     <label>Max klanten/dag<input id="setMax" type="number" value="4"><span class="settingHelp">Normaal maximum aantal klanten per dag.</span></label>
@@ -2222,7 +2228,7 @@ async function importCustomersToSupabase(customers, showAlert=true){
 const THEMES={blue:{nav:"#17253b",nav2:"#233b5c",blue:"#315f9f",blue2:"#254b7e",soft:"#eef4fb"},green:{nav:"#123524",nav2:"#1f5a3b",blue:"#208250",blue2:"#16633d",soft:"#eaf7ef"},purple:{nav:"#24183f",nav2:"#3d276f",blue:"#6d3bc2",blue2:"#512c91",soft:"#f0ebfb"},orange:{nav:"#3b2415",nav2:"#7a3d12",blue:"#f97316",blue2:"#c95c0b",soft:"#fff0e6"},red:{nav:"#3a1518",nav2:"#6f232a",blue:"#c03434",blue2:"#922529",soft:"#fdecec"}};
 function applyTheme(mode){const t=THEMES.blue;const r=document.documentElement;r.style.setProperty('--nav','#063477');r.style.setProperty('--nav2','#031d46');r.style.setProperty('--blue','#0a4ca8');r.style.setProperty('--blue2','#063477');r.style.setProperty('--primary','#0a4ca8');r.style.setProperty('--primary-dark','#063477');r.style.setProperty('--primary-soft','#eef4ff')}
 function selectedTheme(){return 'blue'}
-const DEFAULT={customers:[],visits:[],blocks:[],fixed:[],history:[],unplanned:[],dayDepartures:{},routeCache:{},routeStats:{},disabledBreaks:{},routeTimeEdits:{},navPrefs:{app:"google",ask:true},settings:{start:"Neerstraat 1, Den Bosch",depart:"08:30",home:"18:00",max:4,maxWorkday:8.5,theme:"blue",parking:15,break:30,walk:300,tomtom:"",homeDayEnabled:true,homeDay:5,parttimeDays:{},nlHoliday:true,beHoliday:true}};
+const DEFAULT={customers:[],visits:[],blocks:[],fixed:[],history:[],unplanned:[],dayDepartures:{},routeCache:{},routeStats:{},disabledBreaks:{},routeTimeEdits:{},navPrefs:{app:"google",ask:true},settings:{start:"",startLat:null,startLng:null,depart:"08:30",home:"18:00",max:4,maxWorkday:8.5,theme:"blue",parking:15,break:30,walk:300,tomtom:"",homeDayEnabled:true,homeDay:5,parttimeDays:{},nlHoliday:true,beHoliday:true}};
 let db=load(); if(db.settings&&!db.settings.theme)db.settings.theme="blue"; applyTheme(db.settings?.theme||"blue"); if(!db.dayDepartures)db.dayDepartures={}; if(!db.routeCache)db.routeCache={}; if(!db.routeStats)db.routeStats={}; if(!db.disabledBreaks)db.disabledBreaks={}; if(!db.routeTimeEdits)db.routeTimeEdits={}; if(!db.navPrefs)db.navPrefs={app:"google",ask:true};
 function normalizeSettings(){
   if(!db.settings)db.settings=structuredClone(DEFAULT.settings);
@@ -2296,7 +2302,7 @@ function driveMin(a,b){const d=km(a,b);return d===null?30:Math.max(8,Math.round(
 
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c?.Postcode||""} ${c?.Plaats||""} ${c?.Land||""}`)}`;
 }
-function startPoint(){return {Latitude:"51.6889",Longitude:"5.3039",Plaats:"Den Bosch",Winkel:"Thuis"}} function hasCoords(c){return c&&Number.isFinite(num(c.Latitude,NaN))&&Number.isFinite(num(c.Longitude,NaN))} function routeKey(a,b,mode){return `${mode}:${num(a.Latitude).toFixed(5)},${num(a.Longitude).toFixed(5)}>${num(b.Latitude).toFixed(5)},${num(b.Longitude).toFixed(5)}`}
+function startPoint(){return {Latitude:db.settings?.startLat??"",Longitude:db.settings?.startLng??"",Plaats:db.settings?.start||"Startlocatie",Winkel:"Thuis"}} function hasCoords(c){return c&&Number.isFinite(num(c.Latitude,NaN))&&Number.isFinite(num(c.Longitude,NaN))} function routeKey(a,b,mode){return `${mode}:${num(a.Latitude).toFixed(5)},${num(a.Longitude).toFixed(5)}>${num(b.Latitude).toFixed(5)},${num(b.Longitude).toFixed(5)}`}
 async function tomtomRoute(a,b,mode="car"){
  if(!hasCoords(a)||!hasCoords(b)||!window.GJ_TOMTOM_ENABLED)return null;
  const key=routeKey(a,b,mode);if(db.routeCache?.[key])return db.routeCache[key];
@@ -2332,12 +2338,13 @@ function timeWithAbsenceMarker(date,start,end){
 function ensureFreshDayStats(date){
   if(!date)return;
   const stats=db.routeStats?.[date];
+  if(stats?.includesReturn===true)return;
   const effective=chooseBestDayDeparture(date,visitsOn(date));
   if(!stats || stats.start!==effective){
     saveRouteStats(date);
   }
 }
-function routeStatsForDay(date){const vs=visitsOn(date);if(!vs.length)return null;const points=[startPoint(),...vs.map(v=>getC(v.customerId)).filter(Boolean),startPoint()];let kmTotal=0,driveMinTotal=0,complete=true;for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1];const d=km(a,b);const mode=(i>0&&i<points.length-2&&d!==null&&d*1000<=num(db.settings.walk,300))?"walk":"car";const cached=(hasCoords(a)&&hasCoords(b))?db.routeCache?.[routeKey(a,b,mode)]:null;if(!cached){complete=false;break}kmTotal+=num(cached.km,0);driveMinTotal+=num(cached.min,0)}if(!complete)return null;const depart=t2m(chooseBestDayDeparture(date,vs));const visitMinutes=vs.reduce((s,v)=>s+num(v.duration||getC(v.customerId)?.Bezoektijd,60),0);const parkingMinutes=vs.length*num(db.settings.parking,15);const breakMinutes=(breakEnabled(date)&&vs.length)?num(db.settings.break,30):0;const totalMinutes=driveMinTotal+visitMinutes+parkingMinutes+breakMinutes;const endMin=depart+totalMinutes;return{km:Math.round(kmTotal),driveMin:Math.round(driveMinTotal),totalMin:Math.round(totalMinutes),start:chooseBestDayDeparture(date,vs),end:m2t(endMin),calculated:true}}
+function routeStatsForDay(date){const authoritative=db.routeStats?.[date];if(authoritative?.includesReturn===true)return authoritative;const vs=visitsOn(date);if(!vs.length)return null;const points=[startPoint(),...vs.map(v=>getC(v.customerId)).filter(Boolean),startPoint()];let kmTotal=0,driveMinTotal=0,complete=true;for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1];const d=km(a,b);const mode=(i>0&&i<points.length-2&&d!==null&&d*1000<=num(db.settings.walk,300))?"walk":"car";const cached=(hasCoords(a)&&hasCoords(b))?db.routeCache?.[routeKey(a,b,mode)]:null;if(!cached){complete=false;break}kmTotal+=num(cached.km,0);driveMinTotal+=num(cached.min,0)}if(!complete)return null;const depart=t2m(chooseBestDayDeparture(date,vs));const visitMinutes=vs.reduce((s,v)=>s+num(v.duration||getC(v.customerId)?.Bezoektijd,60),0);const parkingMinutes=vs.length*num(db.settings.parking,15);const breakMinutes=(breakEnabled(date)&&vs.length)?num(db.settings.break,30):0;const totalMinutes=driveMinTotal+visitMinutes+parkingMinutes+breakMinutes;const endMin=depart+totalMinutes;return{km:Math.round(kmTotal),driveMin:Math.round(driveMinTotal),totalMin:Math.round(totalMinutes),start:chooseBestDayDeparture(date,vs),end:m2t(endMin),calculated:true}}
 function saveRouteStats(date){if(!db.routeStats)db.routeStats={};const stats=routeStatsForDay(date);if(stats)db.routeStats[date]=stats;else delete db.routeStats[date]} function invalidateDayStats(date){if(date&&db.routeStats)delete db.routeStats[date]}
 async function calculateDayRoutes(date,rerender=true){const vs=visitsOn(date);if(!vs.length){invalidateDayStats(date);if(rerender)render();return}const points=[startPoint(),...vs.map(v=>getC(v.customerId)).filter(Boolean),startPoint()];for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1];const d=km(a,b);const mode=(i>0&&i<points.length-2&&d!==null&&d*1000<=num(db.settings.walk,300))?"walk":"car";await tomtomRoute(a,b,mode)}saveRouteStats(date);save();if(rerender)render()}
 async function refreshDayRoute(date){if(!date)return;invalidateDayStats(date);if(str(db.settings.tomtom)&&visitsOn(date).length){try{await calculateDayRoutes(date,false)}catch(e){console.warn(e)}}saveRouteStats(date);save();render()} async function refreshChangedDays(dates){const unique=[...new Set((dates||[]).filter(Boolean))];unique.forEach(invalidateDayStats);if(window.GJ_TOMTOM_ENABLED===true){for(const d of unique){if(visitsOn(d).length){try{await calculateDayRoutes(d,false)}catch(e){console.warn(e)}}}}unique.forEach(saveRouteStats);save();render()}
@@ -2946,7 +2953,7 @@ async function optimizeSelectedWeek(){
   }
 }
 function weekRange(){const d=dateObj(state.selected),s=new Date(d);s.setDate(d.getDate()-((d.getDay()+6)%7));const e=new Date(s);e.setDate(s.getDate()+6);return{start:iso(s),end:iso(e)}} function fixDay(fix){visitsOn(state.selected).forEach(v=>setFixed(v,fix));save();render()} function fixWeek(fix){const r=weekRange();db.visits.filter(v=>v.date>=r.start&&v.date<=r.end&&v.status!=="Uit planning").forEach(v=>setFixed(v,fix));save();render()}
-function renderToday(){const today=iso(new Date());renderRoute(today,"todayRoute");const vs=visitsOn(today);$("todayStats").innerHTML=`<div class="metric"><strong>${vs.length}</strong><span>klanten</span></div><div class="metric"><strong>${db.routeStats?.[today]?.km??"–"} km</strong><span>route</span></div><div class="metric"><strong>${vs.filter(v=>v.status==="Bezocht").length}</strong><span>bezocht</span></div>`}
+function renderToday(){const today=iso(new Date());renderRoute(today,"todayRoute");const vs=visitsOn(today),stats=db.routeStats?.[today];$("todayStats").innerHTML=`<div class="metric"><strong>${vs.length}</strong><span>klanten</span></div><div class="metric"><strong>${stats?.km??"–"} km</strong><span>route thuis–thuis</span></div><div class="metric"><strong>${stats?minTxt(stats.driveMin):"–"}</strong><span>reistijd thuis–thuis</span></div><div class="metric"><strong>${vs.filter(v=>v.status==="Uitgevoerd"||v.status==="Niet uitgevoerd"||v.status==="Bezocht").length}/${vs.length}</strong><span>afgerond</span></div>`}
 function plannedDates(id){return db.visits.filter(v=>v.customerId===id&&v.status!=="Uit planning"&&v.date).map(v=>displayDate(v.date)).join(", ")} function renderUnplanned(){const q=low($("unplannedSearch").value);const rows=db.unplanned.filter(u=>!q||JSON.stringify(u).toLowerCase().includes(q)).map(u=>{const c=getC(u.customerId)||{};return{Select:`<input type="checkbox" class="upCheck" data-id="${u.id}">`,Klant:c.Winkel||u.customerName,Datum:displayDate(u.oldDate)||"",Reden:u.reason||"",Andere:`<div class="smallText">${plannedDates(u.customerId)||"Geen andere bezoeken gepland"}</div>`,Actie:`<button onclick="smartReplan('${u.id}')">Slim plannen</button> <button class="secondary" onclick="openMoveDialogForUnplanned('${u.id}')">Zelf datum</button>`}});table("unplannedTable",rows,["Select","Klant","Datum","Reden","Andere","Actie"],true)}
 
 function liveVisitTime(v){
@@ -2999,7 +3006,7 @@ function liveVisitTime(v){
 }
 
 function renderOverview(){
-  const q=low($("overviewSearch").value),sf=$("statusFilter").value,df=$("dateFilter").value;
+  const q=low($("overviewSearch").value),sf=$("statusFilter").value,from=$("dateFilterFrom")?.value||"",to=$("dateFilterTo")?.value||"";
   let rows=[];
 
   db.customers.forEach(c=>{
@@ -3009,6 +3016,7 @@ function renderOverview(){
       vs.forEach(v=>{
         const isFixed=v.status==="Vast";
         rows.push({
+          _date:v.date||"",
           Status:v.status==="Vast"?`<span class="status Vast">VAST</span>`:`<span class="status ${String(v.status).replace(/\s/g,'-')}">${v.status}</span>`,
           Datum:displayDate(v.date),
           Tijd:liveVisitTime(v),
@@ -3024,6 +3032,7 @@ function renderOverview(){
       });
     }else{
       rows.push({
+        _date:"",
         Status:`<span class="status">Niet gepland</span>`,
         Datum:"",
         Tijd:"",
@@ -3038,12 +3047,13 @@ function renderOverview(){
   rows=rows.filter(r=>
     (!q||JSON.stringify(r).toLowerCase().includes(q)) &&
     (!sf||String(r.Status).includes(sf)) &&
-    (!df||r.Datum===displayDate(df))
+    (!from||!r._date||r._date>=from) &&
+    (!to||!r._date||r._date<=to)
   );
 
   table("overviewTable",rows,["Status","Datum","Tijd","Klant","Plaats","Regio","Acties"],true);
 }
-function renderDb(){const q=low($("dbSearch").value),s=state.sort;const rows=db.customers.filter(c=>!q||JSON.stringify(c).toLowerCase().includes(q)).sort((a,b)=>str(a[s.field]).localeCompare(str(b[s.field]),"nl",{numeric:true})*s.dir);let h=`<thead><tr>${HEADERS.map(x=>`<th class="sort" onclick="sortDb('${x}')">${x}${s.field===x?(s.dir>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`;rows.forEach(c=>{const ri=db.customers.indexOf(c);h+=`<tr>${HEADERS.map(x=>`<td><input data-row="${ri}" data-field="${x}" value="${esc(c[x])}"></td>`).join("")}</tr>`});$("dbTable").innerHTML=h+"</tbody>"} function sortDb(f){if(state.sort.field===f)state.sort.dir*=-1;else state.sort={field:f,dir:1};renderDb()} function saveDbLocalOnly(){document.querySelectorAll("#dbTable input").forEach(i=>db.customers[num(i.dataset.row)][i.dataset.field]=i.value);save();render()} async function saveDb(){await saveCustomersToSupabase()}
+function renderDb(){const q=low($("dbSearch").value),s=state.sort,allRows=db.customers.filter(c=>!q||JSON.stringify(c).toLowerCase().includes(q)).sort((a,b)=>str(a[s.field]).localeCompare(str(b[s.field]),"nl",{numeric:true})*s.dir),rows=allRows.slice(0,300);if($("dbRenderNotice"))$("dbRenderNotice").textContent=allRows.length>rows.length?`De eerste ${rows.length} van ${allRows.length} klanten worden getoond. Gebruik zoeken om direct naar een klant te gaan.`:`${allRows.length} klant${allRows.length===1?'':'en'}`;let h=`<thead><tr>${HEADERS.map(x=>`<th class="sort" onclick="sortDb('${x}')">${x}${s.field===x?(s.dir>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`;rows.forEach(c=>{const ri=db.customers.indexOf(c);h+=`<tr>${HEADERS.map(x=>`<td><input data-row="${ri}" data-field="${x}" value="${esc(c[x])}"></td>`).join("")}</tr>`});$("dbTable").innerHTML=h+"</tbody>"} function sortDb(f){if(state.sort.field===f)state.sort.dir*=-1;else state.sort={field:f,dir:1};renderDb()} function saveDbLocalOnly(){document.querySelectorAll("#dbTable input").forEach(i=>db.customers[num(i.dataset.row)][i.dataset.field]=i.value);save();render()} async function saveDb(){await saveCustomersToSupabase()}
 function renderOther(){const bq=low($("blockSearch")?.value||""),bt=$("blockTypeFilter")?.value||"",bd=$("blockDateFilter")?.value||"";
   const filteredBlocks=db.blocks.filter(b=>
     (!bq||low(b.type).includes(bq)||low(b.note).includes(bq)) &&
@@ -3646,7 +3656,15 @@ function partialBlockForDate(date){
 
 function addBlock(){if(!$("blockStart").value)return;let end=$("blockEnd").value||$("blockStart").value;if(end<$("blockStart").value)end=$("blockStart").value;db.blocks.push({id:uuid(),type:$("blockType").value,start:$("blockStart").value,end,startTime:$("blockStartTime").value,endTime:$("blockEndTime").value,note:$("blockNote").value});db.routeStats={};save();render()} function delBlock(id){db.blocks=db.blocks.filter(b=>b.id!==id);db.routeStats={};save();render()} function addFixed(){const val=$("fixedCustomer").value,id=val.split(" - ")[0].trim(),c=getC(id)||db.customers.find(x=>low(x.Winkel)===low(val));if(!c||!$("fixedDate").value)return alert("Kies klant en datum.");const vid=uuid(),f={id:uuid(),visitId:vid,customerId:c.ID,date:$("fixedDate").value,time:$("fixedTime").value,duration:$("fixedDuration").value,note:$("fixedNote").value};db.fixed.push(f);db.visits.push({id:vid,customerId:c.ID,date:f.date,time:f.time,status:"Vast",duration:f.duration});save();refreshDayRoute(f.date)} function unfixFixedAppointment(id){const f=db.fixed.find(x=>x.id===id);if(!f)return;const v=db.visits.find(x=>x.id===f.visitId);if(v){v.status="Gepland";v.time="";}db.fixed=db.fixed.filter(x=>x.id!==id);db.routeStats={};save();refreshDayRoute(f.date);alert("Vaste afspraak losgemaakt. Dit bezoek is nu weer herplanbaar.")}
 function readParttimeSettings(){const out={};[0,1,2,3,4,5,6].forEach(d=>{const even=$("pt"+d+"even")?.checked||false,odd=$("pt"+d+"odd")?.checked||false;if(even||odd)out[d]={even,odd}});return out}
-function saveSettings(){db.settings={start:$("setStart").value,depart:$("setDepart").value,home:$("setHome").value,max:num($("setMax").value,4),maxWorkday:num($("setMaxWorkday").value,8.5),theme:"blue",parking:num($("setParking").value,15),break:num($("setBreak").value,30),walk:num($("setWalk").value,300),tomtom:"",homeDayEnabled:$("setHomeDayEnabled").checked,homeDay:num($("setHomeDay").value,5),parttimeDays:readParttimeSettings(),nlHoliday:$("setNLHoliday").checked,beHoliday:$("setBEHoliday").checked};db.navPrefs={app:$("setNavApp").value,ask:$("setNavAsk").checked};db.routeStats={};save();render()} function fillSettings(){normalizeSettings();const s=db.settings;applyTheme(s.theme||"blue");document.querySelectorAll('input[name="themeMode"]').forEach(x=>x.checked=x.value===(s.theme||"blue"));$("setStart").value=s.start;$("setDepart").value=s.depart;$("setHome").value=s.home;$("setMax").value=s.max;$("setMaxWorkday").value=s.maxWorkday??8.5;$("setParking").value=s.parking;$("setBreak").value=s.break;$("setWalk").value=s.walk;$("setHomeDayEnabled").checked=s.homeDayEnabled!==false;$("setHomeDay").value=String(s.homeDay??5);[0,1,2,3,4,5,6].forEach(d=>{const cfg=(s.parttimeDays||{})[d]||(s.parttimeDays||{})[String(d)]||{};if($("pt"+d+"even"))$("pt"+d+"even").checked=!!cfg.even;if($("pt"+d+"odd"))$("pt"+d+"odd").checked=!!cfg.odd});$("setNLHoliday").checked=s.nlHoliday!==false;$("setBEHoliday").checked=s.beHoliday!==false;if($("setNavApp"))$("setNavApp").value=db.navPrefs?.app||"google";if($("setNavAsk"))$("setNavAsk").checked=db.navPrefs?.ask!==false}
+async function saveSettings(){
+  const address=$("setStart").value.trim();let lat=parseFloat($("setStartLat")?.value),lng=parseFloat($("setStartLng")?.value);
+  try{
+    if(!address)throw new Error('Vul eerst een start- en eindadres in.');
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)){const geo=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:address}}),point=geo.data?.results?.[0]?.position;if(geo.error||geo.data?.error||!point)throw new Error(geo.data?.error||geo.error?.message||'Startadres kon niet worden gevonden.');lat=Number(point.lat);lng=Number(point.lon)}
+    db.settings={start:address,startLat:lat,startLng:lng,depart:$("setDepart").value,home:$("setHome").value,max:num($("setMax").value,4),maxWorkday:num($("setMaxWorkday").value,8.5),theme:"blue",parking:num($("setParking").value,15),break:num($("setBreak").value,30),walk:num($("setWalk").value,300),tomtom:"",homeDayEnabled:$("setHomeDayEnabled").checked,homeDay:num($("setHomeDay").value,5),parttimeDays:readParttimeSettings(),nlHoliday:$("setNLHoliday").checked,beHoliday:$("setBEHoliday").checked,language:localStorage.getItem('gj_app_language')||'nl'};db.navPrefs={app:$("setNavApp").value,ask:$("setNavAsk").checked};db.routeStats={};save();
+    if(window.GJPlanningCore&&window.GJ_AUTH?.sb)await GJPlanningCore.saveUserSettings(GJ_AUTH.sb,db.settings,GJ_AUTH.workspaceUserId);render();
+  }catch(error){alert('Instellingen centraal opslaan mislukt: '+error.message)}
+} function fillSettings(){normalizeSettings();const s=db.settings;applyTheme(s.theme||"blue");document.querySelectorAll('input[name="themeMode"]').forEach(x=>x.checked=x.value===(s.theme||"blue"));$("setStart").value=s.start||'';if($("setStartLat"))$("setStartLat").value=s.startLat??'';if($("setStartLng"))$("setStartLng").value=s.startLng??'';$("setDepart").value=s.depart;$("setHome").value=s.home;$("setMax").value=s.max;$("setMaxWorkday").value=s.maxWorkday??8.5;$("setParking").value=s.parking;$("setBreak").value=s.break;$("setWalk").value=s.walk;$("setHomeDayEnabled").checked=s.homeDayEnabled!==false;$("setHomeDay").value=String(s.homeDay??5);[0,1,2,3,4,5,6].forEach(d=>{const cfg=(s.parttimeDays||{})[d]||(s.parttimeDays||{})[String(d)]||{};if($("pt"+d+"even"))$("pt"+d+"even").checked=!!cfg.even;if($("pt"+d+"odd"))$("pt"+d+"odd").checked=!!cfg.odd});$("setNLHoliday").checked=s.nlHoliday!==false;$("setBEHoliday").checked=s.beHoliday!==false;if($("setNavApp"))$("setNavApp").value=db.navPrefs?.app||"google";if($("setNavAsk"))$("setNavAsk").checked=db.navPrefs?.ask!==false}
 
 function openMoveDialogForVisit(id){
   const v=db.visits.find(x=>x.id===id);
@@ -3845,7 +3863,7 @@ async function saveVisit(){
 function renderHistory(){
   const q=low($("historySearch")?.value||"");
   const sf=$("historyStatusFilter")?.value||"";
-  const df=$("historyDateFilter")?.value||"";
+  const from=$("historyDateFrom")?.value||"",to=$("historyDateTo")?.value||"";
 
   let rows=[...db.history];
   const sortField=$("historySortField")?.value||"date";
@@ -3858,8 +3876,11 @@ function renderHistory(){
   rows=rows.filter(h=>
     (!q||JSON.stringify(h).toLowerCase().includes(q)) &&
     (!sf||h.status===sf) &&
-    (!df||h.date===df)
+    (!from||h.date>=from) &&
+    (!to||h.date<=to)
   );
+  const totalRows=rows.length,renderLimit=250;rows=rows.slice(0,renderLimit);
+  if($("historyRenderNotice"))$("historyRenderNotice").textContent=totalRows>renderLimit?`De nieuwste ${renderLimit} van ${totalRows} resultaten worden getoond. Verklein de periode om gericht verder te zoeken.`:`${totalRows} resultaat${totalRows===1?'':'en'}`;
 
   $("btnHistoryCards")?.classList.toggle("active",state.historyView!=="list");
   $("btnHistoryList")?.classList.toggle("active",state.historyView==="list");
@@ -3875,7 +3896,7 @@ function renderHistory(){
       Status:`<span class="historyStatus ${h.status==="Uitgevoerd"?"done":"notDone"}">${esc(h.status)}</span>`,
       Samenvatting:`<div class="historyListSummary">${esc(h.summary||"")}</div>`,
       Foto:h.photos?.length?`${h.photos.length} foto${h.photos.length===1?"":"s"}`:"",
-      Actie:`<button class="secondary" onclick="openHistoryDetail('${h.id}',0)">Bekijken</button> <button class="editBtn" onclick="openEditHistory('${h.id}')">Bewerken</button> <button class="pdfBtn" onclick="exportHistoryVisitPdf('${h.id}')">PDF</button>`
+      Actie:`<button class="secondary" onclick="openHistoryDetail('${h.id}',0)">Bekijken</button> <button class="editBtn" onclick="openEditHistory('${h.id}')">Bewerken</button> <button class="pdfBtn" onclick="exportHistoryVisitPdf('${h.id}')">PDF</button>${h.status==="Niet uitgevoerd"?` <button onclick="v11ReplanHistory('${h.id}')">Opnieuw plannen</button>`:""}`
     }));
     table("historyTable",listRows,["Datum","Tijd","Klant","Plaats","Status","Samenvatting","Foto","Actie"],true);
     return;
@@ -3893,7 +3914,7 @@ function renderHistory(){
       ${h.summary?`<div class="historySummary">${esc(h.summary).slice(0,180)}${h.summary.length>180?"...":""}</div>`:`<div class="historySummary empty">Geen samenvatting.</div>`}
       ${h.photos?.length?`<div class="historyThumbs">${h.photos.slice(0,3).map((p,i)=>`<img src="${p.data}" onclick="openHistoryDetail('${h.id}',${i})">`).join("")}</div>`:""}
       <div class="actions">
-        <button class="secondary" onclick="openHistoryDetail('${h.id}',0)">Bekijken</button><button class="editBtn" onclick="openEditHistory('${h.id}')">Bewerken</button><button class="pdfBtn" onclick="exportHistoryVisitPdf('${h.id}')">PDF</button>
+        <button class="secondary" onclick="openHistoryDetail('${h.id}',0)">Bekijken</button><button class="editBtn" onclick="openEditHistory('${h.id}')">Bewerken</button><button class="pdfBtn" onclick="exportHistoryVisitPdf('${h.id}')">PDF</button>${h.status==="Niet uitgevoerd"?`<button onclick="v11ReplanHistory('${h.id}')">Opnieuw plannen</button>`:""}
       </div>
     </div>
   `).join(""):`<p class="empty">Geen historie gevonden.</p>`;
@@ -4380,7 +4401,7 @@ function exportMonthPlanningReport(){
 }
 
 function confirmAction(t,msg){if(!confirm(`${t}\n\n${msg}`))return false;return prompt("Typ BEVESTIG om door te gaan:")==="BEVESTIG"} function backup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:"application/json"}));a.download=`planning-gjsystems-backup-${new Date().toISOString().slice(0,10)}.json`;a.click()} function restore(file){if(!file)return;const r=new FileReader();r.onload=e=>{try{if(!confirmAction("Back-up terugzetten","Huidige gegevens worden vervangen."))return;db=JSON.parse(e.target.result);save();render()}catch{alert("Ongeldige back-up")}};r.readAsText(file)}
-function nav(s){state.screen=s;document.querySelectorAll(".screen,.nav").forEach(x=>x.classList.remove("active"));$(s).classList.add("active");document.querySelector(`.nav[data-screen="${s}"]`)?.classList.add("active");const m={calendar:["Kalender","Maand, week of dag met route rechts."],today:["Vandaag","Dagroute van vandaag."],unplanned:["Niet ingepland","Uitgevallen of verwijderde bezoeken."],overview:["Overzicht","Alle bezoeken en statussen."],history:["Historie","Alle afgeronde bezoeken."],reports:["Rapportages","Excel-overzichten uitdraaien."],database:["Database","Klanten beheren."],availability:["Afwezigheid / overig","Verlof, ziekte of tijdelijke afwezigheid."],fixed:["Vaste afspraken","Harde afspraken beheren."],settings:["Instellingen","Persoonlijke en planningsinstellingen."],contact:["Contact","Stuur een vraag en bekijk de reactie."],admin:["Beheer","Gebruikers, TomTom en systeembeheer."]};$("title").textContent=m[s][0];$("sub").textContent=m[s][1];render()} function render(){if(state.screen==="calendar")renderCalendar();renderToday();renderUnplanned();renderOverview();renderHistory();renderDb();renderOther();fillSettings()}
+function nav(s){state.screen=s;document.querySelectorAll(".screen,.nav").forEach(x=>x.classList.remove("active"));$(s).classList.add("active");document.querySelector(`.nav[data-screen="${s}"]`)?.classList.add("active");const m={calendar:["Kalender","Maand, week of dag met route rechts."],today:["Vandaag","Dagroute van vandaag."],unplanned:["Niet ingepland","Uitgevallen of verwijderde bezoeken."],overview:["Overzicht","Alle bezoeken en statussen."],history:["Historie","Alle afgeronde bezoeken."],reports:["Rapportages","Excel-overzichten uitdraaien."],database:["Database","Klanten beheren."],availability:["Afwezigheid / overig","Verlof, ziekte of tijdelijke afwezigheid."],fixed:["Vaste afspraken","Harde afspraken beheren."],settings:["Instellingen","Persoonlijke en planningsinstellingen."],contact:["Contact","Stuur een vraag en bekijk de reactie."],admin:["Beheer","Gebruikers, TomTom en systeembeheer."]};$("title").textContent=m[s][0];$("sub").textContent=m[s][1];render()} function render(){const screen=state.screen;if(screen==="calendar")renderCalendar();else if(screen==="today")renderToday();else if(screen==="unplanned")renderUnplanned();else if(screen==="overview")renderOverview();else if(screen==="history")renderHistory();else if(screen==="database")renderDb();else if(["availability","fixed","contact","admin"].includes(screen))renderOther();if(screen==="settings")fillSettings()}
 document.addEventListener("DOMContentLoaded",()=>{
 
 function setupProfileCropper(fileInput,button,imageEl){
@@ -4727,7 +4748,7 @@ async function drawVisitPdfLayout(doc,visit){
       let pause=false;
       vs.forEach((v,i)=>{
         const c=getC(v.customerId)||{}, prev=i?getC(vs[i-1].customerId):null;
-        let travel=0;
+        let travel=0,distance=0,routeMode='car',routeLive=false;
         if(i===0){
           const from=startPoint(), to=c, park=num(db.settings.parking,15);
           const cached=hasCoords(to)?db.routeCache?.[routeKey(from,to,'car')]:null;
@@ -4825,6 +4846,13 @@ async function drawVisitPdfLayout(doc,visit){
         status:r.status||'Gepland',
         duration:r.bezoekduur_min||60,
         order:r.route_volgorde||999,
+        reistijd_min:Number(r.reistijd_min||0),
+        parking_min:Number(r.parking_min||0),
+        afstand_km:Number(r.afstand_km||0),
+        route_mode:r.route_mode||'car',
+        route_live:r.route_live===true,
+        fixedStart:r.fixed_starttijd?String(r.fixed_starttijd).slice(0,5):'',
+        rescheduledFromHistoryId:r.rescheduled_from_history_id||null,
         supabase:true
       }));
       const previous=db.visits||[];
@@ -5124,7 +5152,7 @@ async function drawVisitPdfLayout(doc,visit){
   function mapHistoryRow(r){
     const customerId=String(r.customer_id||'');
     const customer=(typeof getC==='function'?getC(customerId):null)||{};
-    const status=(r.opmerkingen==='Niet uitgevoerd'||r.status==='Niet uitgevoerd')?'Niet uitgevoerd':'Uitgevoerd';
+    const status=r.status||((r.opmerkingen==='Niet uitgevoerd')?'Niet uitgevoerd':'Uitgevoerd');
     return {
       id:'supa-history-'+String(r.id||r.planning_id||customerId+'-'+r.bezoekdatum),
       supabaseHistoryId:r.id||null,
@@ -5169,8 +5197,8 @@ async function drawVisitPdfLayout(doc,visit){
       }else{
         const byHistory=new Map();
         for(const row of (photoRows||[])){
-          const publicUrl=client.storage.from('visit-photos').getPublicUrl(row.file_path).data.publicUrl;
-          const photo={name:String(row.file_path||'').split('/').pop()||'foto.jpg',data:publicUrl,path:row.file_path};
+          const signed=await client.storage.from('visit-photos').createSignedUrl(row.file_path,900);
+          const photo={name:String(row.file_path||'').split('/').pop()||'foto.jpg',data:signed.error?'':signed.data.signedUrl,path:row.file_path};
           const key=String(row.history_id);if(!byHistory.has(key))byHistory.set(key,[]);byHistory.get(key).push(photo);
         }
         remote.forEach(h=>h.photos=byHistory.get(String(h.supabaseHistoryId))||[]);
@@ -5225,6 +5253,32 @@ async function drawVisitPdfLayout(doc,visit){
     syncTimer=setTimeout(()=>syncFromSupabase(reason),350);
   }
 
+  function applyPlanningRealtime(payload){
+    if(window.__GJ_LOCAL_MUTATION__)return;
+    const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,id=String(row?.id||'');if(!id)return;
+    const index=(db.visits||[]).findIndex(v=>String(v.id)===id||String(v.planningId||'')===id);
+    if(payload.eventType==='DELETE'||!row.datum){if(index>=0){db.visits.splice(index,1);save();render()}return}
+    if(index<0){debounceSync('nieuwe planningregel');return}
+    Object.assign(db.visits[index],{date:row.datum,time:row.starttijd?String(row.starttijd).slice(0,5):'',end:row.eindtijd?String(row.eindtijd).slice(0,5):'',status:row.status||'Gepland',duration:Number(row.bezoekduur_min||60),order:Number(row.route_volgorde||999),reistijd_min:Number(row.reistijd_min||0),parking_min:Number(row.parking_min||0),afstand_km:Number(row.afstand_km||0),route_mode:row.route_mode||'car',route_live:row.route_live===true,fixedStart:row.fixed_starttijd?String(row.fixed_starttijd).slice(0,5):'',rescheduledFromHistoryId:row.rescheduled_from_history_id||null,supabase:true});
+    save();render();
+  }
+
+  function applyDaySettingRealtime(payload){
+    const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,date=row?.datum;if(!date)return;db.dayDepartures=db.dayDepartures||{};db.routeStats=db.routeStats||{};
+    if(payload.eventType==='DELETE'){delete db.dayDepartures[date];delete db.routeStats[date]}
+    else{if(row.vertrektijd)db.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)db.routeStats[date]={km:Number(route.km||0),driveMin:Number(route.travelMin||0),totalMin:Number(route.dayMin||0),start:db.dayDepartures[date],end:route.end||'',calculated:route.live===true,live:route.live===true,includesReturn:true}}
+    save();render();
+  }
+
+  function applyAbsenceRealtime(payload){
+    const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,id=String(row?.id||'');if(!id)return;db.blocks=db.blocks||[];const index=db.blocks.findIndex(block=>String(block.id)===id);
+    if(payload.eventType==='DELETE'){if(index>=0)db.blocks.splice(index,1)}else{const mapped={id,type:row.type||'Overig',start:row.start_date,end:row.end_date||row.start_date,startTime:row.start_time?String(row.start_time).slice(0,5):'',endTime:row.end_time?String(row.end_time).slice(0,5):'',note:row.note||'',supabase:true};if(index>=0)db.blocks[index]=mapped;else db.blocks.push(mapped)}save();render();
+  }
+
+  async function refreshHistoryRealtime(reason){
+    clearTimeout(syncTimer);syncTimer=setTimeout(async()=>{if(syncBusy)return;syncBusy=true;try{await loadVisitHistoryFromSupabase();save();render();if(typeof setSyncStatus==='function')setSyncStatus('Supabase: '+reason,'ok')}finally{syncBusy=false}},180);
+  }
+
   function startRealtime(){
     const client=syncClient();
     if(!client || typeof client.channel!=='function') return;
@@ -5232,11 +5286,13 @@ async function drawVisitPdfLayout(doc,visit){
       if(planningChannel) client.removeChannel(planningChannel);
       if(historyChannel) client.removeChannel(historyChannel);
       planningChannel=client.channel('gj-laptop-planning-sync')
-        .on('postgres_changes',{event:'*',schema:'public',table:'planning'},()=>debounceSync('planning gewijzigd'))
+        .on('postgres_changes',{event:'*',schema:'public',table:'planning'},applyPlanningRealtime)
+        .on('postgres_changes',{event:'*',schema:'public',table:'app_day_settings'},applyDaySettingRealtime)
+        .on('postgres_changes',{event:'*',schema:'public',table:'app_absences'},applyAbsenceRealtime)
         .subscribe();
       historyChannel=client.channel('gj-laptop-history-sync')
-        .on('postgres_changes',{event:'*',schema:'public',table:'visit_history'},()=>debounceSync('bezoek afgerond'))
-        .on('postgres_changes',{event:'*',schema:'public',table:'visit_photos'},()=>debounceSync('bezoekfoto gewijzigd'))
+        .on('postgres_changes',{event:'*',schema:'public',table:'visit_history'},()=>refreshHistoryRealtime('bezoek bijgewerkt'))
+        .on('postgres_changes',{event:'*',schema:'public',table:'visit_photos'},()=>refreshHistoryRealtime('bezoekfoto bijgewerkt'))
         .subscribe();
     }catch(e){ console.warn('Realtime kon niet worden gestart; periodieke sync blijft actief.',e); }
   }
@@ -5246,7 +5302,7 @@ async function drawVisitPdfLayout(doc,visit){
     setTimeout(async()=>{
       await syncFromSupabase('app geopend');
       startRealtime();
-      setInterval(()=>syncFromSupabase('periodieke controle'),30000);
+      setInterval(()=>syncFromSupabase('periodieke veiligheidscontrole'),120000);
     },1400);
   });
   window.addEventListener('focus',()=>debounceSync('venster actief'));
@@ -5620,7 +5676,7 @@ async function drawVisitPdfLayout(doc,visit){
     if(error||!data)return;
     a.profile=data;a.isAdmin=isAdminProfile(data);document.body.classList.toggle('gj-admin',a.isAdmin);
     document.querySelectorAll('.gjAdminOnly').forEach(el=>{if(a.isAdmin)el.style.removeProperty('display')});
-    applyPhoto(data.avatar_url);
+    let avatar=data.avatar_url||'';if(avatar&&!/^https?:|^data:/i.test(avatar)){const signed=await a.sb.storage.from('profile-photos').createSignedUrl(avatar,3600);if(!signed.error)avatar=signed.data.signedUrl}applyPhoto(avatar);
   }
   async function uploadProfilePhoto(dataUrl){
     const a=window.GJ_AUTH;if(!a?.sb||!a?.profile?.id||!dataUrl)return;
@@ -5628,15 +5684,15 @@ async function drawVisitPdfLayout(doc,visit){
       const path=a.profile.id+'/profile.jpg';
       const {error:upErr}=await a.sb.storage.from('profile-photos').upload(path,dataUrlToBlob(dataUrl),{contentType:'image/jpeg',upsert:true,cacheControl:'3600'});
       if(upErr)throw upErr;
-      const pub=a.sb.storage.from('profile-photos').getPublicUrl(path).data.publicUrl+'?v='+Date.now();
-      const {data,error}=await a.sb.from('profiles').update({avatar_url:pub,updated_at:new Date().toISOString()}).eq('id',a.profile.id).select().single();
-      if(error)throw error;if(data)a.profile=data;applyPhoto(pub);
+      const signed=await a.sb.storage.from('profile-photos').createSignedUrl(path,3600);if(signed.error)throw signed.error;
+      const {data,error}=await a.sb.from('profiles').update({avatar_url:path,updated_at:new Date().toISOString()}).eq('id',a.profile.id).select().single();
+      if(error)throw error;if(data)a.profile=data;applyPhoto(signed.data.signedUrl);
     }catch(err){console.error('Profielfoto synchroniseren mislukt',err);alert('De profielfoto is lokaal opgeslagen, maar synchroniseren is mislukt: '+err.message)}
   }
   window.addEventListener('gj-auth-ready',refreshProfile);
   window.addEventListener('gj-profile-photo-changed',e=>uploadProfilePhoto(e.detail));
   window.addEventListener('focus',refreshProfile);
-  window.addEventListener('gj-auth-ready',()=>{const a=window.GJ_AUTH;if(!a?.profile?.id)return;a.sb.channel('profile-photo-'+a.profile.id).on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+a.profile.id},payload=>{if(payload.new?.avatar_url){a.profile=payload.new;applyPhoto(payload.new.avatar_url)}}).subscribe()});
+  window.addEventListener('gj-auth-ready',()=>{const a=window.GJ_AUTH;if(!a?.profile?.id)return;a.sb.channel('profile-photo-'+a.profile.id).on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+a.profile.id},()=>refreshProfile()).subscribe()});
 })();
 </script>
 
@@ -5663,5 +5719,6 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v109.js?v=10900"></script>
 <script src="v110.js?v=11000"></script>
 <script src="v111.js?v=11100"></script>
+<script src="v11.js?v=110000"></script>
 </body>
 </html>

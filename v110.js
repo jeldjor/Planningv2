@@ -7,8 +7,8 @@
   let mutationDepth=0,pendingRemoteReload=false,liveRouteBusy=false,liveRouteTimer=null;
 
   function setVersion(){
-    document.title='Planning-GJsystems v10.10 DEV';
-    document.querySelectorAll('.version,.productVersion').forEach(el=>el.textContent='v10.10 DEV');
+    document.title='Planning-GJsystems';
+    document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach(el=>el.remove());
   }
   function beginMutation(){mutationDepth++;window.__GJ_LOCAL_MUTATION__=true}
   async function endMutation(){
@@ -38,6 +38,8 @@
   }
   async function persistLiveDay(date){
     const sb=client();if(!sb)return false;
+    // v11 slaat de complete dag al atomisch op via save_day_route.
+    if(window.GJPlanningCore&&db.routeStats?.[date]?.includesReturn===true)return true;
     const visits=visitsOn(date),legs=routeLegs(date);
     const [planningResult,customerResult]=await Promise.all([
       sb.from('planning').select('id,customer_id,route_volgorde').eq('datum',date),
@@ -91,12 +93,16 @@
   if(isLaptop){
     const priorGenerate=window.generatePlanning;
     window.generatePlanning=generatePlanning=async function(){
+      let result;const from=typeof parseDisplayDate==='function'?parseDisplayDate($('planFrom')?.value):'',to=typeof parseDisplayDate==='function'?parseDisplayDate($('planTo')?.value):'';
       beginMutation();
       try{
-        const result=await priorGenerate.apply(this,arguments);
-        await makeDatesLive(plannedDates(),{persist:true,force:true});
-        return result;
-      }finally{await endMutation()}
+        result=await priorGenerate.apply(this,arguments);
+      }finally{pendingRemoteReload=false;await endMutation()}
+      // De planner voegt rijen in Supabase toe. Lees daarna éénmaal de echte
+      // database-ID's terug voordat de atomische v11-routeopslag begint.
+      await window.loadPlanningFromSupabase?.();
+      await makeDatesLive(plannedDates().filter(date=>(!from||date>=from)&&(!to||date<=to)),{persist:true,force:true});
+      return result;
     };
     const priorRefresh=window.refreshDayRoute;
     window.refreshDayRoute=refreshDayRoute=async function(date){
@@ -172,8 +178,9 @@
       const departure=db.dayDepartures?.[oldDate]||'';
       beginMutation();document.body.classList.add('v110SavingDay');
       try{
-        await moveDayInDatabase(oldDate,newDate,source);
-        await moveDaySettings(oldDate,newDate,departure);
+        const moved=await client().rpc('move_planning_day',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_old_date:oldDate,p_new_date:newDate});
+        if(moved.error)throw moved.error;
+        if(Number(moved.data?.moved)!==source.length)throw new Error('Niet alle bezoeken zijn door de database bevestigd.');
         source.forEach(v=>v.date=newDate);
         for(const fixed of db.fixed||[])if(fixed.date===oldDate)fixed.date=newDate;
         if(departure){db.dayDepartures[newDate]=departure;delete db.dayDepartures[oldDate]}
@@ -247,13 +254,14 @@
     const planningNotes=planning?.notities||'';
     const taggedFollowUp=String(rawRemarks||planningNotes).match(/(?:vervolgactie|follow[- ]?up)\s*:\s*(.+)$/i)?.[1]||'';
     const remarks=['Uitgevoerd','Niet uitgevoerd'].includes(String(rawRemarks))?planningNotes:rawRemarks;
+    const reason=history?.reden||(status==='Niet uitgevoerd'?remarks:'');
     const followUp=history?.vervolgactie||planning?.vervolgactie||taggedFollowUp;
     const visitor=[profile?.first_name,profile?.last_name].filter(Boolean).join(' ')||profile?.full_name||profile?.email||window.GJ_AUTH?.profile?.full_name||window.GJ_AUTH?.profile?.email||'';
     return {
       chain:c.keten||c.Keten||c.chain||'',storeName:c.naam||c.Winkel||c.name||local?.customerName||'Onbekende klant',branch:c.vestiging||c.Vestiging||c.filiaal||'',
       street:c.straat||c.Straat||c.adres||c.address||c.street||'',houseNumber:c.huisnr||c.Huisnr||c.nr||'',postalCode:c.postcode||c.Postcode||c.postal||'',city:c.plaats||c.Plaats||c.city||local?.place||'',
       contactPerson:c.contactpersoon||c.Contactpersoon||'',visitor,visitDate:history?.bezoekdatum||planning?.datum||local?.date||'',startTime:String(history?.starttijd||planning?.starttijd||local?.time||'').slice(0,5),endTime:String(history?.eindtijd||planning?.eindtijd||local?.end||'').slice(0,5),
-      activity:history?.activiteit||local?.activity||'',status,summary:history?.samenvatting||local?.summary||'',remarks,followUp,workPerformed:history?.uitgevoerde_werkzaamheden||'',attentionPoints:history?.aandachtspunten||'',photos,generatedAt:new Date().toISOString()
+      activity:history?.activiteit||local?.activity||'',status,reason,summary:history?.samenvatting||local?.summary||'',remarks,followUp,workPerformed:history?.uitgevoerde_werkzaamheden||'',attentionPoints:history?.aandachtspunten||'',photos,generatedAt:new Date().toISOString()
     };
   }
   function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Planning-GJsystems v10.10 DEV</title>
+<title>Planning-GJsystems</title>
 <script>
 // v6: failsafe tegen blijven hangen op beginscherm/logo
 window.__GJ_APP_VERSION__='8.4';
@@ -307,18 +307,9 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
+<script src="planning-core.js?v=110000"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-// v7: forceer nieuwe versie op iPhone/PWA
-(function(){
-  try{
-    if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}
-    if(window.caches){caches.keys().then(function(keys){keys.forEach(function(k){caches.delete(k);});});}
-  }catch(e){}
-})();
-</script>
-
 <style id="gjMobileAdminCss">
 #adminMobile .adminTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:7px}
 #adminMobile .adminTab{min-height:34px;padding:5px 3px;font-size:11px}
@@ -448,6 +439,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v109.css?v=10900">
 <link rel="stylesheet" href="v110.css?v=11000">
 <link rel="stylesheet" href="v111.css?v=11100">
+<link rel="stylesheet" href="v11.css?v=110000">
 </head>
 <body>
 <div id="splash" class="splash"><div class="logoBox"><img src="logo-menu.png?v=10820" alt="GJ Systems — The Smarter Way"></div></div>
@@ -456,20 +448,22 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <button type="button" data-screen="today" class="active"><span class="navIcon">⌂</span><span class="navLabel" data-key="today">Vandaag</span></button>
 <button type="button" data-screen="calendar"><span class="navIcon">▣</span><span class="navLabel" data-key="calendar">Kalender</span></button>
 <button type="button" data-screen="overview"><span class="navIcon">☷</span><span class="navLabel" data-key="overview">Overzicht</span></button>
+<button type="button" data-screen="historyMobile"><span class="navIcon">↶</span><span class="navLabel">Historie</span></button>
 <button type="button" data-screen="absence"><span class="navIcon">⊘</span><span class="navLabel" data-key="absence">Afwezigheid</span></button>
 <button type="button" data-screen="settings"><span class="navIcon">⚙</span><span class="navLabel" data-key="settings">Instellingen</span></button>
 <button type="button" data-screen="contactMobile"><span class="navIcon">✉</span><span class="navLabel">Contact</span></button>
 <button type="button" data-screen="adminMobile" class="gjAdminOnly"><span class="navIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.7-2.9 8.2-7 10-4.1-1.8-7-5.3-7-10V6l7-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="navLabel" data-key="admin">Beheer</span></button>
-<div class="menuSpacer"></div><div class="menuBrand"><img src="logo-menu.png?v=10801" alt="GJ Systems — The Smarter Way"></div><button id="menuLogout" type="button" class="menuLogout"><span class="navIcon">↪</span><span class="navLabel" data-key="logout">Uitloggen</span></button><div class="version">v10.9 DEV</div></nav>
+<div class="menuSpacer"></div><div class="menuBrand"><img src="logo-menu.png?v=10801" alt="GJ Systems — The Smarter Way"></div><button id="menuLogout" type="button" class="menuLogout"><span class="navIcon">↪</span><span class="navLabel" data-key="logout">Uitloggen</span></button></nav>
 <div id="profileCropOverlay" class="profileCropOverlay" aria-hidden="true"><div class="profileCropDialog"><h2 data-key="editProfilePhoto">Profielfoto aanpassen</h2><p class="cropHelp">Schuif de foto in het ronde kader en gebruik de regelaar om in of uit te zoomen.</p><div id="cropViewport" class="cropViewport"><img id="cropImage" alt="Uitsnede"></div><label class="cropZoomLabel">Zoom<input id="cropZoom" class="cropZoom" type="range" min="1" max="3" step="0.01" value="1"></label><div class="cropActions"><button id="cropCancel" type="button" class="cancel" data-key="cancel">Annuleren</button><button id="cropSave" type="button" data-key="save">Opslaan</button></div></div></div>
 <main>
 <section id="today" class="screen active"><h1 data-key="today">Vandaag</h1><p class="muted" id="todayDate"></p><div class="panel"><div class="grid2 todayControls"><label class="compactTimeField fieldWithIcon"><span data-key="depart">Vertrektijd</span><span class="fieldIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg></span><input id="depart" type="time" value="08:00"></label><label class="compactRouteField fieldWithIcon"><span data-key="routeApp">Route-app</span><span class="fieldIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3.5-1 4-4 4-7s1.5-5 5-5h4"></path><path d="M15 4l3 3-3 3"></path><circle cx="5" cy="19" r="1.5"></circle></svg></span><select id="navApp"><option>Waze</option><option>Google Maps</option><option>Apple Kaarten</option></select></label></div><div class="stats"><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="16.5" cy="9" r="2.5"></circle><path d="M3.5 19c.6-3.2 2.6-5 5.5-5s4.9 1.8 5.5 5"></path><path d="M14 14.5c2.7 0 4.5 1.5 5 4.5"></path></svg></div><strong id="statVisits">0</strong><span data-key="customers">klanten</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"></path><circle cx="12" cy="10" r="2"></circle></svg></div><strong id="statKm">–</strong><span>km</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 16z"></path><path d="M4 16v3h2v-2h12v2h2v-3"></path><circle cx="8" cy="16" r="1"></circle><circle cx="16" cy="16" r="1"></circle></svg></div><strong id="statTravel">–</strong><span data-key="travelTime">reistijd</span></div><div class="stat"><div class="statIcon"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.2l2.6 2.6L16.5 9"></path></svg></div><strong id="statDone">0</strong><span data-key="ready">klaar</span></div></div><button id="fullRouteBtn" class="todayMainButton" type="button"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-1.5-5.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5L5 16z"></path><path d="M4 16v3h2v-2h12v2h2v-3"></path><circle cx="8" cy="16" r="1"></circle><circle cx="16" cy="16" r="1"></circle></svg><span class="buttonLabel" data-key="openFullRoute">Volledige route openen</span></button><div class="smallBtns" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button id="togglePause" type="button" class="todayActionButton"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6.5A3.5 3.5 0 0 1 12.5 18h-4A3.5 3.5 0 0 1 5 14.5V8z"></path><path d="M16 10h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5c0-1 1-1 1-2M11 5c0-1 1-1 1-2"></path></svg><span class="buttonLabel" data-key="togglePause">Pauze aan/uit</span></button><button id="recalcBtn" type="button" class="todayActionButton"><svg class="uiIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path><path d="M7 4H4v3"></path><path d="M4.8 7A9 9 0 0 1 20 9"></path></svg><span class="buttonLabel" data-key="recalc">Tijden</span></button></div></div><div id="todayRoute"></div></section>
 <section id="calendar" class="screen"><h1 data-key="calendar">Kalender</h1><div class="panel calendarPanel"><div class="monthHead"><button id="prevMonth" class="secondary" type="button">‹</button><div id="monthTitle" class="monthTitle">Maand</div><button id="nextMonth" class="secondary" type="button">›</button></div><div id="calendarList"></div></div><div id="calendarDetail"></div></section>
 <section id="overview" class="screen"><h1 data-key="overview">Overzicht</h1><label><span data-key="search">Zoeken</span><input id="search" data-ph="searchPh" placeholder="Zoek klant, plaats of postcode"></label><div id="overviewList" style="margin-top:8px"></div></section>
+<section id="historyMobile" class="screen"><h1>Historie</h1><div class="historyFiltersMobile"><input id="historyMobileSearch" type="search" placeholder="Zoek klant, plaats of samenvatting"><select id="historyMobileStatus"><option value="">Alle statussen</option><option>Uitgevoerd</option><option>Niet uitgevoerd</option></select><input id="historyMobileFrom" type="date" aria-label="Startdatum"><input id="historyMobileTo" type="date" aria-label="Einddatum"></div><div id="historyMobileList"></div><button id="historyMobileMore" type="button" class="secondary" hidden>Meer historie laden</button></section>
 <section id="absence" class="screen"><h1 data-key="absence">Afwezigheid</h1><div class="panel"><div class="form"><label><span data-key="type">Type</span><select id="blockType"><option>Verlof</option><option>Ziekte</option><option>Training</option><option>Overig</option></select></label><div class="formRow absenceDates"><label class="compactDateField"><span data-key="startDate">Startdatum</span><input id="blockStart" type="date"></label><label class="compactDateField"><span data-key="endDate">Einddatum</span><input id="blockEnd" type="date"></label></div><div class="formRow absenceTimes"><label class="compactTimeField"><span data-key="startTime">Starttijd</span><input id="blockStartTime" type="time" placeholder="09:00"></label><label class="compactTimeField"><span data-key="endTime">Eindtijd</span><input id="blockEndTime" type="time" placeholder="12:30"></label></div><label><span data-key="description">Omschrijving</span><textarea id="blockNote" data-ph="absencePh" placeholder="Bijv. tandarts, verlof ochtend of training"></textarea></label><button id="saveBlock" type="button" data-key="save">Opslaan</button></div></div><div id="absenceList"></div></section>
 <section id="settings" class="screen"><h1 data-key="settings">Instellingen</h1><div class="v102SettingsGrid">
 <div class="v102Card"><h3>Profiel</h3><p class="muted">Wijzig hier je centraal gesynchroniseerde profielfoto.</p><div class="v109ProfilePreview"><span>Profielfoto</span><img id="mV102ProfilePreview" class="v102ProfilePreview" alt=""></div><input id="mV102ProfileFile" type="file" accept="image/*" hidden><button id="mV102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
-<div class="v102Card"><h3>Wachtwoord wijzigen</h3><label>Huidig wachtwoord<input id="mV102CurrentPassword" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="mV102NewPassword" type="password" autocomplete="new-password"></label><label>Nieuw wachtwoord herhalen<input id="mV102NewPasswordAgain" type="password" autocomplete="new-password"></label><div id="mV102PasswordCriteria" class="v102Criteria"></div><button id="mV102ChangePassword" type="button">Wachtwoord wijzigen</button><div id="mV102PasswordStatus" class="adminStatus"></div></div></div><div class="panel form"><label><span data-key="language">Taal</span><select id="lang"><option value="nl">Nederlands</option><option value="de">Deutsch</option><option value="en">English</option></select></label><div class="muted">Vaste uitstraling: blauw met gouden accenten.</div><label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:8px"><input id="defaultSettings" type="checkbox" style="width:auto;height:auto"> <span data-key="useDefault">Als standaard gebruiken</span></label><button id="saveSettings" type="button" data-key="saveSettings">Instellingen opslaan</button><div class="settingsVersion">Versie: v10.5<br>Supabase: nog niet gekoppeld</div></div></section>
+<div class="v102Card"><h3>Wachtwoord wijzigen</h3><label>Huidig wachtwoord<input id="mV102CurrentPassword" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="mV102NewPassword" type="password" autocomplete="new-password"></label><label>Nieuw wachtwoord herhalen<input id="mV102NewPasswordAgain" type="password" autocomplete="new-password"></label><div id="mV102PasswordCriteria" class="v102Criteria"></div><button id="mV102ChangePassword" type="button">Wachtwoord wijzigen</button><div id="mV102PasswordStatus" class="adminStatus"></div></div></div><div class="panel form"><label><span data-key="language">Taal</span><select id="lang"><option value="nl">Nederlands</option><option value="de">Deutsch</option><option value="en">English</option></select></label><label>Startadres<input id="mobileStartAddress" autocomplete="street-address" placeholder="Straat, huisnummer, postcode en plaats"></label><div class="grid2"><label>Startbreedtegraad<input id="mobileStartLat" type="number" step="any"></label><label>Startlengtegraad<input id="mobileStartLng" type="number" step="any"></label></div><div class="grid2"><label>Parkeerbuffer (minuten)<input id="mobileParkingMinutes" type="number" min="0" max="60" value="15"></label><label>Loopafstand (meter)<input id="mobileWalkThreshold" type="number" min="0" max="2000" value="300"></label></div><div class="muted">Deze route-instellingen worden centraal gesynchroniseerd met de laptop.</div><button id="saveSettings" type="button" data-key="saveSettings">Instellingen opslaan</button></div></section>
 
 
 <section id="contactMobile" class="screen">
@@ -554,7 +548,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 </main>
 <script>
 (function(){
-const VERSION='v10.9 DEV',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
+const VERSION='v11.0',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
 let sb=null;
 window.addEventListener('gj-auth-ready',()=>{if(window.GJ_AUTH?.sb)sb=window.GJ_AUTH.sb});
 const COLORS={blue:['#083b86','#052d68','#eef4ff']};
@@ -562,7 +556,7 @@ const TR={nl:{today:'Vandaag',calendar:'Kalender',overview:'Overzicht',absence:'
 const $=id=>document.getElementById(id);
 function localIso(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function parseLocalDate(iso){const [y,m,d]=String(iso||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1)}
-const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,pendingFinishFiles=[],finishBusy=false;
+const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,pendingFinishFiles=[],finishBusy=false,mobileSyncPromise=null;
 function t(k){return (TR[db?.settings?.language||'nl']||TR.nl)[k]||TR.nl[k]||k}
 function ts(status){
   const m={Gepland:'planned',Uitgevoerd:'executed','Niet uitgevoerd':'notExecuted','Uit planning':'remove'};
@@ -576,41 +570,38 @@ function ts(status){
  document.querySelectorAll('#lang option').forEach(o=>o.textContent=languageNames[l][o.value]||o.textContent);
  const absenceTypes={nl:{Verlof:'Verlof',Ziekte:'Ziekte',Training:'Training',Overig:'Overig'},de:{Verlof:'Urlaub',Ziekte:'Krankheit',Training:'Schulung',Overig:'Sonstiges'},en:{Verlof:'Leave',Ziekte:'Sickness',Training:'Training',Overig:'Other'}};
  document.querySelectorAll('#blockType option').forEach(o=>o.textContent=absenceTypes[l][o.value]||o.textContent);
+ const optimizeLabel=document.querySelector('#recalcBtn .buttonLabel');if(optimizeLabel)optimizeLabel.textContent=l==='de'?'Route optimieren':l==='en'?'Optimize route':'Route optimaliseren';
 }function blankDb(){return{customers:[],visits:[],blocks:[],history:[],settings:{theme:'blue',language:'nl'}}}function load(){try{return JSON.parse(localStorage.getItem(STORAGE)||'null')||blankDb()}catch(e){return blankDb()}}function save(){if(window.__GJ_WORKSPACE_CLEARING__)return;localStorage.setItem(STORAGE,JSON.stringify(db))}function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function addDaysIso(iso,n){const d=parseLocalDate(iso);d.setDate(d.getDate()+n);return localIso(d)}function applyTheme(){const c=COLORS.blue;document.documentElement.style.setProperty('--primary',c[0]);document.documentElement.style.setProperty('--primary-dark',c[1]);document.documentElement.style.setProperty('--soft',c[2]);db.settings.theme='blue';localStorage.setItem('gj_theme','blue')}
 
 function mapCustomerRow(c){return {id:c.id,name:c.naam||c.winkel||'Klant',street:c.straat||c.adres||'',nr:c.huisnr||'',postal:c.postcode||'',city:c.plaats||'',phone:c.telefoon_winkel||c.telefoon||'',email:c.email||'',lat:c.latitude,lng:c.longitude,note:c.notities||''}}
 async function loadPlanningFromSupabase(){
   if(!sb)return false;
   try{
-    const [planningRes,daysRes,absRes]=await Promise.all([
+    const workspaceId=window.GJ_AUTH?.workspaceUserId;
+    const [planningRes,customersRes,daysRes,absRes,settingsRes]=await Promise.all([
       sb.from('planning').select('*').order('datum',{ascending:true}).order('route_volgorde',{ascending:true}).limit(5000),
+      sb.from('customers').select('*').order('naam',{ascending:true}).limit(5000),
       sb.from('app_day_settings').select('*'),
-      sb.from('app_absences').select('*').order('start_date',{ascending:true})
+      sb.from('app_absences').select('*').order('start_date',{ascending:true}),
+      window.GJPlanningCore.loadUserSettings(sb,workspaceId)
     ]);
     if(planningRes.error)throw planningRes.error;
+    if(customersRes.error)throw customersRes.error;
     const planning=planningRes.data||[];
-    const ids=[...new Set(planning.map(p=>p.customer_id).filter(Boolean))];
-    let customers=[];
-    if(ids.length){const res=await sb.from('customers').select('*').in('id',ids);if(res.error)throw res.error;customers=res.data||[]}
-    db.customers=customers.map(r=>({id:String(r.id),name:r.winkel||r.naam||r.klantnaam||r.keten||'Onbekende klant',chain:r.keten||'',street:r.straat||r.adres||'',nr:r.huisnr||r.huisnummer||'',postal:r.postcode||'',city:r.plaats||'',country:r.land||'',lat:r.latitude,lng:r.longitude,opening:r.openingstijden||null,visitDuration:Number(r.bezoektijd||30)}));
+    db.customers=(customersRes.data||[]).map(r=>({id:String(r.id),name:r.winkel||r.naam||r.klantnaam||r.keten||'Onbekende klant',chain:r.keten||'',street:r.straat||r.adres||'',nr:r.huisnr||r.huisnummer||'',postal:r.postcode||'',city:r.plaats||'',country:r.land||'',lat:r.latitude,lng:r.longitude,opening:r.openingstijden||null,visitDuration:Number(r.bezoektijd||30),active:r.actief!==false&&r.meenemen_in_planning!==false}));
     const customerIds=new Set(db.customers.map(c=>c.id));
-    db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,distanceKm:kms,routeLive:p.route_live===true,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true}});
-    db.dayDepartures={};
-    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5)});
+    db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),fixedStart:String(p.fixed_starttijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,parking:Number(p.parking_min||0),distanceKm:kms,routeLive:p.route_live===true,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true,rescheduledFromHistoryId:p.rescheduled_from_history_id||null}});
+    db.dayDepartures={};db.mobileRouteStats={};db.pauseEnabled={};
+    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route?.live)db.mobileRouteStats[r.datum]={km:Number(route.km||0),min:Number(route.travelMin||0),live:true,includesReturn:true,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
     db.blocks=absRes.error?[]:(absRes.data||[]).map(r=>({id:String(r.id),type:r.type||'Overig',start:r.start_date,end:r.end_date||r.start_date,startTime:String(r.start_time||'').slice(0,5),endTime:String(r.end_time||'').slice(0,5),note:r.note||'',fromSupabase:true}));
+    db.settings={...db.settings,...settingsRes,language:settingsRes.language||db.settings.language||'nl'};
     save();return true;
   }catch(e){console.error('Supabase laden mislukt',e);return false}
 }
 async function saveDepartureToSupabase(date,value){
   if(!sb)return;
-  const old=(db.dayDepartures||{})[date]||value;
   db.dayDepartures=db.dayDepartures||{};db.dayDepartures[date]=value;
-  const delta=(Number(value.slice(0,2))*60+Number(value.slice(3,5)))-(Number(old.slice(0,2))*60+Number(old.slice(3,5)));
-  const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning');
-  if(delta){for(const v of rows){const shift=x=>{if(!x)return x;let n=Number(x.slice(0,2))*60+Number(x.slice(3,5))+delta;return String(Math.floor(n/60)%24).padStart(2,'0')+':'+String((n%60+60)%60).padStart(2,'0')};v.time=shift(v.time);v.end=shift(v.end)}}
-  const d=await sb.from('app_day_settings').upsert({datum:date,vertrektijd:value+':00',updated_at:new Date().toISOString()},{onConflict:'datum'});if(d.error)throw d.error;
-  for(const v of rows){const u=await sb.from('planning').update({starttijd:v.time||null,eindtijd:v.end||null,updated_at:new Date().toISOString()}).eq('id',v.planningId);if(u.error)throw u.error}
-  await recalculateMobileDayRoute(date);
+  await recalculateMobileDayRoute(date,false);
   save();renderAll();
 }
 async function mobileTomTomLeg(from,to,mode='car'){
@@ -628,47 +619,49 @@ function mobileDistanceKm(a,b){
   const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
   return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
-async function recalculateMobileDayRoute(date){
-  if(!sb)return false;
-  const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning').sort((a,b)=>(a.order||999)-(b.order||999));
-  if(!rows.length){db.mobileRouteStats=db.mobileRouteStats||{};delete db.mobileRouteStats[date];save();renderAll();return true}
-  const home={lat:51.6889,lng:5.3039};
-  let previous=home,totalKm=0,totalDriveMin=0,complete=true;
-  for(let i=0;i<rows.length;i++){
-    const visit=rows[i],to=customer(visit.customerId),storedMode=visit.mode==='walk'?'walk':visit.mode==='drive'?'car':null,mode=i===0?'car':(storedMode||(mobileDistanceKm(previous,to)<=.3?'walk':'car'));
-    const route=await mobileTomTomLeg(previous,to,mode);
-    const patch={route_volgorde:i+1,route_mode:mode,route_live:!!route,updated_at:new Date().toISOString()};
-    if(route){patch.reistijd_min=route.min+(mode==='car'?15:0);patch.afstand_km=route.km;visit.travel=patch.reistijd_min;visit.distanceKm=route.km;visit.routeLive=true;visit.mode=mode==='walk'?'walk':'drive';visit.leg=(mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(patch.reistijd_min)+(route.km?' · '+fmtKm(route.km):'');totalKm+=route.km;totalDriveMin+=route.min}
-    else{complete=false;visit.routeLive=false}
-    const update=await sb.from('planning').update(patch).eq('id',visit.planningId);
-    if(update.error)throw update.error;
-    previous=to;
-  }
-  const returnRoute=await mobileTomTomLeg(previous,home,'car');
-  if(returnRoute){totalKm+=returnRoute.km;totalDriveMin+=returnRoute.min}
-  else complete=false;
-  db.mobileRouteStats=db.mobileRouteStats||{};
-  if(complete)db.mobileRouteStats[date]={km:Math.round(totalKm*10)/10,min:Math.round(totalDriveMin),live:true,includesReturn:true,updatedAt:new Date().toISOString()};
-  else delete db.mobileRouteStats[date];
-  save();renderAll();return true;
+async function recalculateMobileDayRoute(date,optimize=false){
+  if(!sb||!window.GJPlanningCore)return false;
+  return window.GJPlanningCore.queueDay(date,async()=>{
+    const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning').sort((a,b)=>(a.order||999)-(b.order||999));
+    if(!rows.length){db.mobileRouteStats=db.mobileRouteStats||{};delete db.mobileRouteStats[date];save();renderAll();return true}
+    const home={lat:Number.parseFloat(db.settings.startLat),lng:Number.parseFloat(db.settings.startLng)};
+    if(!window.GJPlanningCore.hasPoint(home))throw new Error('Vul bij Instellingen een geldige startbreedte- en lengtegraad in.');
+    const input=rows.map(v=>({...v,customer:customer(v.customerId),fixedStart:v.fixedStart||null}));
+    const calculated=await window.GJPlanningCore.calculateDay({
+      sb,workspaceId:window.GJ_AUTH?.workspaceUserId,date,
+      departure:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',
+      visits:input,absences:db.blocks||[],home,
+      parkingMinutes:Number(db.settings.parking??15),walkThresholdMeters:Number(db.settings.walk??300),
+      optimize,pauseEnabled:(db.pauseEnabled||{})[date]!==false
+    });
+    calculated.visits.forEach((ordered,index)=>{
+      const visit=db.visits.find(v=>v.id===ordered.id),row=calculated.result.rows[index];if(!visit||!row)return;
+      visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.travel=row.travelMin;visit.parking=row.parkingMin;visit.distanceKm=row.distanceKm;visit.routeLive=row.routeLive;visit.mode=row.routeMode==='walk'?'walk':'drive';visit.leg=(row.routeMode==='walk'?'🚶 ':'🚗 ')+fmtTravel(row.travelMin)+(row.distanceKm?' · '+fmtKm(row.distanceKm):'');
+    });
+    db.mobileRouteStats=db.mobileRouteStats||{};
+    db.mobileRouteStats[date]={km:calculated.result.totals.km,min:calculated.result.totals.travelMin,live:calculated.result.live,includesReturn:true,updatedAt:calculated.result.calculatedAt};
+    save();renderAll();return true;
+  });
 }
 async function saveMobileVisitTimeToSupabase(v){
   if(!sb||!v?.planningId)return;
-  const update=await sb.from('planning').update({starttijd:v.time||null,eindtijd:v.end||null,bezoekduur_min:durationOf(v),updated_at:new Date().toISOString()}).eq('id',v.planningId);
+  const update=await sb.from('planning').update({fixed_starttijd:v.time||null,starttijd:v.time||null,eindtijd:v.end||null,bezoekduur_min:durationOf(v),route_live:false,updated_at:new Date().toISOString()}).eq('id',v.planningId);
   if(update.error)throw update.error;
-  await recalculateMobileDayRoute(v.date);
+  v.fixedStart=v.time||null;await recalculateMobileDayRoute(v.date,false);
 }
 async function manualSync(showMessage=false){
+  if(mobileSyncPromise){await mobileSyncPromise;if(showMessage)alert('Planning is bijgewerkt.');return true}
   const button=$('syncBtn');
   if(button)button.disabled=true;
-  try{const ok=await loadPlanningFromSupabase();if(!ok)throw new Error('Synchroniseren mislukt.');await recalculateMobileDayRoute(todayIso());renderAll();if(showMessage)alert('Planning en volledige live dagroute zijn bijgewerkt.');return true}
-  finally{if(button)button.disabled=false}
+  mobileSyncPromise=(async()=>{const ok=await loadPlanningFromSupabase();if(!ok)throw new Error('Synchroniseren mislukt.');renderAll();return true})();
+  try{await mobileSyncPromise;if(showMessage)alert('Planning is bijgewerkt.');return true}
+  finally{mobileSyncPromise=null;if(button)button.disabled=false}
 }
 async function saveAbsenceToSupabase(b){
   const {data,error}=await sb.from('app_absences').insert({type:b.type,start_date:b.start,end_date:b.end,start_time:b.startTime||null,end_time:b.endTime||null,note:b.note||''}).select('*').single();
   if(error)throw error; b.id=String(data.id);b.fromSupabase=true;save();renderAll();
 }
-function customer(id){return db.customers.find(c=>c.id===id)||{}}function todayVisits(includeOut=false){return db.visits.filter(v=>v.date===todayIso()&&(includeOut||v.status!=='Uit planning')&&(!v.pause||v.active!==false)).sort((a,b)=>(a.order||0)-(b.order||0))}function address(c){return [c.street,c.nr,c.postal,c.city].filter(Boolean).join(' ')}function navUrl(q){const app=$('navApp').value;if(app==='Waze')return 'https://waze.com/ul?q='+q+'&navigate=yes'; if(app==='Apple Kaarten')return 'http://maps.apple.com/?q='+q; return 'https://www.google.com/maps/search/?api=1&query='+q}function fullRouteUrl(){const pts=todayVisits().filter(v=>!v.pause&&v.status!=='Uit planning').map(v=>address(customer(v.customerId)));return 'https://www.google.com/maps/dir/'+['Neerstraat 1, Den Bosch'].concat(pts).concat(['Neerstraat 1, Den Bosch']).map(encodeURIComponent).join('/')}function timeToMin(x){if(!x)return null;const p=x.split(':').map(Number);return p[0]*60+p[1]}function minToTime(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}function durationOf(v){const s=timeToMin(v.time),e=timeToMin(v.end);if(s!==null&&e!==null){let d=e-s;if(d<0)d+=1440;return Math.max(5,d)}return v.pause?30:35}function parseLegInfo(txt){
+function customer(id){return db.customers.find(c=>c.id===id)||{}}function todayVisits(includeOut=false){return db.visits.filter(v=>v.date===todayIso()&&(includeOut||v.status!=='Uit planning')&&(!v.pause||v.active!==false)).sort((a,b)=>(a.order||0)-(b.order||0))}function address(c){return [c.street,c.nr,c.postal,c.city].filter(Boolean).join(' ')}function navUrl(q){const app=$('navApp').value;if(app==='Waze')return 'https://waze.com/ul?q='+q+'&navigate=yes'; if(app==='Apple Kaarten')return 'http://maps.apple.com/?q='+q; return 'https://www.google.com/maps/search/?api=1&query='+q}function fullRouteUrl(){const pts=todayVisits().filter(v=>!v.pause&&v.status!=='Uit planning').map(v=>address(customer(v.customerId))),home=String(db.settings?.start||'').trim();if(!home)return pts.length?navUrl(pts[0]):'#';return 'https://www.google.com/maps/dir/'+[home].concat(pts).concat([home]).map(encodeURIComponent).join('/')}function timeToMin(x){if(!x)return null;const p=x.split(':').map(Number);return p[0]*60+p[1]}function minToTime(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}function durationOf(v){const s=timeToMin(v.time),e=timeToMin(v.end);if(s!==null&&e!==null){let d=e-s;if(d<0)d+=1440;return Math.max(5,d)}return v.pause?30:35}function parseLegInfo(txt){
   const s=String(txt||'');
   const tm=s.match(/(\d+)\s*min/i);
   const km=s.match(/([\d,.]+)\s*km/i);
@@ -721,21 +714,25 @@ function routeTotals(){
   vs.forEach(v=>{km+=Number(v.distanceKm||0);min+=Math.max(0,Number(v.travel||0)-(v.mode==='walk'?0:15))});
   return {km,min,live:false};
 }
-function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals(),done=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=done+'/'+real.length;$('statKm').textContent=real.length?Math.round(tot.km):'–';$('statTravel').textContent=real.length?fmtTravel(tot.min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
-function cardHtml(v){if(v.pause)return '<div class="leg pause">'+esc(v.leg||'☕ Pauze')+' <span style="margin-left:auto">'+esc((v.time||'')+' - '+(v.end||''))+'</span><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button></div></div>';const c=customer(v.customerId),q=encodeURIComponent(address(c)),done=v.status==='Uitgevoerd',nd=v.status==='Niet uitgevoerd',out=v.status==='Uit planning',cls=done?'done':(nd?'notdone':(out?'out':'')),mode=v.mode==='walk'?'walk':'drive';const timeHtml=editingTime===v.id?'<div class="timeEdit"><input id="editStart-'+esc(v.id)+'" type="time" value="'+esc(v.time||'')+'"><input id="editEnd-'+esc(v.id)+'" type="time" value="'+esc(v.end||'')+'"><button class="saveTimeBtn" data-id="'+esc(v.id)+'">✓</button></div>':'<div class="timeLine"><span class="pill">'+esc((v.time||'')+' - '+(v.end||''))+'</span><button class="eyeBtn secondary" data-id="'+esc(v.id)+'">👁️</button></div>';return (v.leg?'<div class="leg '+(mode==='walk'?'walk':'')+'">'+esc(v.leg)+'</div>':'')+'<div class="card visitCard '+cls+'"><div class="visitTop"><strong>'+esc(c.name||'Klant')+'</strong><span class="pill">'+esc(ts(v.status||'Gepland'))+'</span></div>'+timeHtml+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0"><span class="routeMode '+(mode==='walk'?'walk':'')+'">'+(mode==='walk'?'🚶 '+t('routeWalk'):'🚗 '+t('routeAuto'))+'</span></div><div class="muted">'+esc(c.city||'')+'</div><div>'+esc([c.street,c.nr,c.postal].filter(Boolean).join(' '))+'</div>'+((done||nd)?'<div class="savedLine">'+(done?'✓':'!')+' '+esc(ts(v.status))+' '+t('saved')+((v.photos&&v.photos.length)?' · 📷 '+v.photos.length+' foto(s)':'')+'</div>':'')+'<div class="btnRow"><button class="routeBtn" data-q="'+q+'">'+t('route')+'</button><button class="finishBtn secondary" data-id="'+esc(v.id)+'">'+((done||nd)?t('edit'):t('finish'))+'</button></div><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button><button class="removePlan red" data-id="'+esc(v.id)+'">'+t('remove')+'</button></div></div>'+(v.returnLeg?'<div class="leg home">'+esc(v.returnLeg)+'</div>':'')}
+function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals(),done=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'}),km=Number(tot.km);$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=done+'/'+real.length;$('statKm').textContent=real.length?(Number.isInteger(km)?String(km):km.toFixed(1).replace('.',',')):'–';$('statTravel').textContent=real.length?fmtTravel(tot.min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
+function cardHtml(v){if(v.pause)return '<div class="leg pause">'+esc(v.leg||'☕ Pauze')+' <span style="margin-left:auto">'+esc((v.time||'')+' - '+(v.end||''))+'</span><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button></div></div>';const c=customer(v.customerId),q=encodeURIComponent(address(c)),done=v.status==='Uitgevoerd',nd=v.status==='Niet uitgevoerd',out=v.status==='Uit planning',cls=done?'done':(nd?'notdone':(out?'out':'')),mode=v.mode==='walk'?'walk':'drive';const timeHtml=editingTime===v.id?'<div class="timeEdit"><input id="editStart-'+esc(v.id)+'" type="time" value="'+esc(v.time||'')+'"><input id="editEnd-'+esc(v.id)+'" type="time" value="'+esc(v.end||'')+'"><button class="saveTimeBtn" data-id="'+esc(v.id)+'">✓</button></div>':'<div class="timeLine"><span class="pill">'+esc((v.time||'')+' - '+(v.end||''))+'</span><button class="eyeBtn secondary" data-id="'+esc(v.id)+'">👁️</button></div>';return (v.leg?'<div class="leg '+(mode==='walk'?'walk':'')+'">'+esc(v.leg)+'</div>':'')+'<div class="card visitCard '+cls+'"><div class="visitTop"><strong>'+esc(c.name||'Klant')+'</strong><span class="pill">'+esc(ts(v.status||'Gepland'))+'</span></div>'+timeHtml+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0"><span class="routeMode '+(mode==='walk'?'walk':'')+'">'+(mode==='walk'?'🚶 '+t('routeWalk'):'🚗 '+t('routeAuto'))+'</span></div><div class="muted">'+esc(c.city||'')+'</div><div>'+esc([c.street,c.nr,c.postal].filter(Boolean).join(' '))+'</div>'+((done||nd)?'<div class="savedLine">'+(done?'✓':'!')+' '+esc(ts(v.status))+' '+t('saved')+((v.photos&&v.photos.length)?' · 📷 '+v.photos.length+' foto(s)':'')+'</div>':'')+'<div class="btnRow">'+((done||nd)?'<button class="visitPdfBtn secondary" data-id="'+esc(v.planningId||v.id)+'">PDF</button>':'')+'<button class="routeBtn" data-q="'+q+'">'+t('route')+'</button><button class="finishBtn secondary" data-id="'+esc(v.id)+'">'+((done||nd)?t('edit'):t('finish'))+'</button></div><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button><button class="removePlan red" data-id="'+esc(v.id)+'">'+t('remove')+'</button></div></div>'+(v.returnLeg?'<div class="leg home">'+esc(v.returnLeg)+'</div>':'')}
 function renderCalendar(){const base=new Date();base.setMonth(base.getMonth()+monthOffset,1);const year=base.getFullYear(),month=base.getMonth(),locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';$('monthTitle').textContent=base.toLocaleDateString(locale,{month:'long',year:'numeric'});const first=new Date(year,month,1),start=new Date(first);start.setDate(first.getDate()-((first.getDay()+6)%7));const dows=db.settings.language==='en'?['mo','tu','we','th','fr','sa','su']:db.settings.language==='de'?['mo','di','mi','do','fr','sa','so']:['ma','di','wo','do','vr','za','zo'];let out='<div class="monthGrid">'+dows.map(d=>'<div class="monthDow">'+d+'</div>').join('');for(let i=0;i<42;i++){const cur=new Date(start);cur.setDate(start.getDate()+i);const iso=localIso(cur),vis=db.visits.filter(v=>v.date===iso&&!v.pause&&v.status!=='Uit planning'),cls=['monthDay',cur.getMonth()===month?'':'other',iso===todayIso()?'today':'',iso===selectedCalendarDate?'selected':''].join(' ');out+='<div class="'+cls+'" data-date="'+iso+'"><div class="monthNo">'+cur.getDate()+'</div>';if(vis.length)out+='<span class="customerCount">👥 '+vis.length+'</span>';out+='</div>'}out+='</div>';$('calendarList').innerHTML=out}
 function openDay(iso){
   selectedCalendarDate=iso;
   const vs=db.visits.filter(v=>v.date===iso&&v.status!=='Uit planning').sort((a,b)=>(a.order||0)-(b.order||0));
+  const absenceWindows=window.GJPlanningCore?.absenceWindows(db.blocks||[],iso)||[];
   const real=vs.filter(v=>!v.pause);
   const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';
   const title=parseLocalDate(iso).toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long'});
   const first=real[0],last=real[real.length-1];
   const summary=real.length ? real.length+' '+t('customers')+(first&&last?' · '+esc(first.time||'')+'–'+esc(last.end||''):'') : '';
-  $('calendarDetail').innerHTML='<div class="card calendarDayCard"><div class="calendarDayHead"><div><div class="calendarDayTitle">'+esc(title)+'</div><div class="calendarDaySummary">'+summary+'</div></div><span class="pill">'+real.length+' 👥</span></div>'+(!vs.length?'<div class="calendarEmpty">'+t('dayNoPlan')+'</div>':vs.map(v=>{if(v.pause)return '<div class="leg pause calendarPause">'+esc((v.time||'')+' - '+(v.end||'')+' '+(v.leg||'Pauze'))+'</div>';const c=customer(v.customerId),q=encodeURIComponent(address(c));return '<div class="calendarVisit"><div class="calendarVisitTime">'+esc(v.time||'--:--')+'<br>'+esc(v.end||'--:--')+'</div><div><div class="calendarVisitName">'+esc(c.name||'Klant')+'</div><div class="calendarVisitMeta">'+esc([c.city,ts(v.status||'Gepland')].filter(Boolean).join(' · '))+'</div></div><button class="routeBtn" data-q="'+q+'">↗</button></div>'}).join(''))+'</div>';
+  const absenceHtml=absenceWindows.map(a=>'<div class="calendarAbsence"><strong>Afwezig: '+esc(a.type)+'</strong><span>'+esc(minToTime(a.from))+'–'+esc(minToTime(a.to))+(a.note?' · '+esc(a.note):'')+'</span></div>').join('');
+  $('calendarDetail').innerHTML='<div class="card calendarDayCard"><div class="calendarDayHead"><div><div class="calendarDayTitle">'+esc(title)+'</div><div class="calendarDaySummary">'+summary+'</div></div><span class="pill">'+real.length+' 👥</span></div>'+absenceHtml+(!vs.length?'<div class="calendarEmpty">'+t('dayNoPlan')+'</div>':vs.map(v=>{if(v.pause)return '<div class="leg pause calendarPause">'+esc((v.time||'')+' - '+(v.end||'')+' '+(v.leg||'Pauze'))+'</div>';const c=customer(v.customerId),q=encodeURIComponent(address(c));return '<div class="calendarVisit"><div class="calendarVisitTime">'+esc(v.time||'--:--')+'<br>'+esc(v.end||'--:--')+'</div><div><div class="calendarVisitName">'+esc(c.name||'Klant')+'</div><div class="calendarVisitMeta">'+esc([c.city,ts(v.status||'Gepland')].filter(Boolean).join(' · '))+'</div></div><button class="routeBtn" data-q="'+q+'">↗</button></div>'}).join(''))+'</div>';
   renderCalendar();
 }
-function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();renderToday();renderCalendar();renderOverview();renderAbsence()}function move(id,dir){const vs=todayVisits(true),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const tmp=vs[i].order;vs[i].order=vs[j].order;vs[j].order=tmp;vs.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((v,idx)=>v.order=idx+1);save();renderAll();saveVisitOrderToSupabase().then(()=>manualSync(false)).catch(console.error)}function photoFingerprint(f){return [f?.name||'',f?.size||0,f?.lastModified||0,f?.type||''].join('|')}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){const known=new Set(pendingFinishFiles.map(photoFingerprint));for(const f of Array.from(files||[])){const key=photoFingerprint(f);if(f&&String(f.type||'').startsWith('image/')&&!known.has(key)){known.add(key);pendingFinishFiles.push(f)}}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
+function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();const active=document.querySelector('.screen.active')?.id||'today';if(active==='today')renderToday();else if(active==='calendar')openDay(selectedCalendarDate);else if(active==='overview')renderOverview();else if(active==='absence')renderAbsence();else if(active==='historyMobile')renderMobileHistory()}
+async function saveVisitOrderToSupabase(date){const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning').sort((a,b)=>(a.order||999)-(b.order||999));for(let i=0;i<rows.length;i++){const result=await sb.from('planning').update({route_volgorde:i+1,route_live:false,updated_at:new Date().toISOString()}).eq('id',rows[i].planningId);if(result.error)throw result.error;rows[i].order=i+1}}
+async function move(id,dir){const vs=todayVisits(true).filter(v=>!v.pause&&v.status!=='Uit planning'),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const original=vs.map(v=>v.order);try{[vs[i],vs[j]]=[vs[j],vs[i]];vs.forEach((v,idx)=>v.order=idx+1);renderAll();await recalculateMobileDayRoute(todayIso(),false)}catch(error){vs.forEach((v,idx)=>v.order=original[idx]);renderAll();alert('Volgorde opslaan mislukt: '+error.message)}}function photoFingerprint(f){return [f?.name||'',f?.size||0,f?.lastModified||0,f?.type||''].join('|')}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){const known=new Set(pendingFinishFiles.map(photoFingerprint));for(const f of Array.from(files||[])){const key=photoFingerprint(f);if(f&&String(f.type||'').startsWith('image/')&&!known.has(key)){known.add(key);pendingFinishFiles.push(f)}}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
  // Bewaar het originele bestand ongewijzigd. Zo blijven resolutie, kwaliteit,
  // bestandstype en metadata behouden bij openen en opslaan op de laptop.
  if(!file || !String(file.type||'').startsWith('image/')) return file;
@@ -754,8 +751,8 @@ async function uploadVisitPhotos(historyId,planningId,files){
   const duplicate=up.error&&(Number(up.error.statusCode)===409||/duplicate|already exists/i.test(String(up.error.message||up.error.error||'')));
   if(up.error&&!duplicate){console.error('Foto upload mislukt:',up.error);throw new Error('Foto upload mislukt: '+up.error.message)}
   if(!existing.data){const row=await sb.from('visit_photos').insert({history_id:historyId,file_path:path});if(row.error){console.error('Fotokoppeling opslaan mislukt:',row.error);throw new Error('Foto kon niet aan bezoek worden gekoppeld: '+row.error.message)}}
-  const pub=sb.storage.from('visit-photos').getPublicUrl(path).data.publicUrl;
-  saved.push({name:file.name||safe,data:pub,path});
+  const signed=await sb.storage.from('visit-photos').createSignedUrl(path,900);
+  saved.push({name:file.name||safe,data:signed.error?'':signed.data.signedUrl,path});
  }
  return saved;
 }
@@ -771,7 +768,7 @@ async function finish(status){
     const upd=await sb.from('planning').update({status,uitgevoerd:status==='Uitgevoerd',updated_at:new Date().toISOString()}).eq('id',v.planningId).select('id,status,uitgevoerd').single();
     if(upd.error)throw new Error('Status niet opgeslagen: '+upd.error.message);
     if(upd.data.status!==status)throw new Error('De opgeslagen status kon niet worden bevestigd.');
-    const historyRow={customer_id:v.customerId,planning_id:v.planningId,bezoekdatum:v.date,starttijd:v.time||null,eindtijd:v.end||null,activiteit:v.activity,samenvatting:v.summary,opmerkingen:status,duur_min:durationOf(v),afgerond:true,updated_at:new Date().toISOString()};
+    const historyRow={customer_id:v.customerId,planning_id:v.planningId,bezoekdatum:v.date,starttijd:v.time||null,eindtijd:v.end||null,activiteit:v.activity,samenvatting:v.summary,opmerkingen:'',reden:status==='Niet uitgevoerd'?v.summary:null,status,duur_min:durationOf(v),afstand_km:Number(v.distanceKm||0),reistijd_min:Number(v.travel||0),afgerond:true,updated_at:new Date().toISOString()};
     const existing=await sb.from('visit_history').select('id').eq('planning_id',v.planningId).order('created_at',{ascending:false}).limit(1).maybeSingle();
     if(existing.error)throw new Error('Bezoekhistorie controleren mislukt: '+existing.error.message);
     let historyId=existing.data?.id;
@@ -828,7 +825,23 @@ function setupProfileCropper(fileInput,button,imageEl){
 
 setupProfileCropper($('profileFile'),$('profileButton'),$('profileImage'));
 async function init(){console.info('Planning GJ mobiel v10.6 - centrale Supabase planning');db=load();db.settings=db.settings||{};db.settings.language=localStorage.getItem('gj_app_language')||db.settings.language||'nl';const supaOk=await loadPlanningFromSupabase();if(!supaOk)throw new Error('De werkruimte kon niet veilig uit Supabase worden geladen.');applyTheme();$('lang').value=db.settings.language||'nl';$('depart').value=(db.dayDepartures||{})[todayIso()]||'08:00';$('blockStart').value=todayIso();$('blockEnd').value=addDaysIso(todayIso(),1);$('blockEnd').min=addDaysIso(todayIso(),1);$('menuBtn').onclick=()=>$('menuPanel').classList.toggle('open');const uid=window.GJ_AUTH?.profile?.id;const savedProfilePhoto=uid?localStorage.getItem('gj_profile_photo_'+uid):null;if(savedProfilePhoto){$('profileImage').src=savedProfilePhoto;$('profileButton').classList.add('hasPhoto')}/* v10.5: profielfoto uitsluitend via Instellingen → Profiel */$('menuLogout').onclick=async()=>{try{sessionStorage.removeItem('gj_impersonate_user_v102');sessionStorage.removeItem('gj_workspace_storage_id');sessionStorage.removeItem('gj_authenticated_user_id');sessionStorage.removeItem('gj_app_open_session');if(window.GJ_AUTH?.sb)await GJ_AUTH.sb.auth.signOut()}finally{location.reload()}};$('syncBtn').onclick=()=>manualSync(true);$('btnTakePhoto').onclick=()=>$('finishCamera').click();$('btnChoosePhoto').onclick=()=>$('finishPhotos').click();$('finishCamera').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};$('finishPhotos').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manualSync(false)});window.addEventListener('focus',()=>manualSync(false));document.querySelectorAll('#menuPanel button[data-screen]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(b.dataset.screen).classList.add('active');document.querySelectorAll('#menuPanel button[data-screen]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('menuPanel').classList.remove('open');renderAll()});document.addEventListener('click',e=>{const r=e.target.closest('.routeBtn');if(r){location.href=navUrl(r.dataset.q);return}const f=e.target.closest('.finishBtn');if(f){openFinish(f.dataset.id);return}const up=e.target.closest('.moveUp');if(up){move(up.dataset.id,-1);return}const down=e.target.closest('.moveDown');if(down){move(down.dataset.id,1);return}const eye=e.target.closest('.eyeBtn');if(eye){editingTime=eye.dataset.id;renderToday();return}const sv=e.target.closest('.saveTimeBtn');if(sv){const v=db.visits.find(x=>x.id===sv.dataset.id);if(v){v.time=$('editStart-'+v.id).value;v.end=$('editEnd-'+v.id).value;editingTime=null;save();renderAll();syncPlanningToSupabase().catch(console.error)}return}const rem=e.target.closest('.removePlan');if(rem){if(confirm(t('removeConfirm'))){const v=db.visits.find(x=>x.id===rem.dataset.id);if(v){v.status='Uit planning';save();renderAll()}}return}const day=e.target.closest('.monthDay');if(day){openDay(day.dataset.date);return}if(e.target.id==='finishOverlay')closeFinish()});$('depart').onchange=async()=>{try{await saveDepartureToSupabase(todayIso(),$('depart').value)}catch(e){alert('Vertrektijd opslaan mislukt: '+e.message)}};$('fullRouteBtn').onclick=()=>{location.href=fullRouteUrl()};$('togglePause').onclick=()=>{db.visits.filter(v=>v.pause&&v.date===todayIso()).forEach(v=>v.active=v.active===false?true:false);save();renderAll()};$('recalcBtn').onclick=()=>manualSync(true);$('prevMonth').onclick=()=>{monthOffset--;renderAll()};$('nextMonth').onclick=()=>{monthOffset++;renderAll()};$('search').oninput=renderOverview;$('finishClose').onclick=closeFinish;$('btnDone').onclick=()=>finish('Uitgevoerd');$('btnNotDone').onclick=()=>finish('Niet uitgevoerd');$('blockStart').onchange=()=>{const end=addDaysIso($('blockStart').value,1);$('blockEnd').value=end;$('blockEnd').min=end};$('blockEnd').onchange=()=>{const min=addDaysIso($('blockStart').value,1);if($('blockEnd').value<min)$('blockEnd').value=min};$('saveBlock').onclick=async()=>{if(!$('blockStart').value)return alert('Vul startdatum in.');if(!$('blockEnd').value)$('blockEnd').value=$('blockStart').value;const b={id:'b-'+Date.now(),type:$('blockType').value,start:$('blockStart').value,end:$('blockEnd').value||$('blockStart').value,startTime:$('blockStartTime').value,endTime:$('blockEndTime').value,note:$('blockNote').value};try{await saveAbsenceToSupabase(b);db.blocks.push(b);save();renderAll();alert(t('absenceSaved'))}catch(e){alert('Afwezigheid opslaan mislukt: '+e.message)}};$('lang').onchange=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);save();location.reload()};$('saveSettings').onclick=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);if($('defaultSettings').checked)localStorage.setItem('gj_theme',db.settings.theme);save();location.reload()};renderAll();openDay(selectedCalendarDate);setTimeout(()=>{const sp=$('splash'); if(sp){sp.classList.add('hide'); sp.style.display='none'}},700)}
-let appInitialized=false;async function initAfterAuth(){if(appInitialized||!window.GJ_AUTH?.profile||!window.GJ_AUTH?.sb)return;appInitialized=true;sb=window.GJ_AUTH.sb;try{await init();await recalculateMobileDayRoute(todayIso())}catch(e){appInitialized=false;console.error(e);alert('Planning laden mislukt: '+e.message)}}window.addEventListener('gj-auth-ready',initAfterAuth);window.addEventListener('load',initAfterAuth);setTimeout(()=>{const s=$('splash');if(s){s.classList.add('hide');s.style.display='none'}},2000);
+window.GJ_MOBILE={
+  state:()=>db,
+  persist:()=>save(),
+  sync:show=>manualSync(show===true),
+  render:()=>renderAll(),
+  recalculate:(date=todayIso(),optimize=false)=>recalculateMobileDayRoute(date,optimize),
+  async saveTime(id,start,end){const v=db.visits.find(x=>x.id===id);if(!v)return;v.time=start;v.end=end;editingTime=null;await saveMobileVisitTimeToSupabase(v);save();renderAll()},
+  async removeFromPlanning(id){const v=db.visits.find(x=>x.id===id);if(!v)return;const update=await sb.from('planning').update({status:'Uit planning',route_live:false,updated_at:new Date().toISOString()}).eq('id',v.planningId);if(update.error)throw update.error;v.status='Uit planning';save();renderAll();await recalculateMobileDayRoute(v.date,false)},
+  async togglePause(date=todayIso()){db.pauseEnabled=db.pauseEnabled||{};db.pauseEnabled[date]=db.pauseEnabled[date]===false;const visits=db.visits.filter(v=>v.date===date&&v.status!=='Uit planning');if(visits.length)await recalculateMobileDayRoute(date,false);else{const current=await sb.from('app_day_settings').select('settings').eq('datum',date).maybeSingle();if(current.error)throw current.error;const result=await sb.from('app_day_settings').upsert({datum:date,vertrektijd:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',settings:{...(current.data?.settings||{}),pause_enabled:db.pauseEnabled[date]},updated_at:new Date().toISOString()},{onConflict:'user_id,datum'});if(result.error)throw result.error}save();renderAll()},
+  async saveSettings(){
+    const address=$('mobileStartAddress')?.value.trim()||db.settings.start||'';let lat=Number($('mobileStartLat')?.value),lng=Number($('mobileStartLng')?.value);
+    if((!Number.isFinite(lat)||!Number.isFinite(lng))&&address){const geo=await sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:address}});const point=geo.data?.results?.[0]?.position;if(geo.error||geo.data?.error||!point)throw new Error(geo.data?.error||geo.error?.message||'Startadres kon niet worden gevonden.');lat=Number(point.lat);lng=Number(point.lon)}
+    db.settings={...db.settings,language:$('lang')?.value||'nl',start:address,startLat:lat,startLng:lng,parking:Number($('mobileParkingMinutes')?.value||15),walk:Number($('mobileWalkThreshold')?.value||300)};
+    await window.GJPlanningCore.saveUserSettings(sb,db.settings,window.GJ_AUTH?.workspaceUserId);localStorage.setItem('gj_app_language',db.settings.language);save();await recalculateMobileDayRoute(todayIso(),false);renderAll();
+  }
+};
+let appInitialized=false;async function initAfterAuth(){if(appInitialized||!window.GJ_AUTH?.profile||!window.GJ_AUTH?.sb)return;appInitialized=true;sb=window.GJ_AUTH.sb;try{await init();const todayRows=db.visits.filter(v=>v.date===todayIso()&&v.status!=='Uit planning');if(todayRows.some(v=>!v.routeLive))await recalculateMobileDayRoute(todayIso(),false)}catch(e){appInitialized=false;console.error(e);alert('Planning laden mislukt: '+e.message)}}window.addEventListener('gj-auth-ready',initAfterAuth);window.addEventListener('load',initAfterAuth);setTimeout(()=>{const s=$('splash');if(s){s.classList.add('hide');s.style.display='none'}},2000);
 })();
 </script>
 
@@ -1029,7 +1042,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
   $('mTomTomTest')?.addEventListener('click',async()=>{
     try{
       setStatus('mTomTomStatus','TomTom wordt getest…','busy');
-      const {data,error}=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:'Neerstraat 1, Den Bosch',country:'NL'}});
+      const {data,error}=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:'Dam 1, Amsterdam',country:'NL'}});
       if(error)throw error;if(data?.error)throw new Error(data.error);
       const found=Array.isArray(data?.results)&&data.results.length>0;
       if(!found)throw new Error('TomTom gaf geen adresresultaat terug.');
@@ -1087,7 +1100,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     if(error||!data)return;
     a.profile=data;a.isAdmin=isAdminProfile(data);document.body.classList.toggle('gj-admin',a.isAdmin);
     document.querySelectorAll('.gjAdminOnly').forEach(el=>{if(a.isAdmin)el.style.removeProperty('display')});
-    applyPhoto(data.avatar_url);
+    let avatar=data.avatar_url||'';if(avatar&&!/^https?:|^data:/i.test(avatar)){const signed=await a.sb.storage.from('profile-photos').createSignedUrl(avatar,3600);if(!signed.error)avatar=signed.data.signedUrl}applyPhoto(avatar);
   }
   async function uploadProfilePhoto(dataUrl){
     const a=window.GJ_AUTH;if(!a?.sb||!a?.profile?.id||!dataUrl)return;
@@ -1095,15 +1108,15 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
       const path=a.profile.id+'/profile.jpg';
       const {error:upErr}=await a.sb.storage.from('profile-photos').upload(path,dataUrlToBlob(dataUrl),{contentType:'image/jpeg',upsert:true,cacheControl:'3600'});
       if(upErr)throw upErr;
-      const pub=a.sb.storage.from('profile-photos').getPublicUrl(path).data.publicUrl+'?v='+Date.now();
-      const {data,error}=await a.sb.from('profiles').update({avatar_url:pub,updated_at:new Date().toISOString()}).eq('id',a.profile.id).select().single();
-      if(error)throw error;if(data)a.profile=data;applyPhoto(pub);
+      const signed=await a.sb.storage.from('profile-photos').createSignedUrl(path,3600);if(signed.error)throw signed.error;
+      const {data,error}=await a.sb.from('profiles').update({avatar_url:path,updated_at:new Date().toISOString()}).eq('id',a.profile.id).select().single();
+      if(error)throw error;if(data)a.profile=data;applyPhoto(signed.data.signedUrl);
     }catch(err){console.error('Profielfoto synchroniseren mislukt',err);alert('De profielfoto is lokaal opgeslagen, maar synchroniseren is mislukt: '+err.message)}
   }
   window.addEventListener('gj-auth-ready',refreshProfile);
   window.addEventListener('gj-profile-photo-changed',e=>uploadProfilePhoto(e.detail));
   window.addEventListener('focus',refreshProfile);
-  window.addEventListener('gj-auth-ready',()=>{const a=window.GJ_AUTH;if(!a?.profile?.id)return;a.sb.channel('profile-photo-'+a.profile.id).on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+a.profile.id},payload=>{if(payload.new?.avatar_url){a.profile=payload.new;applyPhoto(payload.new.avatar_url)}}).subscribe()});
+  window.addEventListener('gj-auth-ready',()=>{const a=window.GJ_AUTH;if(!a?.profile?.id)return;a.sb.channel('profile-photo-'+a.profile.id).on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+a.profile.id},()=>refreshProfile()).subscribe()});
 })();
 </script>
 
@@ -1131,4 +1144,5 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v109.js?v=10900"></script>
 <script src="v110.js?v=11000"></script>
 <script src="v111.js?v=11100"></script>
+<script src="v11.js?v=110000"></script>
 </body></html>

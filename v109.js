@@ -5,11 +5,8 @@
   const isLaptop=!!$('calendarBody');
 
   function setVersionLabels(){
-    document.title='Planning-GJsystems v10.9 DEV';
-    document.querySelectorAll('.version,.productVersion').forEach(el=>{
-      if(el.classList.contains('productVersion')) el.textContent='v10.9 DEV';
-      else el.textContent='v10.9 DEV';
-    });
+    document.title='Planning-GJsystems';
+    document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach(el=>el.remove());
   }
 
   function syncProfilePreviewState(){
@@ -45,7 +42,9 @@
       const customers=ids.length?await client.from('customers').select('id,latitude,longitude').in('id',ids):{data:[],error:null};
       if(customers.error)throw customers.error;
       const byId=new Map((customers.data||[]).map(c=>[String(c.id),c]));
-      let previous={latitude:51.6889,longitude:5.3039};
+      const settings=window.GJ_MOBILE?.state?.()?.settings||{},startLat=Number.parseFloat(settings.startLat),startLng=Number.parseFloat(settings.startLng);
+      if(!Number.isFinite(startLat)||!Number.isFinite(startLng))throw new Error('Stel eerst een geldige centrale startlocatie in.');
+      let previous={latitude:startLat,longitude:startLng};
       for(const row of plan.data||[]){
         const current=byId.get(String(row.customer_id));
         if(!current)continue;

@@ -110,14 +110,8 @@
     },
 
     installDevelopmentLabel() {
-      document.title = 'Planning-GJsystems v10.9 DEV';
-      document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach((element) => {
-        element.innerHTML = element.classList.contains('settingsVersion') ? 'Versie: v10.9 DEV<br>Supabase: development/test' : 'v10.9 DEV';
-      });
-      if ($('v108DevBanner')) return;
-      const config = window.GJ_CONFIG_API?.result()?.config;
-      const label = config?.deploymentLabel || 'Development / test';
-      document.body.insertAdjacentHTML('beforeend', `<div id="v108DevBanner" class="v108DevBanner">${esc(label)} · v10.8</div>`);
+      document.title = 'Planning-GJsystems';
+      document.querySelectorAll('.version,.productVersion,.settingsVersion,#v108DevBanner').forEach((element) => element.remove());
     },
 
     installOwnSettingsUi() {
@@ -142,7 +136,7 @@
       pane.className = 'adminPane';
       pane.hidden = true;
       pane.innerHTML = `
-        <div class="sectionHead"><div><h3>Live Locaties</h3><p class="muted">Werkelijke laatst ontvangen locaties en historie uit de afzonderlijke testomgeving.</p></div><span class="v108DevBadge">Development / test</span></div>
+        <div class="sectionHead"><div><h3>Live Locaties</h3><p class="muted">Werkelijke laatst ontvangen locaties en recente locatiehistorie.</p></div></div>
         <div class="v108AdminSettings">
           <label>Live Locaties<select id="v108SystemEnabled"><option value="false">Uit</option><option value="true">Aan</option></select></label>
           <label>Updatefrequentie<select id="v108SystemInterval">${ALLOWED_INTERVALS.map((value) => `<option value="${value}">${value} minuten</option>`).join('')}</select></label>

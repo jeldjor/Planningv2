@@ -12,7 +12,7 @@ const [script,laptop,mobile,manifestText,pkgText]=await Promise.all([
 
 test('v10.10 modules zijn syntactisch geldig en lokaal geladen',()=>{
   new vm.Script(script,{filename:'v110.js'});
-  assert.equal(JSON.parse(pkgText).version,'10.11.0');
+  assert.equal(JSON.parse(pkgText).version,'11.0.0');
   for(const html of [laptop,mobile]){
     assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=11000/);assert.match(html,/v110\.js\?v=11000/);
     assert.doesNotMatch(html,/cdn\.jsdelivr\.net\/npm\/jspdf/);
@@ -51,7 +51,8 @@ test('gesimuleerd iPhone-voorbeeldvenster ontvangt een geldige PDF-Blob',async()
 });
 
 test('live routes worden na definitieve planning geforceerd en opgeslagen',()=>{
-  assert.match(script,/await makeDatesLive\(plannedDates\(\),\{persist:true,force:true\}\)/);
+  assert.match(script,/await window\.loadPlanningFromSupabase\?\.\(\)/);
+  assert.match(script,/await makeDatesLive\(plannedDates\(\)\.filter/);
   assert.match(script,/if\(!stats\?\.live\)throw new Error/);
   assert.match(script,/route_live:route\.live===true\|\|route\.source==='TomTom'/);
   assert.match(script,/window\.gjInvalidateDayRouteCache/);
@@ -60,11 +61,10 @@ test('live routes worden na definitieve planning geforceerd en opgeslagen',()=>{
 });
 
 test('complete dag wordt database-eerst verplaatst en realtime laden wacht',()=>{
-  const databaseIndex=script.indexOf('await moveDayInDatabase(oldDate,newDate,source)');
+  const databaseIndex=script.indexOf("await client().rpc('move_planning_day'");
   const localIndex=script.indexOf('source.forEach(v=>v.date=newDate)');
   assert.ok(databaseIndex>0&&localIndex>databaseIndex);
-  assert.match(script,/eq\('id',row\.id\)\.eq\('datum',oldDate\)/);
-  assert.match(script,/verify\.data\|\|\[\]/);
+  assert.match(script,/Number\(moved\.data\?\.moved\)!==source\.length/);
   assert.match(script,/if\(window\.__GJ_LOCAL_MUTATION__\)\{pendingRemoteReload=true;return true\}/);
 });
 
