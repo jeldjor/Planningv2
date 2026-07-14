@@ -25,9 +25,9 @@ test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten gelad
   new vm.Script(app,{filename:'v11.js'});
   assert.equal(JSON.parse(pkg).version,'11.1.2');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=111002/);
-    assert.match(html,/v11\.css\?v=111002/);
-    assert.match(html,/v11\.js\?v=111002/);
+    assert.match(html,/planning-core\.js\?v=111200/);
+    assert.match(html,/v11\.css\?v=111200/);
+    assert.match(html,/v11\.js\?v=111200/);
   }
 });
 
@@ -71,13 +71,15 @@ test('live route gebruikt één complete batch en accepteert geen gedeeltelijk a
   };
   const requests=[{from:{lat:1,lng:1},to:{lat:2,lng:2},mode:'car'},{from:{lat:2,lng:2},to:{lat:1,lng:1},mode:'car'}];
   const legs=await core.requestRouteBatch(ok,requests);assert.equal(calls,1);assert.equal(legs.length,2);assert.equal(legs[0].km,12);
+  const olderEdge={functions:{invoke:async()=>({data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000},{travelTimeInSeconds:900,lengthInMeters:18000}]},error:null})}};
+  const compatible=await core.requestRouteBatch(olderEdge,requests);assert.equal(compatible.every(leg=>leg.live),true);
   const partial={functions:{invoke:async()=>({data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000,live:true}]},error:null})}};
-  await assert.rejects(()=>core.requestRouteBatch(partial,requests),/geen complete dagroute/);
-});
-
-test('harde deadline beëindigt een vastgelopen netwerkbewerking',async()=>{
-  const never=new Promise(()=>{});
-  await assert.rejects(()=>core.withTimeout(never,10,'deadline bereikt'),/deadline bereikt/);
+  await assert.rejects(()=>core.requestRouteBatch(partial,requests),/TomTom-traject 1 van 2 mislukt/);
+  let fallbackCalls=0;
+  const fallback={functions:{invoke:async(_name,{body})=>{fallbackCalls++;if(body.action==='route-batch')return{data:{error:'tijdelijke batchlimiet'},error:null};return{data:{routes:[{summary:{travelTimeInSeconds:600,lengthInMeters:12000}}]},error:null}}}};
+  const retried=await core.requestRouteBatch(fallback,requests);assert.equal(retried.length,2);assert.equal(fallbackCalls,3);
+  const same=[{from:{lat:1,lng:1},to:{lat:1,lng:1},mode:'walk'}];
+  const sameResult=await core.requestRouteBatch({functions:{invoke:async()=>{throw new Error('mag niet worden aangeroepen')}}},same);assert.deepEqual(sameResult,[{min:1,km:0,live:true,mode:'walk'}]);
 });
 
 test('mobiele volgorde, tijden, uit-planning en pauze schrijven centraal',()=>{
@@ -147,6 +149,13 @@ test('datumperioden en ontwikkellabels zijn opgeschoond',()=>{
   assert.doesNotMatch(mobile,/<div class="version">/);
   assert.doesNotMatch(laptop,/<div class="productVersion">/);
   assert.doesNotMatch(legacyLocation,/Development \/ test/);
+});
+
+test('iPhone Uit planning-knop is specifiek donkerrood met zilveren tekst',()=>{
+  assert.match(mobile,/class="removePlan red"/);
+  assert.match(css,/button\.removePlan\.red/);
+  assert.match(css,/#681319!important/);
+  assert.match(css,/-webkit-text-fill-color:#d9e0e8!important/);
 });
 
 test('app-shellcache bewaart geen runtimeconfig of Supabase-data',()=>{

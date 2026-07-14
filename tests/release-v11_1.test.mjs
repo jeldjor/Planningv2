@@ -4,10 +4,10 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 
 const root=new URL('../',import.meta.url);
-const [mobile,laptop,v108,v110,v11,sql,readme,adminEdge,tomtomEdge]=await Promise.all([
+const [mobile,laptop,v108,v110,v11,core,sql,readme,adminEdge,tomtomEdge]=await Promise.all([
   readFile(new URL('mobile.html',root),'utf8'),readFile(new URL('laptop.html',root),'utf8'),
   readFile(new URL('v108.js',root),'utf8'),readFile(new URL('v110.js',root),'utf8'),
-  readFile(new URL('v11.js',root),'utf8'),readFile(new URL('SUPABASE_V11_1_RELEASE.sql',root),'utf8'),
+  readFile(new URL('v11.js',root),'utf8'),readFile(new URL('planning-core.js',root),'utf8'),readFile(new URL('SUPABASE_V11_1_RELEASE.sql',root),'utf8'),
   readFile(new URL('README.md',root),'utf8'),readFile(new URL('supabase/functions/admin-users/index.ts',root),'utf8'),
   readFile(new URL('supabase/functions/tomtom-proxy/index.ts',root),'utf8')
 ]);
@@ -24,16 +24,6 @@ test('gewone synchronisatie start geen herberekening van alle geplande dagen',()
   assert.doesNotMatch(v110,/scheduleAllLiveRoutes/);
   assert.doesNotMatch(v110,/setTimeout\([^\n]*makeDatesLive\(plannedDates/);
   assert.match(v110,/makeDatesLive\(\[newDate\]/);
-});
-
-test('iedere route- en Supabasefase heeft een harde deadline',()=>{
-  assert.match(v110,/Dagroute .* is na 45 seconden afgebroken/);
-  assert.match(v110,/maximaal 45 seconden/);
-  assert.match(v110,/loadPlanningFromSupabase\?\.\(\),20000/);
-  assert.match(laptop,/Planning opslaan reageerde niet binnen 20 seconden/);
-  assert.match(laptop,/Adrescontrole reageerde niet binnen 15 seconden/);
-  assert.match(laptop,/Bezoeken indelen \$\{requestIndex\+1\} van \$\{requests\.length\}/);
-  assert.match(v110,/generationBusy/);
 });
 
 test('Realtime is op laptop en iPhone begrensd tot de actieve werkruimte',()=>{
@@ -71,6 +61,9 @@ test('oude DEV-module wordt niet meer geladen en releasecache is vernieuwd',()=>
   assert.doesNotMatch(mobile,/src="v111\.js/);
   assert.doesNotMatch(laptop,/src="v111\.js/);
   assert.match(mobile,/maximum-scale=1,user-scalable=no/);
+  assert.match(mobile,/v110\.js\?v=111200/);
+  assert.match(laptop,/v108\.js\?v=111200/);
+  assert.doesNotMatch(v110,/maximaal 45 seconden/);
 });
 
 test('serverfuncties rollen onvolledige accounts terug en begrenzen externe verzoeken',()=>{
@@ -79,6 +72,15 @@ test('serverfuncties rollen onvolledige accounts terug en begrenzen externe verz
   assert.match(adminEdge,/targetProfile\.role === 'admin'/);
   assert.match(tomtomEdge,/query\.length > 250/);
   assert.match(tomtomEdge,/TomTom-geocodering reageerde niet binnen 15 seconden/);
+  assert.match(tomtomEdge,/for \(let index = 0; index < legs\.length/);
+  assert.match(tomtomEdge,/response\.status === 429 \|\| response\.status >= 500/);
+  assert.match(tomtomEdge,/return json\(\{ error:/);
+  assert.match(core,/async function edgeFailureMessage/);
   assert.match(laptop,/adminDeleteUser/);
   assert.match(mobile,/mDeleteUser/);
+});
+
+test('iPhone houdt planning laden gescheiden van een tijdelijke TomTom-fout',()=>{
+  assert.match(mobile,/Planning is geladen, maar de live route kon nog niet worden berekend/);
+  assert.doesNotMatch(mobile,/if\(todayRows\.some\(v=>!v\.routeLive\)\)await recalculateMobileDayRoute/);
 });

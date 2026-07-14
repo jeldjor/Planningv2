@@ -159,3 +159,23 @@ test('zonder inschakeling door beheer verschijnt geen melding of gebruikersinste
   assert.equal(gpsCalls, 0);
   manager.destroy();
 });
+
+test('recente locatie voorkomt een nieuwe iPhone-locatievraag bij focus of opnieuw openen', async () => {
+  const dom=createDom();let gpsCalls=0;
+  Object.defineProperty(dom.window.navigator,'geolocation',{configurable:true,value:{getCurrentPosition(){gpsCalls++}}});
+  dom.window.GJ_AUTH={profile:{id:'user-a'},realUserId:'user-a',impersonating:false,identitySb:{}};
+  const manager=dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
+  manager.initialized=true;manager.central={enabled:true,update_interval_minutes:10};
+  manager.own={admin_enabled:true,route_location_enabled:true,app_prompt_state:'accepted',permission_state:'granted'};
+  manager.ownLive={captured_at:new Date().toISOString()};
+  assert.equal(await manager.triggerLocation('app geopend'),false);
+  assert.equal(gpsCalls,0);manager.destroy();
+});
+
+test('eenmaal gegeven app-toestemming wordt per gebruiker onthouden', async () => {
+  const dom=createDom();
+  dom.window.GJ_AUTH={profile:{id:'user-a'},realUserId:'user-a',identitySb:{rpc:async()=>({data:{user_id:'user-a',admin_enabled:true,route_location_enabled:true,app_prompt_state:'accepted',permission_state:'granted'},error:null})}};
+  const manager=dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
+  await manager.setOwn({enabled:true,promptState:'accepted',permissionState:'granted'});
+  assert.equal(dom.window.localStorage.getItem('gj_location_consent_user-a'),'accepted');
+});
