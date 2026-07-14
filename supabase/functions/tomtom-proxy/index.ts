@@ -18,21 +18,26 @@ async function calculateTomTomLeg(settings: { tomtom_api_key: string }, leg: Rec
   endpoint.searchParams.set('key', settings.tomtom_api_key);
   endpoint.searchParams.set('travelMode', travelMode);
   endpoint.searchParams.set('traffic', travelMode === 'car' ? 'true' : 'false');
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-  let response: Response;
-  try {
-    response = await fetch(endpoint, { signal: controller.signal });
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw new Error('TomTom reageerde niet binnen 15 seconden.');
-    throw error;
-  } finally {
-    clearTimeout(timeout);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    let response: Response;
+    try {
+      response = await fetch(endpoint, { signal: controller.signal });
+    } catch (error) {
+      if (attempt === 0 && (!(error instanceof DOMException) || error.name !== 'AbortError')) { await new Promise((resolve) => setTimeout(resolve, 500)); continue; }
+      if (error instanceof DOMException && error.name === 'AbortError') throw new Error('TomTom reageerde niet binnen 15 seconden.');
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+    const result = await response.json().catch(() => ({}));
+    const summary = result.routes?.[0]?.summary;
+    if (response.ok && summary) return { ...summary, live: true, mode: leg.mode === 'walk' ? 'walk' : 'car' };
+    if (attempt === 0 && (response.status === 429 || response.status >= 500)) { await new Promise((resolve) => setTimeout(resolve, 650)); continue; }
+    throw new Error(`TomTom HTTP ${response.status}: ${result.error?.description || result.detailedError?.message || result.errorText || 'route niet beschikbaar'}`);
   }
-  const result = await response.json();
-  const summary = result.routes?.[0]?.summary;
-  if (!response.ok || !summary) throw new Error(result.error?.description || 'TomTom-route kon niet worden berekend.');
-  return { ...summary, live: true, mode: leg.mode === 'walk' ? 'walk' : 'car' };
+  throw new Error('TomTom-route kon na opnieuw proberen niet worden berekend.');
 }
 
 Deno.serve(async (request) => {
@@ -51,13 +56,26 @@ Deno.serve(async (request) => {
     if (settingsError || !settings?.tomtom_enabled || !settings.tomtom_api_key) return json({ error: 'TomTom staat uit.' }, 503);
     const body = await request.json();
     if (body.action === 'route') {
-      const summary = await calculateTomTomLeg(settings, body);
-      return json({ routes: [{ summary }] });
+      try {
+        const summary = await calculateTomTomLeg(settings, body);
+        return json({ routes: [{ summary }] });
+      } catch (error) {
+        // Routeproblemen zijn een geldig functieantwoord. Daardoor kan de
+        // client de echte TomTom-reden tonen en desgewenst opnieuw proberen,
+        // in plaats van de nietszeggende Supabase-melding "non-2xx".
+        return json({ error: error instanceof Error ? error.message : String(error) });
+      }
     }
     if (body.action === 'route-batch') {
       const legs = Array.isArray(body.legs) ? body.legs : [];
       if (!legs.length || legs.length > 30) return json({ error: 'Een dagroute moet 1 tot en met 30 trajecten bevatten.' }, 400);
-      const summaries = await Promise.all(legs.map((leg: Record<string, unknown>) => calculateTomTomLeg(settings, leg)));
+      const summaries = [];
+      for (let index = 0; index < legs.length; index += 1) {
+        try { summaries.push(await calculateTomTomLeg(settings, legs[index])); }
+        catch (error) {
+          return json({ error: `TomTom-traject ${index + 1} van ${legs.length}: ${error instanceof Error ? error.message : String(error)}` });
+        }
+      }
       return json({ legs: summaries });
     }
     if (body.action === 'geocode') {
