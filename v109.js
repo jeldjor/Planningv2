@@ -102,6 +102,10 @@
   window.routeStatsForDay=routeStatsForDay=function(date){
     const stats=originalRouteStats(date);
     if(!stats)return stats;
+    // v11 bewaart één gezaghebbend dagtotaal inclusief de terugrit. Dit mag
+    // niet opnieuw worden afgekeurd doordat de oude lokale trajectcache leeg
+    // is; laptop en iPhone lezen juist dit centrale huis-tot-huis-resultaat.
+    if(stats.includesReturn===true)return stats;
     const legs=dayLegs(date);
     stats.live=legs.length>0&&legs.every(leg=>{
       const route=db.routeCache?.[leg.key];

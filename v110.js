@@ -67,7 +67,7 @@
     if(!enabled)throw new Error('TomTom staat niet online. Live routes konden niet worden berekend.');
     if(force&&window.gjInvalidateDayRouteCache)window.gjInvalidateDayRouteCache(date);
     await calculateDayRoutes(date,false);
-    const stats=routeStatsForDay(date);
+    const stats=db.routeStats?.[date]?.includesReturn===true?db.routeStats[date]:routeStatsForDay(date);
     if(!stats?.live)throw new Error(`De live route voor ${displayDate(date)} is niet volledig ontvangen.`);
     saveRouteStats(date);save();render();
     if(persist)await persistLiveDay(date);
