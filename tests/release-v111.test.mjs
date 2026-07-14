@@ -14,7 +14,7 @@ const [mobile,laptop,script,style,pkgText]=await Promise.all([
 
 test('oude v10.11 module blijft syntactisch geldig maar wordt niet meer geladen',()=>{
   new vm.Script(script,{filename:'v111.js'});
-  assert.equal(JSON.parse(pkgText).version,'11.1.3');
+  assert.equal(JSON.parse(pkgText).version,'11.1.2');
   for(const html of [mobile,laptop]){
     assert.match(html,/v111\.css\?v=11100/);
     assert.doesNotMatch(html,/v111\.js\?v=11100/);

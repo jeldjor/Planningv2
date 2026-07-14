@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.1.3
+# Planning-GJsystems v11.1.2
 
-Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd- en synchronisatielaag. v11.1.3 forceert voor alle gewijzigde generatielagen nieuwe browserassets, zodat GitHub Pages en de service worker geen oude routecode meer kunnen gebruiken.
+Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd- en synchronisatielaag. v11.1.2 bewaakt de volledige generatieketen vanaf adrescontrole en bezoeken indelen tot centraal opslaan, terugladen en live routeberekening.
 
 ## Belangrijkste verbeteringen
 

@@ -1,13 +1,4 @@
-# Changelog Planning-GJsystems v11.1.3
-
-## Hotfix 11.1.3
-
-- De cacheparameters van `v108.js` en vooral `v110.js` waren niet mee verhoogd.
-- Laptop en iPhone laden nu `planning-core.js`, `v108.js`, `v110.js`, `v11.js` en `v11.css` allemaal met releasecode `111003`.
-- De service-workercache is verhoogd naar `planning-gjsystems-shell-v11.1.3`.
-- Hierdoor kan GitHub Pages niet langer de oude tekst “Dagroute … berekenen” en de oude onbegrensde generator uit de bestaande browsercache laden.
-- Wanneer de bestaande Supabase `tomtom-proxy` de nieuwe `route-batch` nog niet kent, valt de app automatisch terug op de bestaande losse `route`-aanroepen.
-- Een FunctionsHttpError toont voortaan de inhoudelijke Edge Function-melding of HTTP-status in plaats van alleen “Edge Function returned a non-2xx status code”.
+# Changelog Planning-GJsystems v11.1.2
 
 ## Hotfix 11.1.2
 

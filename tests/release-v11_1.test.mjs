@@ -73,10 +73,6 @@ test('oude DEV-module wordt niet meer geladen en releasecache is vernieuwd',()=>
   assert.match(mobile,/maximum-scale=1,user-scalable=no/);
 });
 
-test('alle gewijzigde browserlagen hebben dezelfde cache-buster',()=>{
-  for(const html of [mobile,laptop])for(const asset of ['planning-core.js','v108.js','v110.js','v11.js'])assert.match(html,new RegExp(asset.replace('.','\\.')+'\\?v=111003'));
-});
-
 test('serverfuncties rollen onvolledige accounts terug en begrenzen externe verzoeken',()=>{
   assert.match(adminEdge,/deleteUser\(data\.user\.id\)/);
   assert.match(adminEdge,/body\.action === 'delete'/);

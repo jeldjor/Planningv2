@@ -1,8 +1,8 @@
-# Testcontrole Planning-GJsystems v11.1.3
+# Testcontrole Planning-GJsystems v11.1.2
 
 ## Geautomatiseerd uitgevoerd
 
-- 66 unit-, integratie-, beveiligings-, UI- en regressietests: geslaagd.
+- 64 unit-, integratie-, beveiligings-, UI- en regressietests: geslaagd.
 - Alle inline JavaScript van laptop en iPhone compileert: geslaagd.
 - Edge Functions TypeScript-syntax: geslaagd.
 - Werkruimtefiltering van Realtime: geslaagd.
