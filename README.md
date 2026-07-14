@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.0
+# Planning-GJsystems v11.1.0
 
-Deze versie bundelt de laptop- en iPhone-app rond één centrale route-, tijd- en synchronisatielaag. De bestaande v10.11 blijft ongewijzigd; v11.0 is de afzonderlijke kandidaat die eerst op de ontwikkelomgeving en daarna met echte apparaten moet worden geaccepteerd.
+Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd- en synchronisatielaag. v11.1.0 herstelt daarnaast Live Locaties, database-eerst bezoekafronding, gelijke dagtotalen en de onnodige herberekening van alle routes na iedere synchronisatie.
 
 ## Belangrijkste verbeteringen
 
@@ -16,17 +16,19 @@ Deze versie bundelt de laptop- en iPhone-app rond één centrale route-, tijd- e
 - De bestaande PDF-knop maakt een professioneel dynamisch winkelbezoekrapport voor laptop en iPhone.
 - Het zichtbare development-/versielabel is verwijderd en de mobiele pagina kan niet per ongeluk worden ingezoomd.
 - Alleen het e-mailadres kan worden onthouden; wachtwoorden worden nooit in browseropslag bewaard.
+- Beheer toont alle gebruikers bij Live Locaties, ook als er nog geen positie is. Een beheerder kan per gebruiker een sessie van 30 minuten live volgen starten; de actieve app vraagt dan iedere minuut een positie op.
 
 ## Installeren of bijwerken
 
 Maak eerst een databaseback-up en test op een afzonderlijke Supabase-ontwikkelomgeving.
 
-### Bestaande v10.11-database
+### Bestaande database
 
-1. Voer `SUPABASE_V11_0_CORE.sql` uit in de SQL Editor.
-2. Deploy opnieuw de Edge Functions `admin-users` en `tomtom-proxy`.
-3. Configureer de app en bouw de deploymentmap zoals hieronder beschreven.
-4. Voer de live acceptatiepunten uit `TESTCONTROLE_V11.0.md` uit.
+1. Maak eerst een databaseback-up.
+2. Als v11-core nog niet is geïnstalleerd: voer `SUPABASE_V11_0_CORE.sql` uit.
+3. Voer daarna altijd `SUPABASE_V11_1_RELEASE.sql` uit. Dit bestand is veilig opnieuw uitvoerbaar.
+4. Deploy opnieuw de Edge Functions `admin-users` en `tomtom-proxy`.
+5. Bouw en publiceer de app en voer de live acceptatiepunten uit.
 
 De migratie is herhaalbaar en voegt de nieuwe kolommen, indexen, private Storage-regels en vier beveiligde RPC's toe:
 
@@ -37,7 +39,7 @@ De migratie is herhaalbaar en voegt de nieuwe kolommen, indexen, private Storage
 
 ### Nieuw, leeg Supabase-project
 
-Voer alleen `SUPABASE_V10_7_DEV_BASELINE.sql` uit. Ondanks de historische bestandsnaam bevat dit bestand de complete v11.0-baseline. Voer `SUPABASE_V11_0_CORE.sql` daarna niet nogmaals uit.
+Voer in deze volgorde uit: `SUPABASE_V10_7_DEV_BASELINE.sql` en daarna `SUPABASE_V11_1_RELEASE.sql`. De historische baseline bevat de centrale v11-routefuncties; de v11.1-migratie voegt het complete Live Locaties-schema en 30-minutensessies toe.
 
 Maak geen gebruikers, wachtwoorden, service-role-key of productiegegevens onderdeel van de repository.
 
@@ -47,7 +49,7 @@ Kopieer `.env.example` naar `.env` en vul de waarden van de ontwikkelomgeving in
 
 ```text
 APP_ENV=development
-APP_DEPLOYMENT_LABEL=Planning-GJsystems v11.0
+APP_DEPLOYMENT_LABEL=Planning-GJsystems
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_ANON_KEY=<anon-of-publishable-key>
 SUPABASE_PROJECT_REF=<project-ref>
@@ -110,7 +112,7 @@ Zie `PDF_README_V11.0.md` voor de veldmapping en uitbreidingsinstructies. De map
 
 De repository bevat geautomatiseerde integratie-, beveiligings-, route-, UI- en PDF-tests. De uiteindelijke testresultaten staan in `TESTCONTROLE_V11.0.md`.
 
-Een echte iPhone, laptop, TomTom-account en gekoppeld Supabase-project zijn niet beschikbaar in de bouwomgeving. Daarom moet de live acceptatielijst op de eigen ontwikkelomgeving worden uitgevoerd voordat v11.0 de huidige werkversie vervangt. Geen softwareversie kan zonder deze omgevingsproef als foutloos worden gegarandeerd.
+De geautomatiseerde suite controleert code, simulaties, beveiligingscontracten, PDF's en builds. Een echte iPhone, laptop, TomTom-account en gekoppeld Supabase-project zijn niet beschikbaar in de bouwomgeving. De gemarkeerde live acceptatiepunten moeten daarom één keer op de eigen omgeving worden bevestigd; achtergrondlocatie op iOS kan door iOS worden gepauzeerd wanneer de PWA niet zichtbaar of het toestel vergrendeld is.
 
 ## Documentatie
 
@@ -118,6 +120,7 @@ Een echte iPhone, laptop, TomTom-account en gekoppeld Supabase-project zijn niet
 - `TESTCONTROLE_V11.0.md` – uitgevoerde tests en nog vereiste live acceptatie
 - `PDF_README_V11.0.md` – ketenprofielen, velden en foto-ophaalwijze
 - `SUPABASE_V11_0_CORE.sql` – migratie voor een bestaande v10.11-database
+- `SUPABASE_V11_1_RELEASE.sql` – Live Locaties, 30 minuten live volgen en v11.1-herstel
 - `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
 - `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
 

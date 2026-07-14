@@ -23,11 +23,11 @@ const [mobile,laptop,auth,app,css,legacyLocation,sql,baseline,edge,serviceWorker
 
 test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten geladen',()=>{
   new vm.Script(app,{filename:'v11.js'});
-  assert.equal(JSON.parse(pkg).version,'11.0.0');
+  assert.equal(JSON.parse(pkg).version,'11.1.0');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=110000/);
-    assert.match(html,/v11\.css\?v=110000/);
-    assert.match(html,/v11\.js\?v=110000/);
+    assert.match(html,/planning-core\.js\?v=111000/);
+    assert.match(html,/v11\.css\?v=111000/);
+    assert.match(html,/v11\.js\?v=111000/);
   }
 });
 
@@ -38,9 +38,10 @@ test('dagengine telt huis-klanten-huis en schuift werk volledig voorbij afwezigh
     absences:[{start_date:'2026-07-15',end_date:'2026-07-15',start_time:'10:00',end_time:'11:00',type:'Training'}],
     legs:[{min:60,km:50,mode:'car',live:true},{min:30,km:20,mode:'car',live:true},{min:20,km:15,mode:'car',live:true}]
   });
-  assert.equal(result.rows[0].start,'09:15');
-  assert.equal(result.rows[1].start,'11:45');
-  assert.equal(result.end,'12:35');
+  assert.equal(result.departure,'11:00');
+  assert.equal(result.rows[0].start,'12:15');
+  assert.equal(result.rows[1].start,'14:00');
+  assert.equal(result.end,'14:50');
   assert.equal(result.totals.km,85);
   assert.equal(result.totals.travelMin,110);
   assert.equal(result.live,true);
@@ -56,6 +57,22 @@ test('route-optimalisatie behoudt alle bezoeken en kiest een kortere volgorde',(
   const optimized=core.optimizeVisits(visits,home);
   assert.deepEqual(optimized.map(v=>v.id),['dichtbij','midden','ver']);
   assert.deepEqual(new Set(optimized.map(v=>v.id)),new Set(visits.map(v=>v.id)));
+});
+
+test('live route gebruikt één complete batch en accepteert geen gedeeltelijk antwoord',async()=>{
+  let calls=0;
+  const ok={
+    functions:{
+      invoke:async()=>{
+        calls++;
+        return{data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000,live:true},{travelTimeInSeconds:900,lengthInMeters:18000,live:true}]},error:null};
+      }
+    }
+  };
+  const requests=[{from:{lat:1,lng:1},to:{lat:2,lng:2},mode:'car'},{from:{lat:2,lng:2},to:{lat:1,lng:1},mode:'car'}];
+  const legs=await core.requestRouteBatch(ok,requests);assert.equal(calls,1);assert.equal(legs.length,2);assert.equal(legs[0].km,12);
+  const partial={functions:{invoke:async()=>({data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000,live:true}]},error:null})}};
+  await assert.rejects(()=>core.requestRouteBatch(partial,requests),/geen complete dagroute/);
 });
 
 test('mobiele volgorde, tijden, uit-planning en pauze schrijven centraal',()=>{
@@ -102,7 +119,7 @@ test('Supabase-routeopslag is één gecontroleerde dagmutatie',()=>{
   assert.match(sql,/function public\.move_planning_day/);
   assert.match(sql,/De nieuwe dag bevat al geplande bezoeken/);
   assert.doesNotMatch(core.persistDay.toString(),/\.from\('planning'\)\.update/);
-  assert.match(core.persistDay.toString(),/centrale v11-routeopslag ontbreekt/);
+  assert.match(core.persistDay.toString(),/centrale routeopslag ontbreekt/);
   for(const functionName of ['save_user_app_settings','save_day_route','replan_history_visit','move_planning_day']){
     assert.match(baseline,new RegExp(`function public\\.${functionName}`));
   }

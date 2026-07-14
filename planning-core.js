@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='11.0.0';
+  const VERSION='11.1.0';
   const dayLocks=new Map();
   const pad=n=>String(n).padStart(2,'0');
   const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -128,28 +128,29 @@
       fromLat:number(request.from.lat),fromLon:number(request.from.lng),
       toLat:number(request.to.lat),toLon:number(request.to.lng),mode:request.mode
     }));
-    const batch=await sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}});
-    if(!batch.error&&!batch.data?.error&&Array.isArray(batch.data?.legs)){
-      return batch.data.legs.map((leg,index)=>({
-        min:Math.max(1,Math.round(number(leg.travelTimeInSeconds)/60)),
-        km:Math.round(number(leg.lengthInMeters)/100)/10,
-        live:leg.live===true,mode:requests[index].mode
-      }));
-    }
-    const legs=[];
-    for(const request of requests){
-      const response=await sb.functions.invoke('tomtom-proxy',{body:{action:'route',fromLat:request.from.lat,fromLon:request.from.lng,toLat:request.to.lat,toLon:request.to.lng,mode:request.mode}});
-      const summary=response.data?.routes?.[0]?.summary;
-      if(response.error||response.data?.error||!summary)throw new Error(response.data?.error||response.error?.message||'Live route kon niet worden berekend.');
-      legs.push({min:Math.max(1,Math.round(number(summary.travelTimeInSeconds)/60)),km:Math.round(number(summary.lengthInMeters)/100)/10,live:true,mode:request.mode});
-    }
-    return legs;
+    let timer;
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('De live routeberekening duurde te lang. Controleer de TomTom Edge Function.')),30000)});
+    let batch;
+    try{batch=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),timeout])}
+    finally{clearTimeout(timer)}
+    if(batch.error||batch.data?.error)throw new Error(batch.data?.error||batch.error?.message||'Live route kon niet worden berekend.');
+    if(!Array.isArray(batch.data?.legs)||batch.data.legs.length!==requests.length)throw new Error('TomTom gaf geen complete dagroute terug.');
+    return batch.data.legs.map((leg,index)=>({
+      min:Math.max(1,Math.round(number(leg.travelTimeInSeconds)/60)),
+      km:Math.round(number(leg.lengthInMeters)/100)/10,
+      live:leg.live===true,mode:requests[index].mode
+    }));
   }
 
   function buildDay({date,departure='08:00',visits=[],absences=[],legs=[],parkingMinutes=15,pauseEnabled=true,pauseMinutes=30,pauseAt=720}){
     if(legs.length!==visits.length+(visits.length?1:0))throw new Error('Het aantal route-onderdelen klopt niet met de dagplanning.');
     const windows=absenceWindows(absences,date),rows=[];
     let cursor=toMinutes(departure);if(cursor===null)cursor=480;
+    // Een afwezigheid in de ochtend blokkeert de buitendienststart. Zonder
+    // expliciete vaste afspraak vóór dat blok start de route pas erna.
+    const fixedBeforeMorning=(visits||[]).some(visit=>{const fixed=toMinutes(visit.fixedStart||visit.fixed_starttijd);return fixed!==null&&fixed<720});
+    const morningBlock=!fixedBeforeMorning&&windows.find(window=>window.from<720&&window.to>cursor);
+    if(morningBlock)cursor=Math.max(cursor,morningBlock.to);
     const initial=cursor;
     let totalKm=0,totalTravel=0,totalParking=0,totalWaiting=0,totalVisit=0,totalPause=0,pauseTaken=false;
     for(let index=0;index<visits.length;index++){
@@ -202,7 +203,7 @@
     const rpc=await sb.rpc('save_day_route',{p_workspace_id:workspaceId||null,p_date:date,p_departure:departure,p_rows:rows,p_summary:summary,p_pause_enabled:pauseEnabled});
     if(!rpc.error)return summary;
     if(/function .* does not exist|schema cache/i.test(String(rpc.error.message||''))){
-      throw new Error('De centrale v11-routeopslag ontbreekt. Voer SUPABASE_V11_0_CORE.sql uit en vernieuw daarna de Supabase schema-cache.');
+      throw new Error('De centrale routeopslag ontbreekt. Voer SUPABASE_V11_1_RELEASE.sql uit en vernieuw daarna de Supabase schema-cache.');
     }
     throw rpc.error;
   }

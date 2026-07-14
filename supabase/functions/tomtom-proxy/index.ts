@@ -18,7 +18,17 @@ async function calculateTomTomLeg(settings: { tomtom_api_key: string }, leg: Rec
   endpoint.searchParams.set('key', settings.tomtom_api_key);
   endpoint.searchParams.set('travelMode', travelMode);
   endpoint.searchParams.set('traffic', travelMode === 'car' ? 'true' : 'false');
-  const response = await fetch(endpoint);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let response: Response;
+  try {
+    response = await fetch(endpoint, { signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw new Error('TomTom reageerde niet binnen 15 seconden.');
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
   const result = await response.json();
   const summary = result.routes?.[0]?.summary;
   if (!response.ok || !summary) throw new Error(result.error?.description || 'TomTom-route kon niet worden berekend.');
@@ -52,12 +62,17 @@ Deno.serve(async (request) => {
     }
     if (body.action === 'geocode') {
       const query = String(body.query || '').trim();
-      if (query.length < 3) return json({ error: 'Adres is te kort.' }, 400);
+      if (query.length < 3 || query.length > 250) return json({ error: 'Adres moet 3 tot en met 250 tekens bevatten.' }, 400);
       const endpoint = new URL(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(query)}.json`);
       endpoint.searchParams.set('key', settings.tomtom_api_key);
       if (body.country) endpoint.searchParams.set('countrySet', String(body.country).toUpperCase());
       endpoint.searchParams.set('limit', '1');
-      const response = await fetch(endpoint);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      let response: Response;
+      try { response = await fetch(endpoint, { signal: controller.signal }); }
+      catch (error) { if (error instanceof DOMException && error.name === 'AbortError') throw new Error('TomTom-geocodering reageerde niet binnen 15 seconden.'); throw error; }
+      finally { clearTimeout(timeout); }
       const result = await response.json();
       const position = result.results?.[0]?.position;
       if (!response.ok || !position) throw new Error(result.errorText || 'Adres kon niet worden gevonden.');

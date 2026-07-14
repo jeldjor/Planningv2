@@ -12,12 +12,12 @@ const [mobile,laptop,script,style,pkgText]=await Promise.all([
   readFile(new URL('package.json',root),'utf8')
 ]);
 
-test('v10.11 releasebestanden zijn geldig en geladen',()=>{
+test('oude v10.11 module blijft syntactisch geldig maar wordt niet meer geladen',()=>{
   new vm.Script(script,{filename:'v111.js'});
-  assert.equal(JSON.parse(pkgText).version,'11.0.0');
+  assert.equal(JSON.parse(pkgText).version,'11.1.0');
   for(const html of [mobile,laptop]){
     assert.match(html,/v111\.css\?v=11100/);
-    assert.match(html,/v111\.js\?v=11100/);
+    assert.doesNotMatch(html,/v111\.js\?v=11100/);
   }
 });
 
@@ -26,8 +26,8 @@ test('mobiele dagtotalen gebruiken alle live trajecten inclusief terugrit',()=>{
   assert.match(mobile,/walkThresholdMeters/);
   assert.match(mobile,/totals\.travelMin/);
   assert.match(mobile,/includesReturn:true/);
-  assert.match(mobile,/live\?\.live&&live\.includesReturn/);
-  assert.match(mobile,/live\?\.live&&live\.includesReturn/);
+  assert.match(mobile,/live\?\.includesReturn&&Number\.isFinite/);
+  assert.match(mobile,/Geen misleidend deeltotaal tonen/);
 });
 
 test('oude development/test-banner is onzichtbaar en wordt verwijderd',()=>{

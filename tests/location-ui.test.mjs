@@ -126,6 +126,20 @@ test('Beheer → Live Locaties wordt alleen voor de bestaande beheerrol opgebouw
   assert.ok(dom.window.document.getElementById('adminPaneLiveLocations'));
 });
 
+test('mobiele Live Locaties-tab heeft geen verborgen beheerpaneel als voorouder', () => {
+  const dom = new JSDOM('<!doctype html><body><section id="adminMobile"><div class="adminTabs"><button class="adminTab" data-admin-tab="users">Gebruikers</button></div><div id="adminPaneUsers" class="adminPane"><div class="panel"></div></div></section></body>', {runScripts:'outside-only',url:'https://development.example.test/mobile.html'});
+  dom.window.eval(source);
+  dom.window.GJ_AUTH={profile:{id:'admin'},realUserId:'admin',isAdmin:true,impersonating:false,identitySb:{}};
+  const manager=dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
+  manager.installAdminUi();
+  const pane=dom.window.document.getElementById('adminPaneLiveLocations'),tab=dom.window.document.querySelector('[data-admin-tab="liveLocations"]');
+  assert.equal(pane.parentElement.id,'adminMobile');
+  dom.window.document.querySelectorAll('#adminMobile .adminPane').forEach(item=>item.hidden=true);
+  pane.hidden=false;
+  assert.equal(tab.textContent,'Live Locaties');
+  assert.equal(pane.closest('.adminPane[hidden]'),null);
+});
+
 test('zonder inschakeling door beheer verschijnt geen melding of gebruikersinstelling', async () => {
   const dom = createDom();
   let gpsCalls = 0;

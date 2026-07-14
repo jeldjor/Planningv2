@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id),isLaptop=!!$('calendarBody');
   const client=()=>window.GJ_AUTH?.sb||null;
   const isUuid=value=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value||''));
-  let mutationDepth=0,pendingRemoteReload=false,liveRouteBusy=false,liveRouteTimer=null;
+  let mutationDepth=0,pendingRemoteReload=false,liveRouteBusy=false;
 
   function setVersion(){
     document.title='Planning-GJsystems';
@@ -21,9 +21,7 @@
     const originalLoad=window.loadPlanningFromSupabase;
     window.loadPlanningFromSupabase=async function(){
       if(window.__GJ_LOCAL_MUTATION__){pendingRemoteReload=true;return true}
-      const result=await originalLoad.apply(this,arguments);
-      if(result&&isLaptop)scheduleAllLiveRoutes();
-      return result;
+      return await originalLoad.apply(this,arguments);
     };
   }
 
@@ -75,18 +73,18 @@
     if(persist)await persistLiveDay(date);
     return true;
   }
-  async function makeDatesLive(dates,{persist=true,force=false,quiet=false}={}){
+  async function makeDatesLive(dates,{persist=true,force=false,quiet=false,onProgress=null}={}){
     if(liveRouteBusy)return false;
     liveRouteBusy=true;
     try{
-      for(const date of [...new Set((dates||[]).filter(Boolean))])await makeDayLive(date,{persist,force});
+      const unique=[...new Set((dates||[]).filter(Boolean))];
+      for(let index=0;index<unique.length;index++){
+        if(typeof onProgress==='function')onProgress(index+1,unique.length,unique[index]);
+        await makeDayLive(unique[index],{persist,force});
+      }
       return true;
     }catch(error){console.error('Live routeberekening:',error);if(!quiet)alert(error.message);return false}
     finally{liveRouteBusy=false}
-  }
-  function scheduleAllLiveRoutes(){
-    clearTimeout(liveRouteTimer);
-    liveRouteTimer=setTimeout(()=>{if(!window.__GJ_LOCAL_MUTATION__)makeDatesLive(plannedDates(),{persist:false,force:false,quiet:true})},550);
   }
   window.gjMakeDatesLive=makeDatesLive;
 
@@ -94,14 +92,32 @@
     const priorGenerate=window.generatePlanning;
     window.generatePlanning=generatePlanning=async function(){
       let result;const from=typeof parseDisplayDate==='function'?parseDisplayDate($('planFrom')?.value):'',to=typeof parseDisplayDate==='function'?parseDisplayDate($('planTo')?.value):'';
+      // De oude planner berekende routes voordat zijn nieuwe lokale regels in
+      // Supabase bestonden. Sla die voorstap over; na opslaan berekent v11 de
+      // routes met de echte database-ID's atomair en volledig live.
+      const tomtomWasEnabled=window.GJ_TOMTOM_ENABLED===true;
+      window.GJ_TOMTOM_ENABLED=false;
       beginMutation();
       try{
         result=await priorGenerate.apply(this,arguments);
-      }finally{pendingRemoteReload=false;await endMutation()}
+      }finally{window.GJ_TOMTOM_ENABLED=tomtomWasEnabled;pendingRemoteReload=false;await endMutation()}
       // De planner voegt rijen in Supabase toe. Lees daarna éénmaal de echte
       // database-ID's terug voordat de atomische v11-routeopslag begint.
       await window.loadPlanningFromSupabase?.();
-      await makeDatesLive(plannedDates().filter(date=>(!from||date>=from)&&(!to||date<=to)),{persist:true,force:true});
+      const dates=plannedDates().filter(date=>(!from||date>=from)&&(!to||date<=to));
+      const progress=$('progressDialog'),report=$('planningReportDialog'),reportWasOpen=report?.open===true;
+      if(reportWasOpen)report.close();
+      if(dates.length&&progress&&!progress.open)progress.showModal();
+      try{
+        const ok=await makeDatesLive(dates,{persist:true,force:true,quiet:false,onProgress:(current,total)=>{
+          if($('progressText'))$('progressText').textContent=`Dagroute ${current} van ${total} live berekenen...`;
+          if($('progressFill'))$('progressFill').style.width=Math.round(current/total*100)+'%';
+        }});
+        if(ok&&dates.length){if($('progressText'))$('progressText').textContent=`Klaar: ${dates.length} dagroutes live berekend.`;if($('progressFill'))$('progressFill').style.width='100%';await new Promise(resolve=>setTimeout(resolve,350))}
+      }finally{
+        if(progress?.open)progress.close();
+        if(reportWasOpen&&!report.open)report.showModal();
+      }
       return result;
     };
     const priorRefresh=window.refreshDayRoute;
@@ -286,5 +302,5 @@
   },true);
 
   setVersion();
-  window.addEventListener('gj-auth-ready',()=>{setVersion();if(isLaptop)setTimeout(scheduleAllLiveRoutes,1200)});
+  window.addEventListener('gj-auth-ready',setVersion);
 })();

@@ -1,4 +1,4 @@
-/* Planning-GJsystems v11.0 — gedeelde productie-integratie */
+/* Planning-GJsystems v11.1 — gedeelde productie-integratie */
 (()=>{
   'use strict';
   const core=window.GJPlanningCore;
@@ -150,7 +150,8 @@
       if(payload.eventType==='DELETE'){if(index>=0)state.blocks.splice(index,1)}else{const mapped={id,type:row.type||'Overig',start:row.start_date,end:row.end_date||row.start_date,startTime:String(row.start_time||'').slice(0,5),endTime:String(row.end_time||'').slice(0,5),note:row.note||'',fromSupabase:true};if(index>=0)state.blocks[index]=mapped;else state.blocks.push(mapped)}draw();
     };
     const historyChanged=()=>{historyLoaded=false;if($('historyMobile')?.classList.contains('active'))loadMobileHistory(true)};
-    realtime=sb().channel('gj-mobile-v11-'+workspace()).on('postgres_changes',{event:'*',schema:'public',table:'planning'},planningChanged).on('postgres_changes',{event:'*',schema:'public',table:'app_day_settings'},dayChanged).on('postgres_changes',{event:'*',schema:'public',table:'app_absences'},absenceChanged).on('postgres_changes',{event:'*',schema:'public',table:'visit_history'},historyChanged).on('postgres_changes',{event:'*',schema:'public',table:'visit_photos'},historyChanged).on('postgres_changes',{event:'*',schema:'public',table:'customers'},()=>window.GJ_MOBILE?.sync(false)).subscribe();
+    const filter=`user_id=eq.${workspace()}`;
+    realtime=sb().channel('gj-mobile-v11-'+workspace()).on('postgres_changes',{event:'*',schema:'public',table:'planning',filter},planningChanged).on('postgres_changes',{event:'*',schema:'public',table:'app_day_settings',filter},dayChanged).on('postgres_changes',{event:'*',schema:'public',table:'app_absences',filter},absenceChanged).on('postgres_changes',{event:'*',schema:'public',table:'visit_history',filter},historyChanged).on('postgres_changes',{event:'*',schema:'public',table:'visit_photos',filter},historyChanged).on('postgres_changes',{event:'*',schema:'public',table:'customers',filter},()=>window.GJ_MOBILE?.sync(false)).subscribe();
   }
 
   function setupMobile(){

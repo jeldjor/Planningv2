@@ -1,4 +1,4 @@
-# Testcontrole Planning-GJsystems v11.0
+# Testcontrole Planning-GJsystems v11.0.1
 
 ## Uitgevoerd in de bouwomgeving
 
@@ -10,6 +10,9 @@
 - [x] Private Storage-regels, signed foto-URL's en blokkeren van dubbele fotopaden gecontroleerd.
 - [x] Productiebouw gemaakt en gecontroleerd op aanwezigheid van v11-bestanden.
 - [x] Veilige service-workercontrole uitgevoerd; runtimeconfiguratie en Supabase-data worden niet gecachet.
+- [x] Correctie voor vastlopen op `Dagroute 1 van ... berekenen` gecontroleerd: eerst opslaan, daarna live rekenen met echte database-ID's.
+- [x] Routebatch gecontroleerd op één verzoek, volledige respons, time-out en het altijd sluiten van het voortgangsvenster.
+- [x] Geautomatiseerde suite v11.0.1: 53 van 53 tests geslaagd.
 
 ## Uitgevoerde PDF-scenario's
 

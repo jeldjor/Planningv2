@@ -2,7 +2,7 @@
 // Supabase development/testproject in. runtime-config.js staat in .gitignore.
 window.GJ_RUNTIME_CONFIG = Object.freeze({
   environment: "development",
-  deploymentLabel: "Planning-GJsystems v11.0",
+  deploymentLabel: "Planning-GJsystems v11.0.1",
   supabaseUrl: "",
   supabaseAnonKey: "",
   supabaseProjectRef: "",

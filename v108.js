@@ -149,7 +149,8 @@
         <div id="v108SystemMessage" class="v108Error" aria-live="polite"></div>
         <div class="v108Section"><div class="sectionHead"><div><h3>Actuele kaart</h3><p class="muted">Een oude positie wordt altijd als Verouderd of Offline gemarkeerd.</p></div><button type="button" id="v108AdminRefresh" class="secondary">Vernieuwen</button></div><div id="v108CurrentMap" class="v108Map"><div class="v108MapEmpty">Locaties worden geladen…</div></div><div id="v108LocationList" class="v108LocationList"></div></div>
         <div class="v108Section"><h3>Kaart afgelopen 24 uur</h3><div class="v108HistoryControls"><label>Gebruiker<select id="v108HistoryUser"></select></label><label>Periode<select id="v108HistoryHours"><option value="1">Laatste 1 uur</option><option value="4">Laatste 4 uur</option><option value="8">Laatste 8 uur</option><option value="24" selected>Laatste 24 uur</option></select></label><button type="button" id="v108HistoryRefresh">Historie laden</button></div><div id="v108HistoryMap" class="v108Map"><div class="v108MapEmpty">Kies een gebruiker.</div></div><div id="v108HistoryList" class="v108HistoryList"></div></div>`;
-      root.querySelector('.panel, .card')?.appendChild(pane);
+      const paneHost = root.id === 'adminMobile' ? root : (root.querySelector(':scope > .panel, :scope > .card') || root);
+      paneHost.appendChild(pane);
       $('v108SystemSave').addEventListener('click', () => this.saveCentral());
       $('v108AdminRefresh').addEventListener('click', () => this.refreshAdmin());
       $('v108HistoryRefresh').addEventListener('click', () => this.loadHistory());
@@ -158,6 +159,8 @@
       $('v108LocationList').addEventListener('click', (event) => {
         const button = event.target.closest('.v108UserLocationToggle');
         if (button) this.setAdminUserEnabled(button.dataset.userId, button.dataset.enabled !== 'true', button);
+        const tracking = event.target.closest('.v108TrackingToggle');
+        if (tracking) this.setLiveTracking(tracking.dataset.userId, tracking.dataset.tracking !== 'true', tracking);
       });
       tab.addEventListener('click', () => setTimeout(() => { this.invalidateMaps(); this.refreshAdmin(); }, 30));
     },
@@ -339,8 +342,10 @@
       if (this.locationTimer) clearInterval(this.locationTimer);
       this.locationTimer = null;
       if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled) return;
-      const minutes = ALLOWED_INTERVALS.includes(Number(this.central.update_interval_minutes)) ? Number(this.central.update_interval_minutes) : 10;
+      const trackingUntil = this.own?.tracking_until ? new Date(this.own.tracking_until).getTime() : 0;
+      const minutes = trackingUntil > Date.now() ? 1 : (ALLOWED_INTERVALS.includes(Number(this.central.update_interval_minutes)) ? Number(this.central.update_interval_minutes) : 10);
       this.locationTimer = setInterval(() => {
+        if (trackingUntil && Date.now() >= trackingUntil) { this.restartLocationTimer(); return; }
         if (document.visibilityState !== 'hidden') this.triggerLocation('ingestelde interval');
       }, minutes * 60000);
     },
@@ -549,9 +554,12 @@
 
     async refreshAdmin() {
       if (!isAdmin() || !$('adminPaneLiveLocations')) return;
+      const list = $('v108LocationList');
+      if (list) list.innerHTML = '<div class="v108Neutral">Gebruikers en locaties worden geladen…</div>';
       const { data, error } = await identityClient().rpc('get_admin_live_locations');
       if (error) {
-        if ($('v108LocationList')) $('v108LocationList').innerHTML = `<div class="v108Error">${esc(error.message)}</div>`;
+        const missing = /does not exist|not found|schema cache|PGRST202/i.test(String(error.message || ''));
+        if (list) list.innerHTML = `<div class="v108Error"><strong>Live Locaties konden niet worden geladen.</strong><br>${missing ? 'De database-uitbreiding voor Live Locaties ontbreekt. Voer SUPABASE_V11_1_RELEASE.sql één keer uit in Supabase.' : esc(error.message)}</div>`;
         return;
       }
       this.adminRows = data || [];
@@ -578,6 +586,20 @@
       }
     },
 
+    async setLiveTracking(userId, enabled, button) {
+      if (!isAdmin() || !userId) return;
+      const original = button?.textContent;
+      if (button) { button.disabled = true; button.textContent = enabled ? 'Starten…' : 'Stoppen…'; }
+      try {
+        const { error } = await identityClient().rpc('set_user_live_tracking', { p_user_id: userId, p_enabled: Boolean(enabled), p_minutes: 30 });
+        if (error) throw error;
+        await this.refreshAdmin();
+      } catch (error) {
+        alert(`Live volgen wijzigen mislukt: ${error.message}`);
+        if (button) { button.disabled = false; button.textContent = original; }
+      }
+    },
+
     renderAdminList() {
       const list = $('v108LocationList');
       if (!list) return;
@@ -588,7 +610,9 @@
         const status = userEnabled ? locationStatus(row.captured_at, interval, centralEnabled) : { key: 'disabled', label: 'Uit voor gebruiker' };
         const avatar = row.avatar_url ? `<img src="${esc(row.avatar_url)}" alt="">` : esc(initials(row));
         const maps = row.latitude == null ? '' : `<a class="btnlink" target="_blank" rel="noopener" href="${esc(googleMapsUrl(row.latitude, row.longitude))}">Openen in Google Maps</a>`;
-        return `<article class="v108LocationCard"><div class="v108LocationHead"><div class="v108Avatar">${avatar}</div><div><div class="v108LocationName">${esc(row.full_name || row.email)}</div><div class="v108LocationMeta">${esc(row.email || '')}</div></div><span class="v108Pill ${status.key}">${status.label}</span></div><div class="v108Permission">Toestemming: ${esc(promptLabel(row.app_prompt_state))} · iPhone/browser: ${esc(permissionLabel(row.permission_state))}</div><div class="v108LocationMeta">Gemeten: ${esc(formatDate(row.captured_at))}<br>Ontvangen: ${esc(formatDate(row.received_at))}<br>Ouderdom: ${esc(ageLabel(row.captured_at))}<br>Nauwkeurigheid: ${row.accuracy == null ? 'onbekend' : `${Math.round(row.accuracy)} meter`}</div>${row.last_error ? `<div class="v108Error">${esc(row.last_error)}</div>` : ''}<div class="v108Actions"><button type="button" class="v108UserLocationToggle ${userEnabled ? 'secondary' : ''}" data-user-id="${esc(row.user_id)}" data-enabled="${userEnabled}">${userEnabled ? 'Live Locaties uitzetten' : 'Live Locaties aanzetten'}</button>${maps}</div></article>`;
+        const trackingUntil = row.tracking_until ? new Date(row.tracking_until).getTime() : 0, tracking = trackingUntil > Date.now();
+        const trackingText = tracking ? `Live volgen tot ${new Date(trackingUntil).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}` : '30 minuten live volgen';
+        return `<article class="v108LocationCard"><div class="v108LocationHead"><div class="v108Avatar">${avatar}</div><div><div class="v108LocationName">${esc(row.full_name || row.email)}</div><div class="v108LocationMeta">${esc(row.email || '')}</div></div><span class="v108Pill ${status.key}">${status.label}</span></div><div class="v108Permission">Toestemming: ${esc(promptLabel(row.app_prompt_state))} · iPhone/browser: ${esc(permissionLabel(row.permission_state))}</div><div class="v108LocationMeta">Gemeten: ${esc(formatDate(row.captured_at))}<br>Ontvangen: ${esc(formatDate(row.received_at))}<br>Ouderdom: ${esc(ageLabel(row.captured_at))}<br>Nauwkeurigheid: ${row.accuracy == null ? 'onbekend' : `${Math.round(row.accuracy)} meter`}</div>${row.last_error ? `<div class="v108Error">${esc(row.last_error)}</div>` : ''}<div class="v108Actions"><button type="button" class="v108UserLocationToggle ${userEnabled ? 'secondary' : ''}" data-user-id="${esc(row.user_id)}" data-enabled="${userEnabled}">${userEnabled ? 'Live Locaties uitzetten' : 'Live Locaties aanzetten'}</button>${userEnabled ? `<button type="button" class="v108TrackingToggle ${tracking ? 'secondary' : ''}" data-user-id="${esc(row.user_id)}" data-tracking="${tracking}">${tracking ? 'Live volgen stoppen' : trackingText}</button>` : ''}${maps}</div>${tracking ? '<div class="v108Neutral">Iedere minuut een actuele positie zolang de app zichtbaar/actief is.</div>' : ''}</article>`;
       }).join('') : '<div class="v108Neutral">Geen gebruikers gevonden.</div>';
     },
 
@@ -717,8 +741,8 @@
 
   window.addEventListener('gj-auth-ready', () => manager.init().catch((error) => {
     console.error('Live Locaties initialiseren mislukt', error);
-    const target = $('v108OwnMessage');
-    if (target) target.textContent = error.message;
+    const target = $('v108LocationList') || $('v108OwnMessage');
+    if (target) target.innerHTML = `<div class="v108Error"><strong>Live Locaties konden niet starten.</strong><br>${esc(error.message)}<br>Controleer of SUPABASE_V11_1_RELEASE.sql is uitgevoerd.</div>`;
   }));
   if (window.GJ_AUTH?.profile && identityClient()) queueMicrotask(() => manager.init().catch(console.error));
 })();

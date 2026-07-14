@@ -1,5 +1,12 @@
 # Changelog Planning-GJsystems v11.0
 
+## Correctie v11.0.1
+
+- Planning genereren slaat nieuwe regels eerst in Supabase op en start pas daarna de live routeberekening met echte database-ID's.
+- Het voortgangsvenster sluit nu altijd, ook wanneer TomTom of de Edge Function een fout geeft.
+- Route-batchverzoeken hebben een duidelijke time-out in frontend en Edge Function, zodat het scherm niet onbeperkt blijft hangen.
+- Cacheversies zijn verhoogd zodat laptop en iPhone de correctie direct ophalen.
+
 ## Route, tijd en planning
 
 - Eén gedeelde dagengine toegevoegd voor laptop en iPhone.

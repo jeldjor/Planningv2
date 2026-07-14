@@ -307,7 +307,7 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=110000"></script>
+<script src="planning-core.js?v=111000"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style id="gjMobileAdminCss">
@@ -439,7 +439,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v109.css?v=10900">
 <link rel="stylesheet" href="v110.css?v=11000">
 <link rel="stylesheet" href="v111.css?v=11100">
-<link rel="stylesheet" href="v11.css?v=110000">
+<link rel="stylesheet" href="v11.css?v=111000">
 </head>
 <body>
 <div id="splash" class="splash"><div class="logoBox"><img src="logo-menu.png?v=10820" alt="GJ Systems — The Smarter Way"></div></div>
@@ -548,7 +548,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 </main>
 <script>
 (function(){
-const VERSION='v11.0',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
+const VERSION='v11.1',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
 let sb=null;
 window.addEventListener('gj-auth-ready',()=>{if(window.GJ_AUTH?.sb)sb=window.GJ_AUTH.sb});
 const COLORS={blue:['#083b86','#052d68','#eef4ff']};
@@ -592,7 +592,7 @@ async function loadPlanningFromSupabase(){
     const customerIds=new Set(db.customers.map(c=>c.id));
     db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),fixedStart:String(p.fixed_starttijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,parking:Number(p.parking_min||0),distanceKm:kms,routeLive:p.route_live===true,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true,rescheduledFromHistoryId:p.rescheduled_from_history_id||null}});
     db.dayDepartures={};db.mobileRouteStats={};db.pauseEnabled={};
-    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route?.live)db.mobileRouteStats[r.datum]={km:Number(route.km||0),min:Number(route.travelMin||0),live:true,includesReturn:true,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
+    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route&&Number.isFinite(Number(route.km))&&Number.isFinite(Number(route.travelMin)))db.mobileRouteStats[r.datum]={km:Number(route.km),min:Number(route.travelMin),live:route.live===true,includesReturn:true,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
     db.blocks=absRes.error?[]:(absRes.data||[]).map(r=>({id:String(r.id),type:r.type||'Overig',start:r.start_date,end:r.end_date||r.start_date,startTime:String(r.start_time||'').slice(0,5),endTime:String(r.end_time||'').slice(0,5),note:r.note||'',fromSupabase:true}));
     db.settings={...db.settings,...settingsRes,language:settingsRes.language||db.settings.language||'nl'};
     save();return true;
@@ -708,13 +708,12 @@ function recalcAll(doRender=true){
 }
 function routeTotals(){
   const live=db.mobileRouteStats?.[todayIso()];
-  if(live?.live&&live.includesReturn&&Number.isFinite(Number(live.km))&&Number.isFinite(Number(live.min)))return{km:Number(live.km),min:Number(live.min),live:true};
-  const vs=todayVisits().filter(v=>!v.pause);
-  let km=0,min=0;
-  vs.forEach(v=>{km+=Number(v.distanceKm||0);min+=Math.max(0,Number(v.travel||0)-(v.mode==='walk'?0:15))});
-  return {km,min,live:false};
+  if(live?.includesReturn&&Number.isFinite(Number(live.km))&&Number.isFinite(Number(live.min)))return{km:Number(live.km),min:Number(live.min),live:live.live===true};
+  // Geen misleidend deeltotaal tonen: losse bezoekregels bevatten de terugrit
+  // naar huis niet en reistijd bevat hier geen parkeertijd die afgetrokken moet worden.
+  return {km:NaN,min:NaN,live:false};
 }
-function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals(),done=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'}),km=Number(tot.km);$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=done+'/'+real.length;$('statKm').textContent=real.length?(Number.isInteger(km)?String(km):km.toFixed(1).replace('.',',')):'–';$('statTravel').textContent=real.length?fmtTravel(tot.min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
+function renderToday(){const vs=todayVisits(),real=vs.filter(v=>!v.pause),tot=routeTotals(),done=real.filter(v=>v.status==='Uitgevoerd'||v.status==='Niet uitgevoerd').length;const locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';const dateText=new Date().toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'}),km=Number(tot.km),min=Number(tot.min);$('todayDate').textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);$('todayDate').style.display='block';$('statVisits').textContent=real.length;$('statDone').textContent=done+'/'+real.length;$('statKm').textContent=real.length&&Number.isFinite(km)?(Number.isInteger(km)?String(km):km.toFixed(1).replace('.',',')):'–';$('statTravel').textContent=real.length&&Number.isFinite(min)?fmtTravel(min):'–';$('todayRoute').innerHTML=vs.length?vs.map(cardHtml).join(''):'<div class="card empty">'+t('dayNoPlan')+'</div>'}
 function cardHtml(v){if(v.pause)return '<div class="leg pause">'+esc(v.leg||'☕ Pauze')+' <span style="margin-left:auto">'+esc((v.time||'')+' - '+(v.end||''))+'</span><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button></div></div>';const c=customer(v.customerId),q=encodeURIComponent(address(c)),done=v.status==='Uitgevoerd',nd=v.status==='Niet uitgevoerd',out=v.status==='Uit planning',cls=done?'done':(nd?'notdone':(out?'out':'')),mode=v.mode==='walk'?'walk':'drive';const timeHtml=editingTime===v.id?'<div class="timeEdit"><input id="editStart-'+esc(v.id)+'" type="time" value="'+esc(v.time||'')+'"><input id="editEnd-'+esc(v.id)+'" type="time" value="'+esc(v.end||'')+'"><button class="saveTimeBtn" data-id="'+esc(v.id)+'">✓</button></div>':'<div class="timeLine"><span class="pill">'+esc((v.time||'')+' - '+(v.end||''))+'</span><button class="eyeBtn secondary" data-id="'+esc(v.id)+'">👁️</button></div>';return (v.leg?'<div class="leg '+(mode==='walk'?'walk':'')+'">'+esc(v.leg)+'</div>':'')+'<div class="card visitCard '+cls+'"><div class="visitTop"><strong>'+esc(c.name||'Klant')+'</strong><span class="pill">'+esc(ts(v.status||'Gepland'))+'</span></div>'+timeHtml+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:5px 0"><span class="routeMode '+(mode==='walk'?'walk':'')+'">'+(mode==='walk'?'🚶 '+t('routeWalk'):'🚗 '+t('routeAuto'))+'</span></div><div class="muted">'+esc(c.city||'')+'</div><div>'+esc([c.street,c.nr,c.postal].filter(Boolean).join(' '))+'</div>'+((done||nd)?'<div class="savedLine">'+(done?'✓':'!')+' '+esc(ts(v.status))+' '+t('saved')+((v.photos&&v.photos.length)?' · 📷 '+v.photos.length+' foto(s)':'')+'</div>':'')+'<div class="btnRow">'+((done||nd)?'<button class="visitPdfBtn secondary" data-id="'+esc(v.planningId||v.id)+'">PDF</button>':'')+'<button class="routeBtn" data-q="'+q+'">'+t('route')+'</button><button class="finishBtn secondary" data-id="'+esc(v.id)+'">'+((done||nd)?t('edit'):t('finish'))+'</button></div><div class="smallBtns"><button class="moveUp secondary" data-id="'+esc(v.id)+'">↑</button><button class="moveDown secondary" data-id="'+esc(v.id)+'">↓</button><button class="removePlan red" data-id="'+esc(v.id)+'">'+t('remove')+'</button></div></div>'+(v.returnLeg?'<div class="leg home">'+esc(v.returnLeg)+'</div>':'')}
 function renderCalendar(){const base=new Date();base.setMonth(base.getMonth()+monthOffset,1);const year=base.getFullYear(),month=base.getMonth(),locale=db.settings.language==='en'?'en-GB':db.settings.language==='de'?'de-DE':'nl-NL';$('monthTitle').textContent=base.toLocaleDateString(locale,{month:'long',year:'numeric'});const first=new Date(year,month,1),start=new Date(first);start.setDate(first.getDate()-((first.getDay()+6)%7));const dows=db.settings.language==='en'?['mo','tu','we','th','fr','sa','su']:db.settings.language==='de'?['mo','di','mi','do','fr','sa','so']:['ma','di','wo','do','vr','za','zo'];let out='<div class="monthGrid">'+dows.map(d=>'<div class="monthDow">'+d+'</div>').join('');for(let i=0;i<42;i++){const cur=new Date(start);cur.setDate(start.getDate()+i);const iso=localIso(cur),vis=db.visits.filter(v=>v.date===iso&&!v.pause&&v.status!=='Uit planning'),cls=['monthDay',cur.getMonth()===month?'':'other',iso===todayIso()?'today':'',iso===selectedCalendarDate?'selected':''].join(' ');out+='<div class="'+cls+'" data-date="'+iso+'"><div class="monthNo">'+cur.getDate()+'</div>';if(vis.length)out+='<span class="customerCount">👥 '+vis.length+'</span>';out+='</div>'}out+='</div>';$('calendarList').innerHTML=out}
 function openDay(iso){
@@ -760,6 +759,7 @@ async function finish(status){
  if(finishBusy)return;
  const v=db.visits.find(x=>x.id===activeVisitId);if(!v)return;
  finishBusy=true;$('btnDone').classList.add('v109Busy');$('btnNotDone').classList.add('v109Busy');
+ const before={status:v.status,activity:v.activity,summary:v.summary,completedAt:v.completedAt,photos:[...(v.photos||[])]};
  try{
   const selectedFiles=pendingFinishFiles.slice();
   v.status=status;v.activity=$('finishActivity').value.trim();v.summary=$('finishSummary').value.trim();v.completedAt=new Date().toISOString();
@@ -782,7 +782,7 @@ async function finish(status){
   const item={visitId:v.id,planningId:v.planningId||v.id,customerId:v.customerId,status,activity:v.activity,summary:v.summary,photos:v.photos,createdAt:v.completedAt};
   const idx=db.history.findIndex(h=>h.visitId===v.id);if(idx>=0)db.history[idx]=item;else db.history.push(item);
   pendingFinishFiles=[];save();closeFinish();renderAll();alert(ts(status)+' '+t('saved'));
- }catch(err){console.error(err);alert(err.message)}finally{finishBusy=false;$('btnDone').classList.remove('v109Busy');$('btnNotDone').classList.remove('v109Busy')}
+ }catch(err){Object.assign(v,before);save();renderAll();console.error(err);alert(err.message)}finally{finishBusy=false;$('btnDone').classList.remove('v109Busy');$('btnNotDone').classList.remove('v109Busy')}
 }
 
 function setupProfileCropper(fileInput,button,imageEl){
@@ -873,6 +873,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
           <div class="adminUserActions">
             <button type="button" class="secondary mToggleUser" data-id="${esc(u.id)}" data-active="${u.is_active!==false}">${u.is_active===false?'Inschakelen':'Uitschakelen'}</button>
             <button type="button" class="secondary mPasswordUser" data-id="${esc(u.id)}">Wachtwoord</button>
+            ${u.role!=='admin'?`<button type="button" class="red mDeleteUser" data-id="${esc(u.id)}">Verwijderen</button>`:''}
           </div>
         </div>`;
       }).join(''):'<div class="card empty">Geen gebruikers gevonden.</div>';
@@ -1025,6 +1026,8 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     if(toggle){try{await adminCall({action:'set_active',user_id:toggle.dataset.id,is_active:toggle.dataset.active!=='true'});await loadMobileUsers()}catch(err){alert(err.message)}return}
     const pw=e.target.closest('.mPasswordUser');
     if(pw){const password=prompt('Nieuw tijdelijk wachtwoord (minimaal 8 tekens):');if(!password)return;if(password.length<8)return alert('Minimaal 8 tekens.');try{await adminCall({action:'set_password',user_id:pw.dataset.id,password});alert('Wachtwoord aangepast.')}catch(err){alert(err.message)}return}
+    const del=e.target.closest('.mDeleteUser');
+    if(del){if(!confirm('Deze gebruiker en alle gekoppelde gegevens definitief verwijderen?'))return;try{await adminCall({action:'delete',user_id:del.dataset.id});await loadMobileUsers()}catch(err){alert(err.message)}return}
     const clear=e.target.closest('[data-admin-clear]');
     if(clear)return clearAction(clear.dataset.adminClear);
   });
@@ -1142,7 +1145,6 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=10801"></script>
 <script src="v109.js?v=10900"></script>
-<script src="v110.js?v=11000"></script>
-<script src="v111.js?v=11100"></script>
-<script src="v11.js?v=110000"></script>
+<script src="v110.js?v=11001"></script>
+<script src="v11.js?v=111000"></script>
 </body></html>
