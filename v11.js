@@ -174,7 +174,7 @@
     return core.queueDay(date,async()=>{
       const source=(db.visits||[]).filter(visit=>visit.date===date&&visit.status!=='Uit planning'&&!visit.pause).sort((a,b)=>(a.order||999)-(b.order||999));
       if(!source.length)return true;
-      const input=source.map(visit=>{const customer=typeof getC==='function'?getC(visit.customerId):{};return{...visit,planningId:visit.id,customer:{lat:Number(customer?.Latitude),lng:Number(customer?.Longitude)},fixedStart:visit.fixedStart||null,duration:Number(visit.duration||customer?.Bezoektijd||60)}});
+      const input=source.map(visit=>{const customer=typeof getC==='function'?getC(visit.customerId):{};return{...visit,planningId:visit.id,customer:{lat:Number(customer?.Latitude),lng:Number(customer?.Longitude),name:customer?.Winkel||'Klant',opening:customer?.Openingstijden||null},fixedStart:visit.fixedStart||null,duration:Number(visit.duration||customer?.Bezoektijd||60)}});
       const routeArgs={date,departure:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',visits:input,absences:db.blocks||[],home:{lat:Number.parseFloat(db.settings.startLat),lng:Number.parseFloat(db.settings.startLng)},parkingMinutes:Number(db.settings.parking??15),walkThresholdMeters:Number(db.settings.walk??300),pauseEnabled:!(db.disabledBreaks||{})[date]};
       const inputHash=core.routeInputHash(routeArgs),current=db.routeStats?.[date];
       if(!optimize&&core.canReuseDayRoute(current,inputHash)){if(rerender&&typeof render==='function')render();return true}

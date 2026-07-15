@@ -4,7 +4,7 @@ Uitgevoerd op 15 juli 2026.
 
 ## Automatische controles
 
-- `npm test`: 79 geslaagd, 0 mislukt.
+- `npm test`: 80 geslaagd, 0 mislukt.
 - `npm run test:pdf`: 14 scenario's gegenereerd, 0 mislukt.
 - `npm run build`: deploymentmap succesvol gemaakt.
 - Alle inline scripts van laptop en iPhone zijn syntactisch compileerbaar.
@@ -22,6 +22,7 @@ Uitgevoerd op 15 juli 2026.
 - De laptop kan geen locatieprompt, browserpermissiecontrole, GPS-aanroep of locatietimer starten; de iPhone-flow blijft actief.
 - Een gedeeltelijk TomTom-antwoord kan niet als groene route worden opgeslagen.
 - Huis, alle bezoeken en de terugrit naar huis tellen mee in kilometers en rijtijd.
+- Vroege aankomst wacht tot opening; een bezoek na sluiting en een gesloten bezoekdag worden geweigerd zonder de bestaande volgorde te overschrijven.
 
 ## Database- en historiecontroles
 

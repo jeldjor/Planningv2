@@ -77,6 +77,74 @@
     return cursor;
   }
 
+  const openingDayNames={
+    0:['zo','zon','zondag','sun','sunday'],1:['ma','maa','maandag','mon','monday'],
+    2:['di','din','dinsdag','tue','tuesday'],3:['wo','woe','woensdag','wed','wednesday'],
+    4:['do','don','donderdag','thu','thursday'],5:['vr','vrij','vrijdag','fri','friday'],
+    6:['za','zat','zaterdag','sat','saturday']
+  };
+  const openingDayIndex=name=>{
+    const key=String(name||'').trim().toLowerCase().replace(/\./g,'');
+    for(const [index,names] of Object.entries(openingDayNames))if(names.some(item=>key===item||key.startsWith(item)))return Number(index);
+    return undefined;
+  };
+  function openingDayMatches(expression,day){
+    for(const part of String(expression||'').toLowerCase().replace(/\s+/g,'').split(/[,/+&]+/).filter(Boolean)){
+      if(part.includes('-')){
+        const [from,to]=part.split('-'),start=openingDayIndex(from),end=openingDayIndex(to);
+        if(start===undefined||end===undefined)continue;
+        if(start<=end?(day>=start&&day<=end):(day>=start||day<=end))return true;
+      }else if(openingDayIndex(part)===day)return true;
+    }
+    return false;
+  }
+  function normalizedOpeningWindow(value){
+    if(value===null||value===undefined)return null;
+    if(typeof value==='object'){
+      if(value.closed===true||value.gesloten===true)return {open:'',close:'',closed:true};
+      const open=value.open||value.van||value.start||value.opening||value.openingstijd;
+      const close=value.close||value.tot||value.end||value.sluiting||value.sluitingstijd;
+      if(open&&close)return normalizedOpeningWindow(`${open}-${close}`);
+    }
+    const raw=String(value).trim();if(!raw)return null;
+    if(/gesloten|closed|dicht/i.test(raw))return {open:'',close:'',closed:true};
+    const match=raw.match(/(\d{1,2})[:.]?(\d{2})?\s*[-–—]\s*(\d{1,2})[:.]?(\d{2})?/);if(!match)return null;
+    const h1=Number(match[1]),m1=Number(match[2]||0),h2=Number(match[3]),m2=Number(match[4]||0);
+    if(h1>23||h2>23||m1>59||m2>59)return null;
+    return {open:`${pad(h1)}:${pad(m1)}`,close:`${pad(h2)}:${pad(m2)}`,closed:false};
+  }
+  function openingWindowForDate(value,date){
+    const day=parseIso(date).getDay();let data=value;
+    if(typeof data==='string'){
+      const raw=data.trim();if(!raw)return null;
+      if((raw.startsWith('{')&&raw.endsWith('}'))||(raw.startsWith('[')&&raw.endsWith(']'))){try{data=JSON.parse(raw)}catch(_){data=raw}}
+    }
+    if(data&&typeof data==='object'&&(data.tekst||data.text))data=data.tekst||data.text;
+    if(data&&typeof data==='object'&&!Array.isArray(data)){
+      for(const [key,item] of Object.entries(data))if(openingDayNames[day].some(name=>String(key).toLowerCase()===name||String(key).toLowerCase().startsWith(name))){const window=normalizedOpeningWindow(item);if(window)return window}
+      for(const key of ['default','standaard','dagelijks','alle dagen'])if(data[key]){const window=normalizedOpeningWindow(data[key]);if(window)return window}
+    }
+    const raw=String(data||'').replace(/\n/g,';'),parts=raw.split(/[;|]/).map(item=>item.trim()).filter(Boolean);let fallback=null;
+    for(const part of parts){
+      if(/gesloten|closed|dicht/i.test(part)){
+        const prefix=part.split(/gesloten|closed|dicht/i)[0];
+        if(openingDayMatches(prefix,day)||openingDayNames[day].some(name=>prefix.toLowerCase().includes(name)))return {open:'',close:'',closed:true};
+        continue;
+      }
+      const match=part.match(/^(.*?)\s*(\d{1,2}[:.]\d{2})\s*[-–—]\s*(\d{1,2}[:.]\d{2})/i);if(!match)continue;
+      const window=normalizedOpeningWindow(`${match[2]}-${match[3]}`);if(!window)continue;
+      const days=String(match[1]||'').trim();
+      if(!days||/^(elke dag|dagelijks|alle dagen)$/i.test(days)){fallback=window;continue}
+      if(openingDayMatches(days,day)||openingDayNames[day].some(name=>days.toLowerCase().includes(name)))return window;
+    }
+    return normalizedOpeningWindow(raw)||fallback;
+  }
+  function visitOpeningWindow(visit,date){
+    const customer=visit?.customer||{},value=visit?.opening??visit?.openingstijden??customer.opening??customer.openingstijden??customer.Openingstijden;
+    return openingWindowForDate(value,date);
+  }
+  const visitName=visit=>String(visit?.customer?.name||visit?.customer?.Winkel||visit?.name||visit?.winkel||'Klant');
+
   function routeCost(order,home){
     if(!order.length)return 0;
     let total=0,previous=home;
@@ -194,6 +262,11 @@
     let totalKm=0,totalTravel=0,totalParking=0,totalWaiting=0,totalVisit=0,totalPause=0,pauseTaken=false;
     for(let index=0;index<visits.length;index++){
       const visit=visits[index],leg=legs[index],travel=Math.max(0,number(leg.min)),parking=leg.mode==='car'?Math.max(0,number(parkingMinutes,15)):0;
+      const opening=visitOpeningWindow(visit,date),label=visitName(visit);
+      if(!opening)throw new Error(`Openingstijden ontbreken of zijn niet leesbaar voor ${label}.`);
+      if(opening.closed||!opening.open||!opening.close)throw new Error(`${label} is op deze dag gesloten.`);
+      const openingStart=toMinutes(opening.open),openingEnd=toMinutes(opening.close);
+      if(openingStart===null||openingEnd===null||openingEnd<=openingStart)throw new Error(`Openingstijden van ${label} zijn ongeldig.`);
       const travelStart=fitOutsideWindows(cursor,travel+parking,windows);
       totalWaiting+=Math.max(0,travelStart-cursor);
       let arrival=travelStart+travel+parking;
@@ -203,11 +276,13 @@
       }
       let desired=toMinutes(visit.fixedStart||visit.fixed_starttijd);
       if(desired===null)desired=arrival;
-      desired=Math.max(desired,arrival);
+      const beforeOpening=Math.max(desired,arrival);desired=Math.max(beforeOpening,openingStart);
+      totalWaiting+=Math.max(0,desired-beforeOpening);
       const duration=Math.max(5,number(visit.duration||visit.bezoekduur_min,30));
       const visitStart=fitOutsideWindows(desired,duration,windows);
       totalWaiting+=Math.max(0,visitStart-desired);
       const visitEnd=visitStart+duration;
+      if(visitEnd>openingEnd)throw new Error(`${label} past niet vóór sluitingstijd ${opening.close}.`);
       rows.push({
         id:String(visit.planningId||visit.id),order:index+1,
         start:fromMinutes(visitStart),end:fromMinutes(visitEnd),
@@ -240,7 +315,8 @@
     const normalizedVisits=(visits||[]).slice().sort((a,b)=>number(a.order,999)-number(b.order,999)).map((visit,index)=>({
       id:String(visit.planningId||visit.id||index),order:index+1,
       lat:number(visit.customer?.lat??visit.customer?.latitude),lng:number(visit.customer?.lng??visit.customer?.longitude),
-      duration:number(visit.duration||visit.bezoekduur_min,30),fixedStart:visit.fixedStart||visit.fixed_starttijd||null
+      duration:number(visit.duration||visit.bezoekduur_min,30),fixedStart:visit.fixedStart||visit.fixed_starttijd||null,
+      opening:visitOpeningWindow(visit,date)
     }));
     const normalizedAbsences=absenceWindows(absences,date).map(window=>({from:window.from,to:window.to}));
     return stableHash({date,departure,home:{lat:number(home?.lat),lng:number(home?.lng)},visits:normalizedVisits,absences:normalizedAbsences,parkingMinutes:number(parkingMinutes,15),walkThresholdMeters:number(walkThresholdMeters,300),pauseEnabled:pauseEnabled!==false});
@@ -344,5 +420,5 @@
     return response.data?.signedUrl||null;
   }
 
-  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,routeInputHash,canReuseDayRoute,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,prepareVisitPhoto,signedPhotoUrl};
+  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,openingWindowForDate,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,routeInputHash,canReuseDayRoute,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,prepareVisitPhoto,signedPhotoUrl};
 });

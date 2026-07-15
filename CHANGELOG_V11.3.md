@@ -7,6 +7,8 @@
 - Laptop en iPhone laden de centrale `app_day_settings` opnieuw uit Supabase en gebruiken dezelfde dagstatus, terugrit, kilometers en reistijd.
 - De laptop-dagroute toont per traject de opgeslagen `route_live`, `reistijd_min`, `afstand_km` en `parking_min`. De terugrit komt uit dezelfde centrale dagstatus.
 - Een rode trajectstatus betekent nu uitsluitend dat voor dat traject geen bevestigde live TomTom-uitkomst is opgeslagen; een groene dag en de geopende dagroute gebruiken dezelfde bron.
+- Na iedere volgorde- of tijdwijziging gebruikt de centrale engine de openingstijden van de klant voor die weekdag. Bij vroege aankomst wordt gewacht tot opening; een bezoek dat na sluiting eindigt of op een gesloten dag valt, wordt niet opgeslagen en de vorige volgorde blijft staan.
+- Laptop en iPhone tonen in de dagroute compact alleen de tijden, bijvoorbeeld `10:00–18:00`, direct naast het adres/postcodeblok.
 
 ## Database en coördinaten
 

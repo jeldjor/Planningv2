@@ -10,7 +10,7 @@
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=113001"></script>
+<script src="planning-core.js?v=113002"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1618,7 +1618,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v110.css?v=112000">
 <link rel="stylesheet" href="v111.css?v=112000">
 <link rel="stylesheet" href="v11.css?v=112000">
-<link rel="stylesheet" href="v113.css?v=113000">
+<link rel="stylesheet" href="v113.css?v=113001">
 </head>
 <body data-gj-device-location="disabled">
 <aside class="sidebar">
@@ -2837,6 +2837,12 @@ function renderRoute(date,target){
   html+=`<div class="travel">🚗 Terug naar huis • ${minTxt(r.min)} • ${r.km} km${routeQualityDotObj(r)}</div><div class="routeHome"><strong>🏠 Thuis</strong><span>${m2t(cur)}</span></div>`;
   el.innerHTML=`<div class="routeSummary"><div><strong>${vs.length}</strong><span>klanten</span></div><div><strong>${Math.round(totalKm)}</strong><span>km</span></div><div><strong>${minTxt(totalDrive)}</strong><span>rijtijd</span></div><div><strong class="${cur>t2m(db.settings.home)?"warn":"ok"}">${m2t(cur)}</strong><span>thuis</span></div></div>`+html;
 }
+function routeOpeningTime(c,date){
+  const openingWindow=window.GJPlanningCore?.openingWindowForDate(c?.Openingstijden,date);
+  if(!openingWindow)return 'Onbekend';
+  if(openingWindow.closed||!openingWindow.open||!openingWindow.close)return 'Gesloten';
+  return `${openingWindow.open}–${openingWindow.close}`;
+}
 function customerRow(v,c,start,end,date){
   const fixed=v.status==="Vast";
   const orderControls=state.editingOrder?`<div class="orderBtns"><button onclick="event.preventDefault();event.stopPropagation();moveVisitOrder('${v.id}',-1)">↑</button><button onclick="event.preventDefault();event.stopPropagation();moveVisitOrder('${v.id}',1)">↓</button></div>`:"";
@@ -2850,7 +2856,7 @@ function customerRow(v,c,start,end,date){
       <div class="rowSub">${fixed?"":`<span class="status ${String(v.status).replace(/\s/g,'-')}">${v.status}</span>`}<span>${esc(c?.Plaats||"")}</span>${orderControls}</div>
     </summary>
     <div class="detail">
-      <div>${esc(c?.Straat)} ${esc(c?.Huisnr)}<br>${esc(c?.Postcode)} ${esc(c?.Plaats)}<br>${esc(c?.Land)}</div>
+      <div>${esc(c?.Straat)} ${esc(c?.Huisnr)}<br>${esc(c?.Postcode)} ${esc(c?.Plaats)} <span class="routeOpeningTime">${esc(routeOpeningTime(c,date))}</span><br>${esc(c?.Land)}</div>
       ${phone(c)?`<div class="phone">📞 ${esc(phone(c))}</div>`:""}
       <div class="actions">${["Uitgevoerd","Niet uitgevoerd"].includes(v.status)?`<button class="${v.status==="Uitgevoerd"?"doneBtn":"notDoneBtn"}" onclick="openVisit('${v.id}')">${v.status}</button>`:`<button onclick="openVisit('${v.id}')">Afronden</button>`}<button class="secondary" onclick="openMoveDialogForVisit('${v.id}')">Herplan</button><button class="secondary" onclick="moveOut('${v.id}')">Uit planning</button><a class="btnlink iconOnly" title="Locatie bekijken" href="${maps(c)}" target="_blank">📍</a><button class="secondary iconOnly" title="Navigeer vanaf huidige locatie" onclick="requestNav('single','${v.customerId}')">🚗</button></div>
     </div>
@@ -5756,7 +5762,7 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
 <script src="v110.js?v=112000"></script>
-<script src="v11.js?v=113000"></script>
+<script src="v11.js?v=113001"></script>
 <script src="v113.js?v=113000"></script>
 </body>
 </html>
