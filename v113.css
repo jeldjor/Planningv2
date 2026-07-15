@@ -1,0 +1,13 @@
+/* Planning-GJsystems v11.3.0 */
+.v113DbFilters{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0 8px}
+.v113DbFilters button{padding:7px 11px;min-height:34px;background:#eef4fb;color:#254b7e;border:1px solid #c8d6e8}
+.v113DbFilters button.active{background:var(--blue);color:#eef1f5;border-color:var(--blue)}
+.v113LocationCell{text-align:center;min-width:86px}
+.v113LocationDot{display:inline-block;width:13px;height:13px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(15,23,42,.16);vertical-align:middle}
+.v113LocationDot.valid{background:#16a34a}.v113LocationDot.auto{background:#f59e0b}.v113LocationDot.invalid{background:#dc2626}.v113LocationDot.unknown{background:#94a3b8}
+#dbTable select[data-field="Actief"]{min-width:78px;height:38px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 8px;font-weight:800}
+.v113CompactDates{display:flex!important;align-items:flex-end!important;gap:8px!important;flex-wrap:wrap!important}
+.v113CompactDates .v113DateLabel{display:grid!important;grid-template-columns:auto!important;gap:3px!important;flex:0 0 154px!important;min-width:0!important;margin:0!important;font-size:12px!important;font-weight:800!important}
+.v113CompactDates .v113DateLabel input[type="date"]{width:154px!important;min-width:0!important;height:38px!important;padding:6px 7px!important;box-sizing:border-box!important}
+.v113CompactDates #dateFilterClear,.v113CompactDates #historyDateClear{height:38px;white-space:nowrap}
+@media(max-width:760px){.v113CompactDates{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}.v113CompactDates .v113DateLabel{width:auto!important;flex:auto!important}.v113CompactDates .v113DateLabel input[type="date"]{width:100%!important}.v113CompactDates #dateFilterClear,.v113CompactDates #historyDateClear{grid-column:1/-1}}

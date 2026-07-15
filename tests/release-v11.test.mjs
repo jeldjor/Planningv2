@@ -23,11 +23,11 @@ const [mobile,laptop,auth,app,css,legacyLocation,sql,baseline,edge,serviceWorker
 
 test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten geladen',()=>{
   new vm.Script(app,{filename:'v11.js'});
-  assert.equal(JSON.parse(pkg).version,'11.1.2');
+  assert.equal(JSON.parse(pkg).version,'11.3.0');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=111200/);
-    assert.match(html,/v11\.css\?v=111200/);
-    assert.match(html,/v11\.js\?v=111200/);
+    assert.match(html,/planning-core\.js\?v=113000/);
+    assert.match(html,/v11\.css\?v=112000/);
+    assert.match(html,/v11\.js\?v=113000/);
   }
 });
 
@@ -74,10 +74,10 @@ test('live route gebruikt één complete batch en accepteert geen gedeeltelijk a
   const olderEdge={functions:{invoke:async()=>({data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000},{travelTimeInSeconds:900,lengthInMeters:18000}]},error:null})}};
   const compatible=await core.requestRouteBatch(olderEdge,requests);assert.equal(compatible.every(leg=>leg.live),true);
   const partial={functions:{invoke:async()=>({data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000,live:true}]},error:null})}};
-  await assert.rejects(()=>core.requestRouteBatch(partial,requests),/TomTom-traject 1 van 2 mislukt/);
-  let fallbackCalls=0;
-  const fallback={functions:{invoke:async(_name,{body})=>{fallbackCalls++;if(body.action==='route-batch')return{data:{error:'tijdelijke batchlimiet'},error:null};return{data:{routes:[{summary:{travelTimeInSeconds:600,lengthInMeters:12000}}]},error:null}}}};
-  const retried=await core.requestRouteBatch(fallback,requests);assert.equal(retried.length,2);assert.equal(fallbackCalls,3);
+  await assert.rejects(()=>core.requestRouteBatch(partial,requests),/TomTom-dagroute mislukt/);
+  let retryCalls=0;
+  const retry={functions:{invoke:async()=>{retryCalls++;if(retryCalls===1)return{data:{error:'tijdelijk niet bereikbaar',code:'TOMTOM_UNAVAILABLE',retryable:true},error:null};return{data:{legs:[{travelTimeInSeconds:600,lengthInMeters:12000},{travelTimeInSeconds:600,lengthInMeters:12000}]},error:null}}}};
+  const retried=await core.requestRouteBatch(retry,requests);assert.equal(retried.length,2);assert.equal(retryCalls,2);
   const same=[{from:{lat:1,lng:1},to:{lat:1,lng:1},mode:'walk'}];
   const sameResult=await core.requestRouteBatch({functions:{invoke:async()=>{throw new Error('mag niet worden aangeroepen')}}},same);assert.deepEqual(sameResult,[{min:1,km:0,live:true,mode:'walk'}]);
 });

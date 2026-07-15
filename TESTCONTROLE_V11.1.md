@@ -2,7 +2,7 @@
 
 ## Geautomatiseerd uitgevoerd
 
-- 64 unit-, integratie-, beveiligings-, UI- en regressietests: geslaagd.
+- 66 unit-, integratie-, beveiligings-, UI- en regressietests: geslaagd.
 - Alle inline JavaScript van laptop en iPhone compileert: geslaagd.
 - Edge Functions TypeScript-syntax: geslaagd.
 - Werkruimtefiltering van Realtime: geslaagd.
@@ -13,6 +13,9 @@
 - Centrale dagroute thuis-klanten-thuis, terugrit, afwezigheid en pauze: geslaagd.
 - Atomaire planningsperiode en complete-dagverplaatsing: contractcontrole geslaagd.
 - Productiebouw: geslaagd.
+- TomTom-batchfallback, exact trajectnummer, oude Edge-respons en dubbele coördinaten: geslaagd.
+- Scheiding tussen iPhone-planning laden en automatische TomTom-route: geslaagd.
+- Donkerrode/zilveren `UIT PLANNING`-knop met voldoende CSS-specificiteit: geslaagd.
 
 ## PDF uitgevoerd
 

@@ -143,7 +143,7 @@
     const dayChanged=payload=>{
       const state=mobileState(),row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,date=row?.datum;if(!date)return;state.dayDepartures=state.dayDepartures||{};state.mobileRouteStats=state.mobileRouteStats||{};state.pauseEnabled=state.pauseEnabled||{};
       if(payload.eventType==='DELETE'){delete state.dayDepartures[date];delete state.mobileRouteStats[date];delete state.pauseEnabled[date]}
-      else{if(row.vertrektijd)state.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)state.mobileRouteStats[date]={km:Number(route.km||0),min:Number(route.travelMin||0),live:route.live===true,includesReturn:true,updatedAt:route.calculatedAt};state.pauseEnabled[date]=row.settings?.pause_enabled!==false}draw();
+      else{if(row.vertrektijd)state.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)state.mobileRouteStats[date]={km:Number(route.km||0),min:Number(route.travelMin||0),live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null,updatedAt:route.calculatedAt};state.pauseEnabled[date]=row.settings?.pause_enabled!==false}draw();
     };
     const absenceChanged=payload=>{
       const state=mobileState(),row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,id=String(row?.id||'');if(!id)return;state.blocks=state.blocks||[];const index=state.blocks.findIndex(item=>String(item.id)===id);
@@ -175,9 +175,12 @@
       const source=(db.visits||[]).filter(visit=>visit.date===date&&visit.status!=='Uit planning'&&!visit.pause).sort((a,b)=>(a.order||999)-(b.order||999));
       if(!source.length)return true;
       const input=source.map(visit=>{const customer=typeof getC==='function'?getC(visit.customerId):{};return{...visit,planningId:visit.id,customer:{lat:Number(customer?.Latitude),lng:Number(customer?.Longitude)},fixedStart:visit.fixedStart||null,duration:Number(visit.duration||customer?.Bezoektijd||60)}});
-      const result=await core.calculateDay({sb:sb(),workspaceId:workspace(),date,departure:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',visits:input,absences:db.blocks||[],home:{lat:Number.parseFloat(db.settings.startLat),lng:Number.parseFloat(db.settings.startLng)},parkingMinutes:Number(db.settings.parking??15),walkThresholdMeters:Number(db.settings.walk??300),optimize,pauseEnabled:!(db.disabledBreaks||{})[date]});
+      const routeArgs={date,departure:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',visits:input,absences:db.blocks||[],home:{lat:Number.parseFloat(db.settings.startLat),lng:Number.parseFloat(db.settings.startLng)},parkingMinutes:Number(db.settings.parking??15),walkThresholdMeters:Number(db.settings.walk??300),pauseEnabled:!(db.disabledBreaks||{})[date]};
+      const inputHash=core.routeInputHash(routeArgs),current=db.routeStats?.[date];
+      if(!optimize&&core.canReuseDayRoute(current,inputHash)){if(rerender&&typeof render==='function')render();return true}
+      const result=await core.calculateDay({sb:sb(),workspaceId:workspace(),...routeArgs,optimize});
       result.visits.forEach((ordered,index)=>{const visit=(db.visits||[]).find(item=>String(item.id)===String(ordered.id)),row=result.result.rows[index];if(!visit||!row)return;visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.reistijd_min=row.travelMin;visit.parking_min=row.parkingMin;visit.afstand_km=row.distanceKm;visit.route_mode=row.routeMode;visit.route_live=row.routeLive});
-      db.routeStats=db.routeStats||{};db.routeStats[date]={km:result.result.totals.km,driveMin:result.result.totals.travelMin,totalMin:result.result.totals.dayMin,start:result.result.departure,end:result.result.end,calculated:result.result.live,live:result.result.live,includesReturn:true};
+      db.routeStats=db.routeStats||{};db.routeStats[date]={km:result.result.totals.km,driveMin:result.result.totals.travelMin,totalMin:result.result.totals.dayMin,start:result.result.departure,end:result.result.end,calculated:result.result.live,live:result.result.live,includesReturn:true,returnLeg:result.result.returnLeg||null,inputHash:result.result.inputHash||null};
       if(typeof save==='function')save();if(rerender&&typeof render==='function')render();return true;
     });
   }

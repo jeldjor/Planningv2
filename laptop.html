@@ -10,7 +10,7 @@
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=111200"></script>
+<script src="planning-core.js?v=113000"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1612,12 +1612,13 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 </style>
 <link rel="stylesheet" href="v105.css?v=10500">
 <link rel="stylesheet" href="v106.css?v=10700">
-<link rel="stylesheet" href="v108.css?v=111200">
+<link rel="stylesheet" href="v108.css?v=112000">
 <link rel="stylesheet" href="v1082.css?v=10820">
 <link rel="stylesheet" href="v109.css?v=10900">
-<link rel="stylesheet" href="v110.css?v=111200">
-<link rel="stylesheet" href="v111.css?v=11100">
-<link rel="stylesheet" href="v11.css?v=111200">
+<link rel="stylesheet" href="v110.css?v=112000">
+<link rel="stylesheet" href="v111.css?v=112000">
+<link rel="stylesheet" href="v11.css?v=112000">
+<link rel="stylesheet" href="v113.css?v=113000">
 </head>
 <body>
 <aside class="sidebar">
@@ -2307,10 +2308,9 @@ async function tomtomRoute(a,b,mode="car"){
  if(!hasCoords(a)||!hasCoords(b)||!window.GJ_TOMTOM_ENABLED)return null;
  const key=routeKey(a,b,mode);if(db.routeCache?.[key])return db.routeCache[key];
  try{
-  const {data,error}=await (window.GJ_AUTH?.sb||supa).functions.invoke('tomtom-proxy',{body:{action:'route',fromLat:num(a.Latitude),fromLon:num(a.Longitude),toLat:num(b.Latitude),toLon:num(b.Longitude),mode}});
-  if(error||data?.error)throw new Error(error?.message||data.error);
-  const sm=data.routes?.[0]?.summary;if(!sm)return null;
-  const result={km:Math.round(sm.lengthInMeters/100)/10,min:Math.max(1,Math.round(sm.travelTimeInSeconds/60)),source:'TomTom',live:true};
+  const routes=await window.GJPlanningCore.requestRouteBatch(window.GJ_AUTH?.sb||supa,[{from:{lat:num(a.Latitude),lng:num(a.Longitude)},to:{lat:num(b.Latitude),lng:num(b.Longitude)},mode}]);
+  const live=routes[0];if(!live)return null;
+  const result={km:live.km,min:live.min,source:'TomTom',live:live.live===true};
   if(!Number.isFinite(result.km)||!Number.isFinite(result.min)||result.km<0||result.km>600||result.min<1||result.min>720)throw new Error('TomTom gaf een onrealistische route terug.');
   db.routeCache[key]=result;save();return result;
  }catch(e){console.warn('TomTom route:',e);return null}
@@ -2677,6 +2677,23 @@ function routeQualityDotStats(stats,date=""){
   const live=!!(stats && stats.calculated);
   return `<span class="${live?"routeDotLive":"routeDotEstimate"}" title="${live?"Live routeberekening":"Geschatte route"}"></span>`;
 }
+function storedVisitRoute(v,fallback){
+  const min=Number(v?.reistijd_min??v?.travel),km=Number(v?.afstand_km??v?.distanceKm);
+  const hasStored=Number.isFinite(min)&&min>=0&&Number.isFinite(km)&&km>=0&&(v?.supabase===true||v?.route_live!==undefined||v?.routeLive!==undefined);
+  if(!hasStored)return fallback;
+  const live=v?.route_live===true||v?.routeLive===true;
+  return {min,km,live,source:live?'TomTom':'Schatting'};
+}
+function storedReturnRoute(date,fallback){
+  const leg=db.routeStats?.[date]?.returnLeg;
+  const min=Number(leg?.travelMin),km=Number(leg?.distanceKm);
+  if(!Number.isFinite(min)||min<0||!Number.isFinite(km)||km<0)return fallback;
+  return {min,km,live:leg.routeLive===true,source:leg.routeLive===true?'TomTom':'Schatting'};
+}
+function storedParkingMinutes(v){
+  const stored=Number(v?.parking_min??v?.parking);
+  return Number.isFinite(stored)&&stored>=0?stored:num(db.settings.parking,15);
+}
 function dayOverEight(date){
   const stats=db.routeStats?.[date];
   const limit=Math.round(num(db.settings?.maxWorkday,8.5)*60);
@@ -2760,22 +2777,22 @@ function renderRoute(date,target){
     const c=getC(v.customerId)||{},prev=i?getC(vs[i-1].customerId):null;
     let travel=0,line="";
     if(i===0){
-      const from=startPoint(),to=c,park=num(db.settings.parking,15);
+      const from=startPoint(),to=c,park=storedParkingMinutes(v);
       const cached=hasCoords(to)?db.routeCache?.[routeKey(from,to,"car")]:null;
-      const r=cached||fallbackRoute(from,to,"car");
+      const r=storedVisitRoute(v,cached||fallbackRoute(from,to,"car"));
       travel=r.min+park;totalDrive+=r.min;totalKm+=r.km||0;
       line=`🚗 ${minTxt(r.min)} • ${r.km} km • 🅿️ +${park} min${routeQualityDotObj(r)}`;
     }else{
       const d=km(prev,c);
       if(d!==null&&d*1000<=num(db.settings.walk,300)){
         const cached=(hasCoords(prev)&&hasCoords(c))?db.routeCache?.[routeKey(prev,c,"walk")]:null;
-        const r=cached||fallbackRoute(prev,c,"walk");
+        const r=storedVisitRoute(v,cached||fallbackRoute(prev,c,"walk"));
         travel=r.min;
         line=`🚶 ${r.min} min • ${Math.round((r.km||0)*1000)} m${routeQualityDotObj(r)}`;
       }else{
-        const park=num(db.settings.parking,15);
+        const park=storedParkingMinutes(v);
         const cached=(hasCoords(prev)&&hasCoords(c))?db.routeCache?.[routeKey(prev,c,"car")]:null;
-        const r=cached||fallbackRoute(prev,c,"car");
+        const r=storedVisitRoute(v,cached||fallbackRoute(prev,c,"car"));
         travel=r.min+park;totalKm+=r.km||0;totalDrive+=r.min;
         line=`🚗 ${minTxt(r.min)} • ${r.km} km • 🅿️ +${park} min${routeQualityDotObj(r)}`;
       }
@@ -2815,7 +2832,7 @@ function renderRoute(date,target){
   }
   const lastC=getC(vs[vs.length-1].customerId),home=startPoint();
   const cached=hasCoords(lastC)?db.routeCache?.[routeKey(lastC,home,"car")]:null;
-  const r=cached||fallbackRoute(lastC,home,"car");
+  const r=storedReturnRoute(date,cached||fallbackRoute(lastC,home,"car"));
   cur+=r.min;totalDrive+=r.min;totalKm+=r.km||0;
   html+=`<div class="travel">🚗 Terug naar huis • ${minTxt(r.min)} • ${r.km} km${routeQualityDotObj(r)}</div><div class="routeHome"><strong>🏠 Thuis</strong><span>${m2t(cur)}</span></div>`;
   el.innerHTML=`<div class="routeSummary"><div><strong>${vs.length}</strong><span>klanten</span></div><div><strong>${Math.round(totalKm)}</strong><span>km</span></div><div><strong>${minTxt(totalDrive)}</strong><span>rijtijd</span></div><div><strong class="${cur>t2m(db.settings.home)?"warn":"ok"}">${m2t(cur)}</strong><span>thuis</span></div></div>`+html;
@@ -3803,12 +3820,10 @@ function openEditHistory(id){
 async function persistLaptopVisit(v,status,activity,summary,files,historyId=null){
   const client=window.GJ_AUTH?.sb;if(!client||!v?.id)return null;
   const planningId=v.planningId||v.id;
-  const updated=await client.from('planning').update({status,uitgevoerd:status==='Uitgevoerd',updated_at:new Date().toISOString()}).eq('id',planningId).select('id,status').single();
-  if(updated.error)throw new Error('Status niet opgeslagen: '+updated.error.message);
-  const row={customer_id:v.customerId,planning_id:planningId,bezoekdatum:v.date,starttijd:(liveVisitTime(v)||v.time)||null,eindtijd:v.end||null,activiteit:activity||'',samenvatting:summary||'',opmerkingen:'',reden:status==='Niet uitgevoerd'?(summary||null):null,status,duur_min:Number(v.duration||60),afstand_km:Number(v.afstand_km||v.distanceKm||0),reistijd_min:Number(v.reistijd_min||v.travel||0),afgerond:true,updated_at:new Date().toISOString()};
-  if(!historyId){const found=await client.from('visit_history').select('id').eq('planning_id',planningId).order('created_at',{ascending:false}).limit(1).maybeSingle();if(found.error)throw new Error('Historie controleren mislukt: '+found.error.message);historyId=found.data?.id||null}
-  if(historyId){const saved=await client.from('visit_history').update(row).eq('id',historyId);if(saved.error)throw new Error('Historie bijwerken mislukt: '+saved.error.message)}
-  else{const saved=await client.from('visit_history').insert(row).select('id').single();if(saved.error)throw new Error('Historie opslaan mislukt: '+saved.error.message);historyId=saved.data.id}
+  const completed=await client.rpc('complete_visit',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_planning_id:planningId,p_status:status,p_activity:activity||'',p_summary:summary||'',p_start:(liveVisitTime(v)||v.time)||null,p_end:v.end||null,p_duration:Number(v.duration||60),p_distance:Number(v.afstand_km||v.distanceKm||0),p_travel:Number(v.reistijd_min||v.travel||0)});
+  if(completed.error){if(/does not exist|schema cache|PGRST202/i.test(String(completed.error.message||'')))throw new Error('De veilige historie-opslag ontbreekt. Voer SUPABASE_V11_3_RELEASE.sql uit.');throw new Error('Opdracht opslaan mislukt: '+completed.error.message)}
+  historyId=completed.data?.history_id||historyId;
+  if(!historyId)throw new Error('Supabase heeft geen historie-ID teruggegeven.');
   const uploaded=[];
   for(const file of Array.from(files||[])){
     if(!String(file.type||'').startsWith('image/'))continue;
@@ -4880,7 +4895,7 @@ async function drawVisitPdfLayout(doc,visit){
         const loadedKeys=new Set(loaded.map(v=>String(v.id||'')+'|'+v.date+'|'+v.customerId));
         const hadStale=previousKeys.size!==loadedKeys.size||[...previousKeys].some(k=>!loadedKeys.has(k));
         db.visits=loaded;
-        if(hadStale){db.routeCache={};db.routeStats={};}
+        if(hadStale){db.routeCache={};}
       }
       save(); render();
       setSyncStatus(`Supabase: ${loaded.length} planningregels geladen`, 'ok');
@@ -5283,7 +5298,7 @@ async function drawVisitPdfLayout(doc,visit){
   function applyDaySettingRealtime(payload){
     const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,date=row?.datum;if(!date)return;db.dayDepartures=db.dayDepartures||{};db.routeStats=db.routeStats||{};
     if(payload.eventType==='DELETE'){delete db.dayDepartures[date];delete db.routeStats[date]}
-    else{if(row.vertrektijd)db.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)db.routeStats[date]={km:Number(route.km||0),driveMin:Number(route.travelMin||0),totalMin:Number(route.dayMin||0),start:db.dayDepartures[date],end:route.end||'',calculated:route.live===true,live:route.live===true,includesReturn:true}}
+    else{if(row.vertrektijd)db.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)db.routeStats[date]={km:Number(route.km||0),driveMin:Number(route.travelMin||0),totalMin:Number(route.dayMin||0),start:db.dayDepartures[date],end:route.end||'',calculated:route.live===true,live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null}}
     save();render();
   }
 
@@ -5737,9 +5752,10 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v105.js?v=10500"></script>
 <script src="v1082.js?v=10820"></script>
 <script src="v106.js?v=10700"></script>
-<script src="v108.js?v=111200"></script>
-<script src="v109.js?v=10900&amp;hotfix=centralstats1"></script>
-<script src="v110.js?v=111200&amp;hotfix=centralstats1"></script>
-<script src="v11.js?v=111200"></script>
+<script src="v108.js?v=112000"></script>
+<script src="v109.js?v=112000"></script>
+<script src="v110.js?v=112000"></script>
+<script src="v11.js?v=113000"></script>
+<script src="v113.js?v=113000"></script>
 </body>
 </html>

@@ -1,22 +1,5 @@
 # Changelog Planning-GJsystems v11.1.2
 
-## Hotfix 11.1.2
-
-- Ook adrescontrole, bezoeken indelen, planning opslaan en centraal terugladen tonen nu hun eigen voortgang.
-- Adrescontrole stopt na 15 seconden, planning opslaan na 20 seconden en terugladen na 20 seconden.
-- De totale voorbereidende generatie wordt na twee minuten gecontroleerd afgebroken.
-- De generator geeft tijdens het indelen na ieder bezoek de browser ruimte om het scherm te verversen.
-- Een tweede klik tijdens genereren wordt geblokkeerd.
-- Het voortgangsvenster sluit vanuit één centrale `finally`, ongeacht in welke fase een fout ontstaat.
-- TomTom blijft beschikbaar voor ontbrekende klantcoördinaten; alleen de verouderde routevoorberekening wordt overgeslagen.
-
-## Hotfix 11.1.1
-
-- Een ontbrekende timeout rond `save_day_route` is toegevoegd.
-- TomTom heeft een deadline van 25 seconden, Supabase-routeopslag 15 seconden en de complete dag 45 seconden.
-- Het voortgangsvenster sluit altijd via `finally`; een dag kan niet onbeperkt op “1 van 4” blijven staan.
-- Nieuwe regressietest met een bewust nooit antwoordende netwerkcall.
-
 ## Opgeloste fouten
 
 - Live Locaties op mobiel staat nu als direct beheerpaneel en verdwijnt niet meer door een verborgen bovenliggend Gebruikers-paneel.
@@ -33,10 +16,17 @@
 - iPhone gebruikt voor kilometers en reistijd uitsluitend het centrale dagtotaal thuis-klanten-thuis. Een onvolledig lokaal deeltotaal wordt niet meer als 0 getoond.
 - Een ochtendafwezigheid verschuift de route na de afwezigheid, tenzij er expliciet een vaste afspraak ervoor staat.
 - De oude v10.11 DEV-module wordt niet meer geladen; het korte verkeerde versie-/developmentbeeld is weg.
-- De app-shellcache is verhoogd naar v11.1.0.
+- Alle gewijzigde scripts hebben cacheversie `111200` en de app-shellcache is verhoogd naar v11.1.2.
+- Geldige live TomTom-batchresultaten uit een oudere Edge Function zonder expliciet `live=true` worden veilig herkend; ongeldige afstand of reistijd wordt juist afgewezen.
+- Het routevoortgangsvenster sluit vóórdat een foutmelding verschijnt.
+- Identieke of vrijwel identieke klantlocaties worden als een geldig traject van één minuut verwerkt zonder een onmogelijke TomTom-aanvraag.
+- Wanneer de batch tijdelijk wordt geweigerd, probeert de app de trajecten gecontroleerd één voor één en noemt een fout voortaan het exacte trajectnummer.
+- De TomTom Edge Function verwerkt batchtrajecten sequentieel om piek-/rate-limitfouten te voorkomen.
+- TomTom-routefouten komen als leesbaar functieantwoord terug; de kale Supabase-melding `Edge Function returned a non-2xx status code` wordt niet meer als route- of laadfout gebruikt.
+- De iPhone laadt de planning onafhankelijk van de automatische TomTom-herberekening. Een tijdelijke routefout blokkeert het inloggen en de planning niet meer.
+- Een recente locatie voorkomt nieuwe GPS-vragen bij iedere focus of heropening; gegeven app-toestemming wordt per gebruiker onthouden.
 - Gebruikersaanmaak rolt een Auth-account terug als het profiel niet kan worden opgeslagen; beheerders kunnen niet-admin testgebruikers veilig verwijderen.
 - TomTom-geocodering heeft nu invoergrenzen en een timeout van 15 seconden.
-- TomTom-dagroutes, Supabase-routeopslag en de complete dagbewerking hebben afzonderlijke harde deadlines; het voortgangsvenster kan niet onbeperkt op dag 1 blijven staan.
 
 ## Database
 

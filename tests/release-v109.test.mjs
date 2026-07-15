@@ -17,12 +17,13 @@ test('v10.9 regressiebestanden en alle inline scripts zijn syntactisch geldig',(
     const blocks=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).filter(x=>x.trim());
     blocks.forEach((code,index)=>new vm.Script(code,{filename:`${name}-inline-${index}.js`}));
   }
-  assert.equal(JSON.parse(pkg).version,'11.1.2');
+  assert.equal(JSON.parse(pkg).version,'11.3.0');
 });
 
 test('TomTom wordt centraal gecontroleerd en live routestatus is leidend',()=>{
   assert.match(script,/rpc\('get_tomtom_status'\)/);
   assert.match(script,/stats\.live===true/);
+  assert.match(script,/if\(stats\.includesReturn===true\)return stats/);
   assert.match(script,/route_live:route\.live===true\|\|route\.source==='TomTom'/);
   assert.match(mobile,/visit\.routeLive=row\.routeLive/);
 });

@@ -1,7 +1,7 @@
-/* Planning-GJsystems v11.1 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
+/* Planning-GJsystems v11.3 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
 'use strict';
-const CACHE='planning-gjsystems-shell-v11.1.2';
-const SHELL=['./','./index.html','./laptop.html','./mobile.html','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./v11.js','./v11.css'];
+const CACHE='planning-gjsystems-shell-v11.3.0';
+const SHELL=['./','./index.html','./laptop.html','./mobile.html','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./v11.js','./v11.css','./v113.js','./v113.css'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));

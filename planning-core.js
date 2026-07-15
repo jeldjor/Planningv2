@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='11.1.2';
+  const VERSION='11.3.0';
   const dayLocks=new Map();
   const pad=n=>String(n).padStart(2,'0');
   const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -33,7 +33,10 @@
     return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
   };
   const pointFromCustomer=customer=>({lat:number(customer?.lat??customer?.Latitude,NaN),lng:number(customer?.lng??customer?.Longitude,NaN)});
-  const hasPoint=point=>Number.isFinite(number(point?.lat,NaN))&&Number.isFinite(number(point?.lng,NaN));
+  const hasPoint=point=>{
+    const lat=number(point?.lat,NaN),lng=number(point?.lng,NaN);
+    return Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180;
+  };
   const visitPoint=visit=>pointFromCustomer(visit.customer||visit);
 
   function absenceWindows(absences,date){
@@ -149,34 +152,24 @@
     })).map(({fromLat,fromLon,toLat,toLon,mode})=>({
       fromLat,fromLon,toLat,toLon,mode
     }));
-    let timer;
-    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('De live routeberekening duurde te lang. Controleer de TomTom Edge Function.')),30000)});
-    let batch;
-    try{batch=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),timeout])}
-    catch(error){batch={data:null,error}}
-    finally{clearTimeout(timer)}
-    let received=!batch.error&&!batch.data?.error&&Array.isArray(batch.data?.legs)&&batch.data.legs.length===remoteIndexes.length?batch.data.legs:null;
-    if(!received){
-      // Oudere Edge Functions of een tijdelijke batchlimiet kunnen de batch
-      // weigeren terwijl losse TomTom-routes wel werken. Probeer die trajecten
-      // daarom één voor één, zodat één piekbelasting niet de hele dag blokkeert.
-      received=[];
-      for(let index=0;index<payload.length;index++){
-        let singleTimer;
-        const singleTimeout=new Promise((_,reject)=>{singleTimer=setTimeout(()=>reject(new Error('timeout na 20 seconden')),20000)});
-        let single;
-        try{single=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route',...payload[index]}}),singleTimeout])}
-        catch(error){single={data:null,error}}
-        finally{clearTimeout(singleTimer)}
-        const summary=single.data?.routes?.[0]?.summary;
-        if(single.error||single.data?.error||!summary){
-          const singleReason=await edgeFailureMessage(single,'');
-          const batchReason=await edgeFailureMessage(batch,'geen route ontvangen');
-          throw new Error(`TomTom-traject ${index+1} van ${payload.length} mislukt: ${singleReason||batchReason}`);
-        }
-        received.push({...summary,live:true});
-      }
+    let batch=null,received=null,lastReason='geen route ontvangen';
+    // Eén dag is altijd één batch. Zo ontstaan geen dubbele routecycli of een
+    // storm van losse Edge-aanroepen wanneer TomTom tijdelijk niet reageert.
+    for(let attempt=0;attempt<2&&!received;attempt++){
+      let timer;
+      const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('De live routeberekening duurde te lang.')),45000)});
+      try{batch=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),timeout])}
+      catch(error){batch={data:null,error}}
+      finally{clearTimeout(timer)}
+      if(!batch?.error&&!batch?.data?.error&&Array.isArray(batch?.data?.legs)&&batch.data.legs.length===remoteIndexes.length){received=batch.data.legs;break}
+      lastReason=await edgeFailureMessage(batch,lastReason);
+      const code=String(batch?.data?.code||'');
+      const retryable=batch?.data?.retryable===true||(!batch?.data&&!code);
+      if(code==='UNSUPPORTED_ACTION')throw new Error('De actieve TomTom Edge Function is verouderd. Publiceer de meegeleverde tomtom-proxy opnieuw.');
+      if(!retryable||attempt===1)break;
+      await new Promise(resolve=>setTimeout(resolve,700));
     }
+    if(!received)throw new Error(`TomTom-dagroute mislukt: ${lastReason}`);
     received.forEach((leg,remoteIndex)=>{
       const index=remoteIndexes[remoteIndex];
       const seconds=Number(leg?.travelTimeInSeconds),meters=Number(leg?.lengthInMeters);
@@ -243,10 +236,28 @@
     return (hash>>>0).toString(16);
   }
 
-  async function persistDay(sb,{workspaceId,date,departure,result,pauseEnabled=true}){
-    const summary={...result.totals,end:result.end,live:result.live,returnLeg:result.returnLeg,calculatedAt:result.calculatedAt,hash:stableHash({date,departure,rows:result.rows})};
+  function routeInputHash({date,departure,visits=[],absences=[],home,parkingMinutes=15,walkThresholdMeters=300,pauseEnabled=true}){
+    const normalizedVisits=(visits||[]).slice().sort((a,b)=>number(a.order,999)-number(b.order,999)).map((visit,index)=>({
+      id:String(visit.planningId||visit.id||index),order:index+1,
+      lat:number(visit.customer?.lat??visit.customer?.latitude),lng:number(visit.customer?.lng??visit.customer?.longitude),
+      duration:number(visit.duration||visit.bezoekduur_min,30),fixedStart:visit.fixedStart||visit.fixed_starttijd||null
+    }));
+    const normalizedAbsences=absenceWindows(absences,date).map(window=>({from:window.from,to:window.to}));
+    return stableHash({date,departure,home:{lat:number(home?.lat),lng:number(home?.lng)},visits:normalizedVisits,absences:normalizedAbsences,parkingMinutes:number(parkingMinutes,15),walkThresholdMeters:number(walkThresholdMeters,300),pauseEnabled:pauseEnabled!==false});
+  }
+
+  function canReuseDayRoute(summary,inputHash){
+    return !!(summary&&summary.live===true&&summary.includesReturn===true&&summary.returnLeg?.routeLive===true&&summary.inputHash&&summary.inputHash===inputHash);
+  }
+
+  async function persistDay(sb,{workspaceId,date,departure,result,pauseEnabled=true,inputHash=null}){
+    const summary={...result.totals,end:result.end,live:result.live,includesReturn:!!result.returnLeg,returnLeg:result.returnLeg,calculatedAt:result.calculatedAt,inputHash:inputHash||null,hash:stableHash({date,departure,rows:result.rows})};
     const rows=result.rows.map(row=>({id:row.id,route_volgorde:row.order,starttijd:row.start,eindtijd:row.end,reistijd_min:row.travelMin,parking_min:row.parkingMin,afstand_km:row.distanceKm,route_mode:row.routeMode,route_live:row.routeLive}));
-    const rpc=await sb.rpc('save_day_route',{p_workspace_id:workspaceId||null,p_date:date,p_departure:departure,p_rows:rows,p_summary:summary,p_pause_enabled:pauseEnabled});
+    let timer;
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Het opslaan van de dagroute duurde te lang.')),15000)});
+    let rpc;
+    try{rpc=await Promise.race([sb.rpc('save_day_route',{p_workspace_id:workspaceId||null,p_date:date,p_departure:departure,p_rows:rows,p_summary:summary,p_pause_enabled:pauseEnabled}),timeout])}
+    finally{clearTimeout(timer)}
     if(!rpc.error)return summary;
     if(/function .* does not exist|schema cache/i.test(String(rpc.error.message||''))){
       throw new Error('De centrale routeopslag ontbreekt. Voer SUPABASE_V11_1_RELEASE.sql uit en vernieuw daarna de Supabase schema-cache.');
@@ -261,7 +272,8 @@
     const requests=createLegRequests(selected,home,walkThresholdMeters);
     const legs=await requestRouteBatch(sb,requests);
     const result=buildDay({date,departure,visits:selected,absences,legs,parkingMinutes,pauseEnabled});
-    await persistDay(sb,{workspaceId,date,departure,result,pauseEnabled});
+    result.inputHash=routeInputHash({date,departure,visits:selected,absences,home,parkingMinutes,walkThresholdMeters,pauseEnabled});
+    await persistDay(sb,{workspaceId,date,departure,result,pauseEnabled,inputHash:result.inputHash});
     return {visits:selected,result};
   }
 
@@ -294,5 +306,5 @@
     return response.data?.signedUrl||null;
   }
 
-  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
+  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,routeInputHash,canReuseDayRoute,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
 });

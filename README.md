@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.1.2
+# Planning-GJsystems v11.3.0
 
-Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd- en synchronisatielaag. v11.1.2 bewaakt de volledige generatieketen vanaf adrescontrole en bezoeken indelen tot centraal opslaan, terugladen en live routeberekening.
+Deze productierelease maakt de centrale route-, database- en historielaag stabiel voor dagelijks gebruik. v11.3.0 houdt een ongewijzigde groene route groen zonder opnieuw TomTom aan te roepen, controleert klantcoördinaten vóór planning en import en rondt bezoeken op laptop en iPhone atomair af.
 
 ## Belangrijkste verbeteringen
 
@@ -17,6 +17,9 @@ Deze kwaliteitsrelease bundelt laptop en iPhone rond één centrale route-, tijd
 - Het zichtbare development-/versielabel is verwijderd en de mobiele pagina kan niet per ongeluk worden ingezoomd.
 - Alleen het e-mailadres kan worden onthouden; wachtwoorden worden nooit in browseropslag bewaard.
 - Beheer toont alle gebruikers bij Live Locaties, ook als er nog geen positie is. Een beheerder kan per gebruiker een sessie van 30 minuten live volgen starten; de actieve app vraagt dan iedere minuut een positie op.
+- Ongewijzigde groene dagen worden aan de hand van een invoerhash hergebruikt. Alleen een routebepalende wijziging start een nieuwe complete TomTom-berekening.
+- De database toont locatiekwaliteit en filters voor alle, actieve en inactieve klanten; import controleert ontbrekende coördinaten vóór upload.
+- Afronden gebruikt de atomaire RPC `complete_visit`, zodat een klantnummer nooit meer in een UUID-veld terechtkomt en planning en historie niet half kunnen worden opgeslagen.
 
 ## Installeren of bijwerken
 
@@ -26,20 +29,23 @@ Maak eerst een databaseback-up en test op een afzonderlijke Supabase-ontwikkelom
 
 1. Maak eerst een databaseback-up.
 2. Als v11-core nog niet is geïnstalleerd: voer `SUPABASE_V11_0_CORE.sql` uit.
-3. Voer daarna altijd `SUPABASE_V11_1_RELEASE.sql` uit. Dit bestand is veilig opnieuw uitvoerbaar.
-4. Deploy opnieuw de Edge Functions `admin-users` en `tomtom-proxy`.
-5. Bouw en publiceer de app en voer de live acceptatiepunten uit.
+3. Voer daarna `SUPABASE_V11_1_RELEASE.sql` uit als dat nog niet is gebeurd.
+4. Voer `SUPABASE_V11_2_RELEASE.sql` uit als dat nog niet is gebeurd.
+5. Voer daarna `SUPABASE_V11_3_RELEASE.sql` uit. Dit voegt de atomaire bezoekafronding en unieke historiekoppeling toe.
+6. Deploy de meegeleverde Edge Function `tomtom-proxy` als v11.2 nog niet actief was.
+7. Bouw en publiceer de app en voer de live acceptatiepunten uit.
 
-De migratie is herhaalbaar en voegt de nieuwe kolommen, indexen, private Storage-regels en vier beveiligde RPC's toe:
+De releasemigraties zijn herhaalbaar en voegen de benodigde kolommen, indexen, private Storage-regels en beveiligde RPC's toe:
 
 - `save_user_app_settings`
 - `save_day_route`
 - `replan_history_visit`
 - `move_planning_day`
+- `complete_visit`
 
 ### Nieuw, leeg Supabase-project
 
-Voer in deze volgorde uit: `SUPABASE_V10_7_DEV_BASELINE.sql` en daarna `SUPABASE_V11_1_RELEASE.sql`. De historische baseline bevat de centrale v11-routefuncties; de v11.1-migratie voegt het complete Live Locaties-schema en 30-minutensessies toe.
+Voer in deze volgorde uit: `SUPABASE_V10_7_DEV_BASELINE.sql`, `SUPABASE_V11_1_RELEASE.sql`, `SUPABASE_V11_2_RELEASE.sql` en `SUPABASE_V11_3_RELEASE.sql`.
 
 Maak geen gebruikers, wachtwoorden, service-role-key of productiegegevens onderdeel van de repository.
 
@@ -121,6 +127,10 @@ De geautomatiseerde suite controleert code, simulaties, beveiligingscontracten, 
 - `PDF_README_V11.0.md` – ketenprofielen, velden en foto-ophaalwijze
 - `SUPABASE_V11_0_CORE.sql` – migratie voor een bestaande v10.11-database
 - `SUPABASE_V11_1_RELEASE.sql` – Live Locaties, 30 minuten live volgen en v11.1-herstel
+- `SUPABASE_V11_3_RELEASE.sql` – atomaire bezoekafronding en unieke historiekoppeling
+- `CHANGELOG_V11.3.md` – functionele wijzigingen en gewijzigde bestanden
+- `TESTCONTROLE_V11.3.md` – werkelijk uitgevoerde tests en vijf live controles
+- `INSTALLATIE_V11.3.md` – stappen voor de huidige GitHub- en Supabase-omgeving
 - `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
 - `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
 

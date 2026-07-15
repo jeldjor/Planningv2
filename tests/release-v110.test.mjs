@@ -12,9 +12,9 @@ const [script,laptop,mobile,manifestText,pkgText]=await Promise.all([
 
 test('v10.10 modules zijn syntactisch geldig en lokaal geladen',()=>{
   new vm.Script(script,{filename:'v110.js'});
-  assert.equal(JSON.parse(pkgText).version,'11.1.2');
+  assert.equal(JSON.parse(pkgText).version,'11.3.0');
   for(const html of [laptop,mobile]){
-    assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=11000/);assert.match(html,/v110\.js\?v=111200/);
+    assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=11000/);assert.match(html,/v110\.js\?v=112000/);
     assert.doesNotMatch(html,/cdn\.jsdelivr\.net\/npm\/jspdf/);
   }
 });

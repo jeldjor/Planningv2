@@ -26,6 +26,12 @@ test('gewone synchronisatie start geen herberekening van alle geplande dagen',()
   assert.match(v110,/makeDatesLive\(\[newDate\]/);
 });
 
+test('oude planner kan niet vóór de centrale engine een tweede routecyclus starten',()=>{
+  assert.match(v110,/const priorCalculateRoutesForDates=window\.calculateRoutesForDates/);
+  assert.match(v110,/window\.calculateRoutesForDates=async\(\)=>true/);
+  assert.match(v110,/window\.calculateRoutesForDates=priorCalculateRoutesForDates/);
+});
+
 test('Realtime is op laptop en iPhone begrensd tot de actieve werkruimte',()=>{
   assert.match(v11,/const filter=`user_id=eq\.\$\{workspace\(\)\}`/);
   assert.match(laptop,/const filter='user_id=eq\.'\+workspaceId/);
@@ -61,8 +67,8 @@ test('oude DEV-module wordt niet meer geladen en releasecache is vernieuwd',()=>
   assert.doesNotMatch(mobile,/src="v111\.js/);
   assert.doesNotMatch(laptop,/src="v111\.js/);
   assert.match(mobile,/maximum-scale=1,user-scalable=no/);
-  assert.match(mobile,/v110\.js\?v=111200/);
-  assert.match(laptop,/v108\.js\?v=111200/);
+  assert.match(mobile,/v110\.js\?v=112000/);
+  assert.match(laptop,/v108\.js\?v=112000/);
   assert.doesNotMatch(v110,/maximaal 45 seconden/);
 });
 
@@ -71,16 +77,16 @@ test('serverfuncties rollen onvolledige accounts terug en begrenzen externe verz
   assert.match(adminEdge,/body\.action === 'delete'/);
   assert.match(adminEdge,/targetProfile\.role === 'admin'/);
   assert.match(tomtomEdge,/query\.length > 250/);
-  assert.match(tomtomEdge,/TomTom-geocodering reageerde niet binnen 15 seconden/);
-  assert.match(tomtomEdge,/for \(let index = 0; index < legs\.length/);
+  assert.match(tomtomEdge,/TOMTOM_TIMEOUT/);
+  assert.match(tomtomEdge,/Math\.min\(4, legs\.length\)/);
   assert.match(tomtomEdge,/response\.status === 429 \|\| response\.status >= 500/);
-  assert.match(tomtomEdge,/return json\(\{ error:/);
+  assert.match(tomtomEdge,/return applicationError/);
   assert.match(core,/async function edgeFailureMessage/);
   assert.match(laptop,/adminDeleteUser/);
   assert.match(mobile,/mDeleteUser/);
 });
 
 test('iPhone houdt planning laden gescheiden van een tijdelijke TomTom-fout',()=>{
-  assert.match(mobile,/Planning is geladen, maar de live route kon nog niet worden berekend/);
+  assert.doesNotMatch(mobile,/Automatische live route/);
   assert.doesNotMatch(mobile,/if\(todayRows\.some\(v=>!v\.routeLive\)\)await recalculateMobileDayRoute/);
 });

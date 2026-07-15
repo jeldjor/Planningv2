@@ -35,28 +35,10 @@
       if(!client||!edit?.id)return false;
       const saved=await client.from('planning').update({starttijd:edit.start||null,eindtijd:edit.end||null,updated_at:new Date().toISOString()}).eq('id',edit.id).select('datum').single();
       if(saved.error)throw saved.error;
-      const date=saved.data.datum;
-      const plan=await client.from('planning').select('id,customer_id,route_volgorde').eq('datum',date).order('route_volgorde',{ascending:true});
-      if(plan.error)throw plan.error;
-      const ids=[...new Set((plan.data||[]).map(x=>x.customer_id).filter(Boolean))];
-      const customers=ids.length?await client.from('customers').select('id,latitude,longitude').in('id',ids):{data:[],error:null};
-      if(customers.error)throw customers.error;
-      const byId=new Map((customers.data||[]).map(c=>[String(c.id),c]));
-      const settings=window.GJ_MOBILE?.state?.()?.settings||{},startLat=Number.parseFloat(settings.startLat),startLng=Number.parseFloat(settings.startLng);
-      if(!Number.isFinite(startLat)||!Number.isFinite(startLng))throw new Error('Stel eerst een geldige centrale startlocatie in.');
-      let previous={latitude:startLat,longitude:startLng};
-      for(const row of plan.data||[]){
-        const current=byId.get(String(row.customer_id));
-        if(!current)continue;
-        const body={action:'route',fromLat:Number(previous.latitude),fromLon:Number(previous.longitude),toLat:Number(current.latitude),toLon:Number(current.longitude),mode:'car'};
-        const route=await client.functions.invoke('tomtom-proxy',{body});
-        const summary=route.data?.routes?.[0]?.summary;
-        const patch={route_live:!!summary,route_mode:'car',updated_at:new Date().toISOString()};
-        if(summary){patch.reistijd_min=Math.max(1,Math.round(summary.travelTimeInSeconds/60))+15;patch.afstand_km=Math.round(summary.lengthInMeters/100)/10}
-        const update=await client.from('planning').update(patch).eq('id',row.id);
-        if(update.error)throw update.error;
-        previous=current;
-      }
+      // Ook deze oude eventroute gebruikt uitsluitend de gedeelde dagengine.
+      // Geen losse trajecten meer die het centrale huis-tot-huis-resultaat
+      // kunnen overschrijven.
+      await window.GJ_MOBILE?.recalculate?.(saved.data.datum,false);
       return true;
     };
     return;

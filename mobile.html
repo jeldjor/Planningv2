@@ -307,7 +307,7 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=111200"></script>
+<script src="planning-core.js?v=113000"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style id="gjMobileAdminCss">
@@ -434,12 +434,13 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 </style>
 <link rel="stylesheet" href="v105.css?v=10500">
 <link rel="stylesheet" href="v106.css?v=10700">
-<link rel="stylesheet" href="v108.css?v=111200">
+<link rel="stylesheet" href="v108.css?v=112000">
 <link rel="stylesheet" href="v1082.css?v=10820">
 <link rel="stylesheet" href="v109.css?v=10900">
-<link rel="stylesheet" href="v110.css?v=111200">
-<link rel="stylesheet" href="v111.css?v=11100">
-<link rel="stylesheet" href="v11.css?v=111200">
+<link rel="stylesheet" href="v110.css?v=112000">
+<link rel="stylesheet" href="v111.css?v=112000">
+<link rel="stylesheet" href="v11.css?v=112000">
+<link rel="stylesheet" href="v113.css?v=113000">
 </head>
 <body>
 <div id="splash" class="splash"><div class="logoBox"><img src="logo-menu.png?v=10820" alt="GJ Systems — The Smarter Way"></div></div>
@@ -592,7 +593,7 @@ async function loadPlanningFromSupabase(){
     const customerIds=new Set(db.customers.map(c=>c.id));
     db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),fixedStart:String(p.fixed_starttijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,parking:Number(p.parking_min||0),distanceKm:kms,routeLive:p.route_live===true,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true,rescheduledFromHistoryId:p.rescheduled_from_history_id||null}});
     db.dayDepartures={};db.mobileRouteStats={};db.pauseEnabled={};
-    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route&&Number.isFinite(Number(route.km))&&Number.isFinite(Number(route.travelMin)))db.mobileRouteStats[r.datum]={km:Number(route.km),min:Number(route.travelMin),live:route.live===true,includesReturn:true,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
+    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route&&Number.isFinite(Number(route.km))&&Number.isFinite(Number(route.travelMin)))db.mobileRouteStats[r.datum]={km:Number(route.km),min:Number(route.travelMin),live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
     db.blocks=absRes.error?[]:(absRes.data||[]).map(r=>({id:String(r.id),type:r.type||'Overig',start:r.start_date,end:r.end_date||r.start_date,startTime:String(r.start_time||'').slice(0,5),endTime:String(r.end_time||'').slice(0,5),note:r.note||'',fromSupabase:true}));
     db.settings={...db.settings,...settingsRes,language:settingsRes.language||db.settings.language||'nl'};
     save();return true;
@@ -605,12 +606,9 @@ async function saveDepartureToSupabase(date,value){
   save();renderAll();
 }
 async function mobileTomTomLeg(from,to,mode='car'){
-  if(!sb||![from?.lat,from?.lng,to?.lat,to?.lng].every(x=>Number.isFinite(Number(x))))return null;
-  const {data,error}=await sb.functions.invoke('tomtom-proxy',{body:{action:'route',fromLat:Number(from.lat),fromLon:Number(from.lng),toLat:Number(to.lat),toLon:Number(to.lng),mode}});
-  if(error||data?.error)return null;
-  const summary=data?.routes?.[0]?.summary;
-  if(!summary)return null;
-  return {min:Math.max(1,Math.round(Number(summary.travelTimeInSeconds)/60)),km:Math.round(Number(summary.lengthInMeters)/100)/10,live:true};
+  if(!sb||!window.GJPlanningCore)return null;
+  const routes=await window.GJPlanningCore.requestRouteBatch(sb,[{from,to,mode}]);
+  return routes[0]||null;
 }
 function mobileDistanceKm(a,b){
   const lat1=Number(a?.lat),lon1=Number(a?.lng),lat2=Number(b?.lat),lon2=Number(b?.lng);
@@ -627,19 +625,19 @@ async function recalculateMobileDayRoute(date,optimize=false){
     const home={lat:Number.parseFloat(db.settings.startLat),lng:Number.parseFloat(db.settings.startLng)};
     if(!window.GJPlanningCore.hasPoint(home))throw new Error('Vul bij Instellingen een geldige startbreedte- en lengtegraad in.');
     const input=rows.map(v=>({...v,customer:customer(v.customerId),fixedStart:v.fixedStart||null}));
-    const calculated=await window.GJPlanningCore.calculateDay({
-      sb,workspaceId:window.GJ_AUTH?.workspaceUserId,date,
-      departure:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',
+    const routeArgs={date,departure:(db.dayDepartures||{})[date]||db.settings.depart||'08:00',
       visits:input,absences:db.blocks||[],home,
       parkingMinutes:Number(db.settings.parking??15),walkThresholdMeters:Number(db.settings.walk??300),
-      optimize,pauseEnabled:(db.pauseEnabled||{})[date]!==false
-    });
+      pauseEnabled:(db.pauseEnabled||{})[date]!==false};
+    const inputHash=window.GJPlanningCore.routeInputHash(routeArgs),current=db.mobileRouteStats?.[date];
+    if(!optimize&&window.GJPlanningCore.canReuseDayRoute(current,inputHash)){renderAll();return true}
+    const calculated=await window.GJPlanningCore.calculateDay({sb,workspaceId:window.GJ_AUTH?.workspaceUserId,...routeArgs,optimize});
     calculated.visits.forEach((ordered,index)=>{
       const visit=db.visits.find(v=>v.id===ordered.id),row=calculated.result.rows[index];if(!visit||!row)return;
       visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.travel=row.travelMin;visit.parking=row.parkingMin;visit.distanceKm=row.distanceKm;visit.routeLive=row.routeLive;visit.mode=row.routeMode==='walk'?'walk':'drive';visit.leg=(row.routeMode==='walk'?'🚶 ':'🚗 ')+fmtTravel(row.travelMin)+(row.distanceKm?' · '+fmtKm(row.distanceKm):'');
     });
     db.mobileRouteStats=db.mobileRouteStats||{};
-    db.mobileRouteStats[date]={km:calculated.result.totals.km,min:calculated.result.totals.travelMin,live:calculated.result.live,includesReturn:true,updatedAt:calculated.result.calculatedAt};
+    db.mobileRouteStats[date]={km:calculated.result.totals.km,min:calculated.result.totals.travelMin,live:calculated.result.live,includesReturn:true,returnLeg:calculated.result.returnLeg||null,inputHash:calculated.result.inputHash||null,updatedAt:calculated.result.calculatedAt};
     save();renderAll();return true;
   });
 }
@@ -765,15 +763,10 @@ async function finish(status){
   v.status=status;v.activity=$('finishActivity').value.trim();v.summary=$('finishSummary').value.trim();v.completedAt=new Date().toISOString();
   let uploaded=[];
   if(sb&&v.planningId){
-    const upd=await sb.from('planning').update({status,uitgevoerd:status==='Uitgevoerd',updated_at:new Date().toISOString()}).eq('id',v.planningId).select('id,status,uitgevoerd').single();
-    if(upd.error)throw new Error('Status niet opgeslagen: '+upd.error.message);
-    if(upd.data.status!==status)throw new Error('De opgeslagen status kon niet worden bevestigd.');
-    const historyRow={customer_id:v.customerId,planning_id:v.planningId,bezoekdatum:v.date,starttijd:v.time||null,eindtijd:v.end||null,activiteit:v.activity,samenvatting:v.summary,opmerkingen:'',reden:status==='Niet uitgevoerd'?v.summary:null,status,duur_min:durationOf(v),afstand_km:Number(v.distanceKm||0),reistijd_min:Number(v.travel||0),afgerond:true,updated_at:new Date().toISOString()};
-    const existing=await sb.from('visit_history').select('id').eq('planning_id',v.planningId).order('created_at',{ascending:false}).limit(1).maybeSingle();
-    if(existing.error)throw new Error('Bezoekhistorie controleren mislukt: '+existing.error.message);
-    let historyId=existing.data?.id;
-    if(historyId){const hist=await sb.from('visit_history').update(historyRow).eq('id',historyId);if(hist.error)throw new Error('Bezoekhistorie bijwerken mislukt: '+hist.error.message)}
-    else{const hist=await sb.from('visit_history').insert(historyRow).select('id').single();if(hist.error)throw new Error('Bezoekhistorie opslaan mislukt: '+hist.error.message);historyId=hist.data.id}
+    const completed=await sb.rpc('complete_visit',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_planning_id:v.planningId,p_status:status,p_activity:v.activity||'',p_summary:v.summary||'',p_start:v.time||null,p_end:v.end||null,p_duration:durationOf(v),p_distance:Number(v.distanceKm||0),p_travel:Number(v.travel||0)});
+    if(completed.error){if(/does not exist|schema cache|PGRST202/i.test(String(completed.error.message||'')))throw new Error('De veilige historie-opslag ontbreekt. Voer SUPABASE_V11_3_RELEASE.sql uit.');throw new Error('Opdracht opslaan mislukt: '+completed.error.message)}
+    const historyId=completed.data?.history_id;
+    if(!historyId)throw new Error('Supabase heeft geen historie-ID teruggegeven.');
     if(selectedFiles.length)uploaded=await uploadVisitPhotos(historyId,v.planningId,selectedFiles);
   }
   v.status=status;
@@ -841,7 +834,7 @@ window.GJ_MOBILE={
     await window.GJPlanningCore.saveUserSettings(sb,db.settings,window.GJ_AUTH?.workspaceUserId);localStorage.setItem('gj_app_language',db.settings.language);save();await recalculateMobileDayRoute(todayIso(),false);renderAll();
   }
 };
-let appInitialized=false;async function initAfterAuth(){if(appInitialized||!window.GJ_AUTH?.profile||!window.GJ_AUTH?.sb)return;appInitialized=true;sb=window.GJ_AUTH.sb;try{await init()}catch(e){appInitialized=false;console.error(e);alert('Planning laden mislukt: '+e.message);return}const todayRows=db.visits.filter(v=>v.date===todayIso()&&v.status!=='Uit planning');if(todayRows.some(v=>!v.routeLive)){try{await recalculateMobileDayRoute(todayIso(),false)}catch(e){console.error('Automatische live route:',e);alert('Planning is geladen, maar de live route kon nog niet worden berekend: '+e.message)}}}window.addEventListener('gj-auth-ready',initAfterAuth);window.addEventListener('load',initAfterAuth);setTimeout(()=>{const s=$('splash');if(s){s.classList.add('hide');s.style.display='none'}},2000);
+let appInitialized=false;async function initAfterAuth(){if(appInitialized||!window.GJ_AUTH?.profile||!window.GJ_AUTH?.sb)return;appInitialized=true;sb=window.GJ_AUTH.sb;try{await init()}catch(e){appInitialized=false;console.error(e);alert('Planning laden mislukt: '+e.message);return}}window.addEventListener('gj-auth-ready',initAfterAuth);window.addEventListener('load',initAfterAuth);setTimeout(()=>{const s=$('splash');if(s){s.classList.add('hide');s.style.display='none'}},2000);
 })();
 </script>
 
@@ -1143,8 +1136,9 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v105.js?v=10500"></script>
 <script src="v1082.js?v=10820"></script>
 <script src="v106.js?v=10700"></script>
-<script src="v108.js?v=111200"></script>
-<script src="v109.js?v=10900&amp;hotfix=centralstats1"></script>
-<script src="v110.js?v=111200&amp;hotfix=centralstats1"></script>
-<script src="v11.js?v=111200"></script>
+<script src="v108.js?v=112000"></script>
+<script src="v109.js?v=112000"></script>
+<script src="v110.js?v=112000"></script>
+<script src="v11.js?v=113000"></script>
+<script src="v113.js?v=113000"></script>
 </body></html>
