@@ -84,8 +84,8 @@ test('beide apparaten laden runtimeconfig en de centrale v11-productiekern', asy
     assert.match(html, /v110\.css\?v=112000/);
     assert.match(html, /v110\.js\?v=112000/);
     assert.match(html, /visit-pdf\.js\?v=11000/);
-    assert.match(html, /planning-core\.js\?v=113001/);
-    assert.match(html, /v11\.js\?v=113000/);
+    assert.match(html, /planning-core\.js\?v=113002/);
+    assert.match(html, /v11\.js\?v=113001/);
     assert.doesNotMatch(html, />v10\.\d+ DEV</);
   }
 });

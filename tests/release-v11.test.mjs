@@ -25,16 +25,16 @@ test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten gelad
   new vm.Script(app,{filename:'v11.js'});
   assert.equal(JSON.parse(pkg).version,'11.3.0');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=113001/);
+    assert.match(html,/planning-core\.js\?v=113002/);
     assert.match(html,/v11\.css\?v=112000/);
-    assert.match(html,/v11\.js\?v=113000/);
+    assert.match(html,/v11\.js\?v=113001/);
   }
 });
 
 test('dagengine telt huis-klanten-huis en schuift werk volledig voorbij afwezigheid',()=>{
   const result=core.buildDay({
     date:'2026-07-15',departure:'08:00',parkingMinutes:15,
-    visits:[{id:'a',duration:30},{id:'b',duration:30}],
+    visits:[{id:'a',duration:30,customer:{opening:'00:00-23:59'}},{id:'b',duration:30,customer:{opening:'00:00-23:59'}}],
     absences:[{start_date:'2026-07-15',end_date:'2026-07-15',start_time:'10:00',end_time:'11:00',type:'Training'}],
     legs:[{min:60,km:50,mode:'car',live:true},{min:30,km:20,mode:'car',live:true},{min:20,km:15,mode:'car',live:true}]
   });
@@ -133,7 +133,7 @@ test('Supabase-routeopslag is één gecontroleerde dagmutatie',()=>{
 });
 
 test('centrale dagengine verwerkt pauze en heeft geen hardgecodeerde woonlocatie',()=>{
-  const result=core.buildDay({date:'2026-07-15',departure:'11:00',parkingMinutes:0,pauseEnabled:true,pauseMinutes:30,visits:[{id:'a',duration:30},{id:'b',duration:30}],legs:[{min:20,km:10,mode:'car',live:true},{min:20,km:10,mode:'car',live:true},{min:20,km:10,mode:'car',live:true}]});
+  const result=core.buildDay({date:'2026-07-15',departure:'11:00',parkingMinutes:0,pauseEnabled:true,pauseMinutes:30,visits:[{id:'a',duration:30,customer:{opening:'00:00-23:59'}},{id:'b',duration:30,customer:{opening:'00:00-23:59'}}],legs:[{min:20,km:10,mode:'car',live:true},{min:20,km:10,mode:'car',live:true},{min:20,km:10,mode:'car',live:true}]});
   assert.equal(result.totals.pauseMin,30);
   assert.equal(result.rows[1].start,'12:40');
   assert.doesNotMatch(laptop,/startLat\?\?51\.6889|startLng\?\?5\.3039/);

@@ -47,9 +47,9 @@ test('database heeft locatiebolletjes, actieve filters en importcontrole vóór 
 
 test('datumvelden blijven compact naast elkaar en release-assets worden gedeployed',()=>{
   assert.match(v113,/v113CompactDates/);assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
-  assert.match(laptop,/v113\.css\?v=113000/);assert.match(laptop,/v113\.js\?v=113000/);
+  assert.match(laptop,/v113\.css\?v=113001/);assert.match(laptop,/v113\.js\?v=113000/);
   assert.match(mobile,/v113\.js\?v=113000/);assert.match(build,/'v113\.js', 'v113\.css'/);
-  assert.match(worker,/planning-gjsystems-shell-v11\.3\.0-r2/);
+  assert.match(worker,/planning-gjsystems-shell-v11\.3\.0-r3/);
 });
 
 test('grote bezoekfoto’s worden vóór laptop- en iPhone-upload veilig verkleind',async()=>{
@@ -61,4 +61,15 @@ test('grote bezoekfoto’s worden vóór laptop- en iPhone-upload veilig verklei
   assert.match(mobile,/prepareVisitPhoto\(originalFile\)/);
   assert.match(laptop,/originalFile\.name,originalFile\.size,originalFile\.lastModified,originalFile\.type/);
   assert.match(mobile,/photoFingerprint\(originalFile\)/);
+});
+
+test('volgordewijzigingen respecteren opening en sluiting op laptop en iPhone',()=>{
+  assert.deepEqual(core.openingWindowForDate({tekst:'Ma-Za 10:00-18:00; Zo gesloten'},'2026-07-15'),{open:'10:00',close:'18:00',closed:false});
+  assert.deepEqual(core.openingWindowForDate({tekst:'Ma-Za 10:00-18:00; Zo gesloten'},'2026-07-19'),{open:'',close:'',closed:true});
+  const early=core.buildDay({date:'2026-07-15',departure:'08:00',parkingMinutes:0,pauseEnabled:false,visits:[{id:'a',duration:30,customer:{name:'Testwinkel',opening:{tekst:'Ma-Za 10:00-18:00'}}}],legs:[{min:30,km:10,mode:'car',live:true},{min:20,km:10,mode:'car',live:true}]});
+  assert.equal(early.rows[0].start,'10:00');assert.equal(early.rows[0].end,'10:30');
+  assert.throws(()=>core.buildDay({date:'2026-07-15',departure:'17:30',parkingMinutes:0,pauseEnabled:false,visits:[{id:'a',duration:30,customer:{name:'Testwinkel',opening:{tekst:'Ma-Za 10:00-18:00'}}}],legs:[{min:20,km:10,mode:'car',live:true},{min:20,km:10,mode:'car',live:true}]}),/past niet vóór sluitingstijd 18:00/);
+  assert.match(laptop,/routeOpeningTime\(c,date\)/);assert.match(mobile,/openingWindowForDate\(c\.opening,v\.date\)/);
+  assert.match(mobile,/const original=new Map\(vs\.map\(v=>\[v\.id,v\.order\]\)\)/);
+  assert.match(v11,/opening:customer\?\.Openingstijden/);
 });
