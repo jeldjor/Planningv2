@@ -15,7 +15,36 @@ function createDom({ admin = false } = {}) {
   return dom;
 }
 
+function createLaptopDom() {
+  const dom = new JSDOM('<!doctype html><body data-gj-device-location="disabled"><section id="admin"></section></body>', {
+    runScripts: 'outside-only', url: 'https://development.example.test/laptop.html'
+  });
+  Object.defineProperty(dom.window.navigator, 'onLine', { configurable: true, value: true });
+  dom.window.eval(source);
+  return dom;
+}
+
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+test('laptop vraagt nooit browserlocatie en toont geen toestemmingsvenster', async () => {
+  const dom = createLaptopDom();
+  let gpsCalls = 0, permissionCalls = 0;
+  Object.defineProperty(dom.window.navigator, 'geolocation', { configurable: true, value: { getCurrentPosition() { gpsCalls += 1; } } });
+  Object.defineProperty(dom.window.navigator, 'permissions', { configurable: true, value: { async query() { permissionCalls += 1; return { state: 'prompt' }; } } });
+  dom.window.GJ_AUTH = { profile: { id: 'user-a' }, realUserId: 'user-a', impersonating: false, identitySb: {} };
+  const manager = dom.window.__GJ_LIVE_LOCATIONS_V108__.manager;
+  manager.initialized = true;
+  manager.central = { enabled: true, update_interval_minutes: 10 };
+  manager.own = { admin_enabled: true, route_location_enabled: true, app_prompt_state: 'accepted', permission_state: 'granted' };
+  await manager.reconcile({ direct: true });
+  manager.showConsent();
+  await manager.triggerLocation('laptopcontrole', true);
+  assert.equal(dom.window.document.getElementById('v108Consent'), null);
+  assert.equal(gpsCalls, 0);
+  assert.equal(permissionCalls, 0);
+  assert.equal(manager.locationTimer, null);
+  manager.destroy();
+});
 
 test('centraal uit toont geen toestemmingsmelding en vraagt geen GPS', async () => {
   const dom = createDom();

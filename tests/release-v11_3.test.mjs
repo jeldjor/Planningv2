@@ -49,5 +49,16 @@ test('datumvelden blijven compact naast elkaar en release-assets worden gedeploy
   assert.match(v113,/v113CompactDates/);assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
   assert.match(laptop,/v113\.css\?v=113000/);assert.match(laptop,/v113\.js\?v=113000/);
   assert.match(mobile,/v113\.js\?v=113000/);assert.match(build,/'v113\.js', 'v113\.css'/);
-  assert.match(worker,/planning-gjsystems-shell-v11\.3\.0/);
+  assert.match(worker,/planning-gjsystems-shell-v11\.3\.0-r2/);
+});
+
+test('grote bezoekfoto’s worden vóór laptop- en iPhone-upload veilig verkleind',async()=>{
+  const small={type:'image/jpeg',size:1024,name:'klein.jpg'};
+  assert.equal(await core.prepareVisitPhoto(small),small);
+  assert.match(String(core.prepareVisitPhoto),/8\*1024\*1024/);
+  assert.match(String(core.prepareVisitPhoto),/maxDimension=2560/);
+  assert.match(laptop,/GJPlanningCore\.prepareVisitPhoto\(originalFile\)/);
+  assert.match(mobile,/prepareVisitPhoto\(originalFile\)/);
+  assert.match(laptop,/originalFile\.name,originalFile\.size,originalFile\.lastModified,originalFile\.type/);
+  assert.match(mobile,/photoFingerprint\(originalFile\)/);
 });
