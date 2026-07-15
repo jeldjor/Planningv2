@@ -4,7 +4,7 @@ Uitgevoerd op 15 juli 2026.
 
 ## Automatische controles
 
-- `npm test`: 77 geslaagd, 0 mislukt.
+- `npm test`: 79 geslaagd, 0 mislukt.
 - `npm run test:pdf`: 14 scenario's gegenereerd, 0 mislukt.
 - `npm run build`: deploymentmap succesvol gemaakt.
 - Alle inline scripts van laptop en iPhone zijn syntactisch compileerbaar.
@@ -19,6 +19,7 @@ Uitgevoerd op 15 juli 2026.
 - Laptop leest trajectstatus uit de opgeslagen planning en de terugrit uit de centrale dagstatus.
 - Laptop wist bij een normale synchronisatie geen geldige routegegevens.
 - iPhone-login laadt planning zonder automatisch alle externe routes opnieuw te starten.
+- De laptop kan geen locatieprompt, browserpermissiecontrole, GPS-aanroep of locatietimer starten; de iPhone-flow blijft actief.
 - Een gedeeltelijk TomTom-antwoord kan niet als groene route worden opgeslagen.
 - Huis, alle bezoeken en de terugrit naar huis tellen mee in kilometers en rijtijd.
 
@@ -29,6 +30,7 @@ Uitgevoerd op 15 juli 2026.
 - Coördinatenstatus onderscheidt geldig, automatisch gevonden en ongeldig.
 - Import controleert en herstelt coördinaten vóór upload en blokkeert rode regels.
 - Laptop en iPhone ronden bezoeken af via `complete_visit`.
+- Laptop en iPhone verwerken bezoekfoto's via dezelfde maximale bestandsgrootte en automatische JPEG-compressie.
 - De functie is in het gekoppelde Supabase-project werkelijk uitgevoerd binnen een teruggedraaide testtransactie.
 - De functie is `SECURITY INVOKER`, niet uitvoerbaar door `anon` en wel door `authenticated`.
 - Na de teruggedraaide test waren planning en historie aantoonbaar ongewijzigd.
@@ -51,4 +53,3 @@ Uitgevoerd op 15 juli 2026.
 3. Rond één testbezoek met één foto af en open het daarna in Historie.
 4. Importeer een klein Excel-bestand met één geldige en één ontbrekende coördinaat en controleer de locatiebolletjes.
 5. Wissel in de database tussen Alle, Actief en Inactief en zet één testklant tijdelijk inactief en weer actief.
-

@@ -307,7 +307,7 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=113000"></script>
+<script src="planning-core.js?v=113001"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style id="gjMobileAdminCss">
@@ -442,7 +442,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v11.css?v=112000">
 <link rel="stylesheet" href="v113.css?v=113000">
 </head>
-<body>
+<body data-gj-device-location="enabled">
 <div id="splash" class="splash"><div class="logoBox"><img src="logo-menu.png?v=10820" alt="GJ Systems — The Smarter Way"></div></div>
 <header class="header"><div class="profileBlock"><button id="profileButton" class="profileButton" type="button" aria-label="Profielfoto. Wijzigen via Instellingen → Profiel"><span class="profileFallback">♙</span><img id="profileImage" alt="Profielfoto"></button><input id="profileFile" type="file" accept="image/*" style="display:none"><div id="headerUserName" class="headerUserName">Gebruiker</div></div><div class="headerActions"><button id="syncBtn" class="syncBtn" type="button" aria-label="Synchroniseren"><span class="syncIcon">↻</span> <span data-key="sync">Sync</span></button><button id="menuBtn" class="menuBtn" type="button"><span class="menuIcon">☰</span><span data-key="menu">MENU</span></button></div></header>
 <nav id="menuPanel" class="menuPanel">
@@ -730,17 +730,14 @@ function openDay(iso){
 function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();const active=document.querySelector('.screen.active')?.id||'today';if(active==='today')renderToday();else if(active==='calendar')openDay(selectedCalendarDate);else if(active==='overview')renderOverview();else if(active==='absence')renderAbsence();else if(active==='historyMobile')renderMobileHistory()}
 async function saveVisitOrderToSupabase(date){const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning').sort((a,b)=>(a.order||999)-(b.order||999));for(let i=0;i<rows.length;i++){const result=await sb.from('planning').update({route_volgorde:i+1,route_live:false,updated_at:new Date().toISOString()}).eq('id',rows[i].planningId);if(result.error)throw result.error;rows[i].order=i+1}}
 async function move(id,dir){const vs=todayVisits(true).filter(v=>!v.pause&&v.status!=='Uit planning'),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const original=vs.map(v=>v.order);try{[vs[i],vs[j]]=[vs[j],vs[i]];vs.forEach((v,idx)=>v.order=idx+1);renderAll();await recalculateMobileDayRoute(todayIso(),false)}catch(error){vs.forEach((v,idx)=>v.order=original[idx]);renderAll();alert('Volgorde opslaan mislukt: '+error.message)}}function photoFingerprint(f){return [f?.name||'',f?.size||0,f?.lastModified||0,f?.type||''].join('|')}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){const known=new Set(pendingFinishFiles.map(photoFingerprint));for(const f of Array.from(files||[])){const key=photoFingerprint(f);if(f&&String(f.type||'').startsWith('image/')&&!known.has(key)){known.add(key);pendingFinishFiles.push(f)}}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
- // Bewaar het originele bestand ongewijzigd. Zo blijven resolutie, kwaliteit,
- // bestandstype en metadata behouden bij openen en opslaan op de laptop.
- if(!file || !String(file.type||'').startsWith('image/')) return file;
- return file;
+ return window.GJPlanningCore.prepareVisitPhoto(file);
 }
 async function uploadVisitPhotos(historyId,planningId,files){
  const saved=[];
  for(let i=0;i<files.length;i++){
-  const file=await prepareVisitPhoto(files[i]);
+  const originalFile=files[i],file=await prepareVisitPhoto(originalFile);
   const safe=(file.name||('foto-'+(i+1)+'.jpg')).replace(/[^a-zA-Z0-9._-]/g,'_');
-  let hash=2166136261;for(const ch of photoFingerprint(file)){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619)}
+  let hash=2166136261;for(const ch of photoFingerprint(originalFile)){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619)}
   const path=String(planningId||'zonder-planning')+'/'+String(historyId)+'/'+(hash>>>0).toString(16)+'-'+safe;
   const existing=await sb.from('visit_photos').select('id').eq('history_id',historyId).eq('file_path',path).maybeSingle();
   if(existing.error)throw new Error('Fotocontrole mislukt: '+existing.error.message);
@@ -749,7 +746,7 @@ async function uploadVisitPhotos(historyId,planningId,files){
   if(up.error&&!duplicate){console.error('Foto upload mislukt:',up.error);throw new Error('Foto upload mislukt: '+up.error.message)}
   if(!existing.data){const row=await sb.from('visit_photos').insert({history_id:historyId,file_path:path});if(row.error){console.error('Fotokoppeling opslaan mislukt:',row.error);throw new Error('Foto kon niet aan bezoek worden gekoppeld: '+row.error.message)}}
   const signed=await sb.storage.from('visit-photos').createSignedUrl(path,900);
-  saved.push({name:file.name||safe,data:signed.error?'':signed.data.signedUrl,path});
+  saved.push({name:originalFile.name||file.name||safe,data:signed.error?'':signed.data.signedUrl,path});
  }
  return saved;
 }
@@ -1136,7 +1133,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v105.js?v=10500"></script>
 <script src="v1082.js?v=10820"></script>
 <script src="v106.js?v=10700"></script>
-<script src="v108.js?v=112000"></script>
+<script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
 <script src="v110.js?v=112000"></script>
 <script src="v11.js?v=113000"></script>

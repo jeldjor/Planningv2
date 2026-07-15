@@ -1,6 +1,6 @@
 /* Planning-GJsystems v11.3 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
 'use strict';
-const CACHE='planning-gjsystems-shell-v11.3.0';
+const CACHE='planning-gjsystems-shell-v11.3.0-r2';
 const SHELL=['./','./index.html','./laptop.html','./mobile.html','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./v11.js','./v11.css','./v113.js','./v113.css'];
 
 self.addEventListener('install',event=>{

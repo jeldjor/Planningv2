@@ -14,6 +14,7 @@
   const isAdmin = () => window.GJ_AUTH?.isAdmin === true;
   const realUserId = () => window.GJ_AUTH?.realUserId || window.GJ_AUTH?.profile?.id || null;
   const consentKey = () => `gj_location_consent_${realUserId() || 'unknown'}`;
+  const deviceLocationAllowed = () => document.body?.dataset?.gjDeviceLocation !== 'disabled';
 
   function formatDate(value) {
     if (!value) return 'Nog nooit';
@@ -259,6 +260,11 @@
 
     async reconcile({ direct = false, reason = 'controle' } = {}) {
       if (!this.initialized) return;
+      if (!deviceLocationAllowed()) {
+        this.stopLocationCycle();
+        this.closeConsent();
+        return;
+      }
       if (!this.central) await this.loadCentral();
       this.renderOwn();
       if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) {
@@ -284,7 +290,7 @@
     },
 
     showConsent() {
-      if ($('v108Consent') || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) return;
+      if (!deviceLocationAllowed() || $('v108Consent') || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) return;
       document.body.insertAdjacentHTML('beforeend', `
         <div id="v108Consent" class="v108Consent" role="dialog" aria-modal="true" aria-labelledby="v108ConsentTitle">
           <div class="v108ConsentCard"><h2 id="v108ConsentTitle">Routefunctionaliteit inschakelen</h2><p>Deze app gebruikt je locatie voor route- en navigatiefuncties met Google Maps, Waze en Kaarten.</p><div class="v108ConsentActions"><button type="button" id="v108ConsentAllow">Toestaan</button><button type="button" id="v108ConsentLater" class="secondary">Nu niet</button></div></div>
@@ -309,7 +315,7 @@
     },
 
     async acceptAndRequest() {
-      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) return;
+      if (!deviceLocationAllowed() || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating()) return;
       try {
         this.closeConsent();
         await this.setOwn({ enabled: true, promptState: 'accepted', permissionState: 'prompt' });
@@ -335,7 +341,7 @@
     },
 
     startLocationCycle() {
-      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') {
+      if (!deviceLocationAllowed() || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') {
         this.stopLocationCycle();
         return;
       }
@@ -346,7 +352,7 @@
     restartLocationTimer() {
       if (this.locationTimer) clearInterval(this.locationTimer);
       this.locationTimer = null;
-      if (!this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled) return;
+      if (!deviceLocationAllowed() || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled) return;
       const trackingUntil = this.own?.tracking_until ? new Date(this.own.tracking_until).getTime() : 0;
       const minutes = trackingUntil > Date.now() ? 1 : (ALLOWED_INTERVALS.includes(Number(this.central.update_interval_minutes)) ? Number(this.central.update_interval_minutes) : 10);
       this.locationTimer = setInterval(() => {
@@ -386,6 +392,7 @@
 
     async observeOfficialPermission() {
       this.releasePermissionHandle();
+      if (!deviceLocationAllowed()) return 'disabled';
       if (!navigator.permissions?.query) return 'unknown';
       try {
         const handle = await navigator.permissions.query({ name: 'geolocation' });
@@ -420,6 +427,7 @@
 
     async triggerLocation(reason, force = false) {
       const now = Date.now();
+      if (!deviceLocationAllowed()) return false;
       if (!force && now - this.lastTriggerAt < EVENT_DEDUP_MS) return false;
       if (this.requestInFlight || !this.central?.enabled || !this.own?.admin_enabled || isImpersonating() || !this.own?.route_location_enabled || this.own?.app_prompt_state !== 'accepted') return false;
       const trackingUntil=this.own?.tracking_until?new Date(this.own.tracking_until).getTime():0;

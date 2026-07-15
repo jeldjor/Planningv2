@@ -10,7 +10,7 @@
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=113000"></script>
+<script src="planning-core.js?v=113001"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1620,7 +1620,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v11.css?v=112000">
 <link rel="stylesheet" href="v113.css?v=113000">
 </head>
-<body>
+<body data-gj-device-location="disabled">
 <aside class="sidebar">
   <div class="userBrand">
     <button type="button" class="desktopProfileButton" id="desktopProfileButton" aria-label="Profielfoto. Wijzigen via Instellingen → Profiel">
@@ -3825,16 +3825,17 @@ async function persistLaptopVisit(v,status,activity,summary,files,historyId=null
   historyId=completed.data?.history_id||historyId;
   if(!historyId)throw new Error('Supabase heeft geen historie-ID teruggegeven.');
   const uploaded=[];
-  for(const file of Array.from(files||[])){
-    if(!String(file.type||'').startsWith('image/'))continue;
+  for(const originalFile of Array.from(files||[])){
+    if(!String(originalFile.type||'').startsWith('image/'))continue;
+    const file=await window.GJPlanningCore.prepareVisitPhoto(originalFile);
     const safe=(file.name||'foto.jpg').replace(/[^a-zA-Z0-9._-]/g,'_');
-    let hash=2166136261;for(const ch of [file.name,file.size,file.lastModified,file.type].join('|')){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619)}
+    let hash=2166136261;for(const ch of [originalFile.name,originalFile.size,originalFile.lastModified,originalFile.type].join('|')){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619)}
     const path=planningId+'/'+historyId+'/'+(hash>>>0).toString(16)+'-'+safe;
     const exists=await client.from('visit_photos').select('id').eq('history_id',historyId).eq('file_path',path).maybeSingle();if(exists.error)throw new Error('Fotocontrole mislukt: '+exists.error.message);
     const storage=await client.storage.from('visit-photos').upload(path,file,{contentType:file.type||'image/jpeg',upsert:false});
     const duplicate=storage.error&&(Number(storage.error.statusCode)===409||/duplicate|already exists/i.test(String(storage.error.message||'')));if(storage.error&&!duplicate)throw new Error('Foto uploaden mislukt: '+storage.error.message);
     if(!exists.data){const link=await client.from('visit_photos').insert({history_id:historyId,file_path:path});if(link.error)throw new Error('Foto koppelen mislukt: '+link.error.message)}
-    const signed=await client.storage.from('visit-photos').createSignedUrl(path,900);uploaded.push({name:file.name||safe,data:signed.error?'':signed.data.signedUrl,path});
+    const signed=await client.storage.from('visit-photos').createSignedUrl(path,900);uploaded.push({name:originalFile.name||file.name||safe,data:signed.error?'':signed.data.signedUrl,path});
   }
   return {historyId,uploaded};
 }
@@ -5752,7 +5753,7 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v105.js?v=10500"></script>
 <script src="v1082.js?v=10820"></script>
 <script src="v106.js?v=10700"></script>
-<script src="v108.js?v=112000"></script>
+<script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
 <script src="v110.js?v=112000"></script>
 <script src="v11.js?v=113000"></script>

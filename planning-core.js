@@ -299,6 +299,44 @@
     if(response.error)throw response.error;
   }
 
+  async function prepareVisitPhoto(file,{maxBytes=8*1024*1024,maxDimension=2560,quality=.84}={}){
+    if(!file||!String(file.type||'').startsWith('image/'))throw new Error('Selecteer een geldig afbeeldingsbestand.');
+    const allowedTypes=new Set(['image/jpeg','image/png','image/webp']);
+    if(Number(file.size||0)<=maxBytes&&allowedTypes.has(String(file.type||'').toLowerCase()))return file;
+    if(typeof document==='undefined')throw new Error('Deze grote foto kan in deze omgeving niet worden verkleind.');
+    let source=null,cleanup=()=>{};
+    try{
+      if(typeof createImageBitmap==='function'){
+        try{source=await createImageBitmap(file,{imageOrientation:'from-image'});cleanup=()=>source?.close?.()}catch(_){source=null}
+      }
+      if(!source){
+        if(typeof URL==='undefined'||typeof URL.createObjectURL!=='function')throw new Error('De foto kan niet worden geopend.');
+        const objectUrl=URL.createObjectURL(file);
+        try{source=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Het fotoformaat kan niet worden gelezen.'));image.src=objectUrl})}
+        catch(error){URL.revokeObjectURL(objectUrl);throw error}
+        cleanup=()=>URL.revokeObjectURL(objectUrl);
+      }
+      const sourceWidth=Number(source.naturalWidth||source.width),sourceHeight=Number(source.naturalHeight||source.height);
+      if(!sourceWidth||!sourceHeight)throw new Error('De foto heeft geen geldige afmetingen.');
+      let scale=Math.min(1,Number(maxDimension||2560)/Math.max(sourceWidth,sourceHeight)),jpegQuality=Number(quality||.84),blob=null;
+      for(let attempt=0;attempt<7;attempt++){
+        const width=Math.max(1,Math.round(sourceWidth*scale)),height=Math.max(1,Math.round(sourceHeight*scale));
+        const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+        const context=canvas.getContext('2d',{alpha:false});if(!context)throw new Error('De foto kan niet worden verwerkt.');
+        context.fillStyle='#fff';context.fillRect(0,0,width,height);context.drawImage(source,0,0,width,height);
+        blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',jpegQuality));canvas.width=canvas.height=1;
+        if(!blob)throw new Error('De foto kon niet naar JPEG worden omgezet.');
+        if(blob.size<=maxBytes)break;
+        scale*=.78;jpegQuality=Math.max(.62,jpegQuality-.05);
+      }
+      if(!blob||blob.size>maxBytes)throw new Error('De foto blijft na verkleinen te groot. Kies een andere foto.');
+      const base=String(file.name||'foto').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9._-]/g,'_')||'foto';
+      return new File([blob],`${base}.jpg`,{type:'image/jpeg',lastModified:Number(file.lastModified||Date.now())});
+    }catch(error){
+      throw new Error(`Foto voorbereiden mislukt: ${error.message||error}`);
+    }finally{cleanup()}
+  }
+
   async function signedPhotoUrl(sb,path,expiresIn=900){
     if(!path)return null;
     const response=await sb.storage.from('visit-photos').createSignedUrl(path,expiresIn);
@@ -306,5 +344,5 @@
     return response.data?.signedUrl||null;
   }
 
-  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,routeInputHash,canReuseDayRoute,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,signedPhotoUrl};
+  return {VERSION,number,toMinutes,fromMinutes,localIso,parseIso,addDays,haversineKm,pointFromCustomer,hasPoint,absenceWindows,fitOutsideWindows,optimizeVisits,createLegRequests,requestRouteBatch,buildDay,stableHash,routeInputHash,canReuseDayRoute,persistDay,calculateDay,queueDay,loadUserSettings,saveUserSettings,prepareVisitPhoto,signedPhotoUrl};
 });

@@ -22,10 +22,12 @@
 - De database leidt het echte klant-UUID af uit de planning. Een zichtbaar klantnummer zoals `AUTO-...` kan daardoor nooit meer per ongeluk in een UUID-kolom worden geschreven.
 - Planningstatus en historie worden in één transactie opgeslagen. Bij een fout wordt niets half opgeslagen.
 - De unieke koppeling tussen planning en historie voorkomt een dubbel historisch bezoek bij opnieuw klikken of een vertraagde verbinding.
+- Grote bezoekfoto's en iPhone-formaten worden vóór upload automatisch naar een hoogwaardige JPEG van maximaal circa 8 MB verkleind. Kleine JPEG-, PNG- en WebP-foto's blijven ongewijzigd en dezelfde originele foto wordt niet dubbel opgeslagen.
 
 ## Interface
 
 - De velden **Van** en **Tot en met** staan in Overzicht en Historie compact naast elkaar en vallen alleen op een zeer smal scherm onder elkaar.
+- De laptop is expliciet uitgesloten van apparaatlocatie: hij toont geen toestemmingsvenster, vraagt geen browsertoestemming en leest of verzendt nooit de locatie van de laptop. Beheer van iPhone-locaties blijft op de laptop wel beschikbaar.
 - De releasecache en GitHub Pages-workflow zijn bijgewerkt naar v11.3.0.
 
 ## Nieuwe of gewijzigde bestanden
@@ -46,4 +48,3 @@
 - `README.md`
 - `package.json`
 - `package-lock.json`
-

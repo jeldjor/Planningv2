@@ -17,9 +17,11 @@ Deze productierelease maakt de centrale route-, database- en historielaag stabie
 - Het zichtbare development-/versielabel is verwijderd en de mobiele pagina kan niet per ongeluk worden ingezoomd.
 - Alleen het e-mailadres kan worden onthouden; wachtwoorden worden nooit in browseropslag bewaard.
 - Beheer toont alle gebruikers bij Live Locaties, ook als er nog geen positie is. Een beheerder kan per gebruiker een sessie van 30 minuten live volgen starten; de actieve app vraagt dan iedere minuut een positie op.
+- Alleen de iPhone mag een apparaatlocatie aanvragen en verzenden. De laptop vraagt nooit locatietoestemming, maar kan als beheerder wel ontvangen iPhone-locaties bekijken.
 - Ongewijzigde groene dagen worden aan de hand van een invoerhash hergebruikt. Alleen een routebepalende wijziging start een nieuwe complete TomTom-berekening.
 - De database toont locatiekwaliteit en filters voor alle, actieve en inactieve klanten; import controleert ontbrekende coördinaten vóór upload.
 - Afronden gebruikt de atomaire RPC `complete_visit`, zodat een klantnummer nooit meer in een UUID-veld terechtkomt en planning en historie niet half kunnen worden opgeslagen.
+- Grote bezoekfoto's worden op laptop en iPhone vóór upload automatisch verkleind; de private Storage-bucket blijft daardoor beschermd tegen onnodig grote camerabestanden.
 
 ## Installeren of bijwerken
 
