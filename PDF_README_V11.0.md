@@ -21,6 +21,8 @@ De profielen staan in `chainProfiles` in `visit-pdf.js`:
 - `berden`
 - `stichd` als algemene terugval
 
+Alle dertien bekende ketens hebben vanaf v11.3.5 een eigen winkelbanner. De vijf oorspronkelijke banners staan in `assets/chain-banners-core.png`; de acht later aangeleverde banners staan in `assets/chain-banners.png`. De banner staat onvervormd over de volledige paginabreedte. Daaronder staan de actuele bezoekgegevens één keer in een compact blok.
+
 Voeg een keten toe door één object toe te voegen met `displayName`, `aliases`, `primary`, `secondary`, `soft` en eventueel `banner`. De goedgekeurde banners staan in `assets/chain-banners.png`; het `banner`-object bevat de uitsnede `x`, `y`, `w` en `h`. Wanneer geen goedgekeurde banner beschikbaar is, gebruikt de PDF automatisch een nette tekstheader.
 
 ## Gebruikte gegevens
@@ -47,12 +49,14 @@ Het raster past zich aan nul tot acht foto's aan. Foto's worden eerst met hun EX
 - één pagina wanneer de inhoud leesbaar past;
 - automatische vervolgpagina's voor lange tekst of extra foto's;
 - ketenspecifieke header en accentkleur;
-- tweekoloms gegevensblok zonder lege labels;
+- compact gegevensblok in drie kolommen zonder lege labels of dubbele informatie;
+- de bezoekdatum staat precies één keer in het rapport; start- en eindtijd worden nooit afgedrukt;
+- samenvatting vóór de foto's, met voldoende witruimte;
 - dynamisch fotoraster zonder vervorming;
-- vaste rustige footer met Planning-GJsystems, Stichd, generatiedatum en paginanummer.
+- vaste rustige footer met uitsluitend GJsystems en het paginanummer.
 
 Op laptop wordt het rapport gedownload. Op iPhone wordt vooraf een voorbeeldvenster geopend en daarna met de PDF gevuld, zodat de normale iOS-functies voor delen en bewaren beschikbaar blijven.
 
 ## Bekende beperking
 
-Alleen de acht aangeleverde, goedgekeurde banners zijn als afbeeldingsheader opgenomen. Andere ketens gebruiken het configureerbare kleurprofiel met tekstheader totdat een goedgekeurde banner wordt toegevoegd.
+Alle dertien bekende ketens gebruiken een aangeleverde banner. Onbekende of later toegevoegde ketens gebruiken het configureerbare Stichd-profiel met tekstheader totdat een goedgekeurde banner wordt toegevoegd.

@@ -6,7 +6,7 @@
 <title>Planning-GJsystems</title>
 <script>
 // v6: failsafe tegen blijven hangen op beginscherm/logo
-window.__GJ_APP_VERSION__='8.4';
+window.__GJ_APP_VERSION__='11.3.5';
 (function(){
   function hideSplash(){
     var s=document.getElementById('splash');
@@ -306,8 +306,9 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="runtime-config.js"></script>
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
-<script src="visit-pdf.js?v=113100"></script>
-<script src="planning-core.js?v=113100"></script>
+<script src="photo-zip.js?v=113500"></script>
+<script src="visit-pdf.js?v=113500"></script>
+<script src="planning-core.js?v=113500"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style id="gjMobileAdminCss">
@@ -549,7 +550,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 </main>
 <script>
 (function(){
-const VERSION='v11.3.1',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
+const VERSION='v11.3.5',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
 let sb=null;
 window.addEventListener('gj-auth-ready',()=>{if(window.GJ_AUTH?.sb)sb=window.GJ_AUTH.sb});
 const COLORS={blue:['#083b86','#052d68','#eef4ff']};
@@ -951,7 +952,7 @@ cardHtml=function(v){
   return decorated;
 };
 setupProfileCropper($('profileFile'),$('profileButton'),$('profileImage'));
-async function init(){console.info('Planning GJ mobiel v11.3.1 - centrale Supabase planning');db=load();db.settings=db.settings||{};db.settings.language=localStorage.getItem('gj_app_language')||db.settings.language||'nl';const supaOk=await loadPlanningFromSupabase();if(!supaOk)throw new Error('De werkruimte kon niet veilig uit Supabase worden geladen.');applyTheme();$('lang').value=db.settings.language||'nl';$('depart').value=(db.dayDepartures||{})[todayIso()]||'08:00';$('blockStart').value=todayIso();$('blockEnd').value=todayIso();$('blockEnd').min=todayIso();$('menuBtn').onclick=()=>$('menuPanel').classList.toggle('open');const uid=window.GJ_AUTH?.profile?.id;const savedProfilePhoto=uid?localStorage.getItem('gj_profile_photo_'+uid):null;if(savedProfilePhoto){$('profileImage').src=savedProfilePhoto;$('profileButton').classList.add('hasPhoto')}/* v10.5: profielfoto uitsluitend via Instellingen → Profiel */$('menuLogout').onclick=async()=>{try{sessionStorage.removeItem('gj_impersonate_user_v102');sessionStorage.removeItem('gj_workspace_storage_id');sessionStorage.removeItem('gj_authenticated_user_id');sessionStorage.removeItem('gj_app_open_session');if(window.GJ_AUTH?.sb)await GJ_AUTH.sb.auth.signOut()}finally{location.reload()}};$('syncBtn').onclick=()=>manualSync(true);$('btnTakePhoto').onclick=togglePhotoDeleteMode;$('btnChoosePhoto').onclick=()=>$('finishPhotos').click();$('finishCamera').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};$('finishPhotos').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manualSync(false)});window.addEventListener('focus',()=>manualSync(false));document.querySelectorAll('#menuPanel button[data-screen]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(b.dataset.screen).classList.add('active');document.querySelectorAll('#menuPanel button[data-screen]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('menuPanel').classList.remove('open');renderAll()});document.addEventListener('click',e=>{const editBlock=e.target.closest('.editAbsence');if(editBlock){editAbsence(editBlock.dataset.id);return}const deleteBlock=e.target.closest('.deleteAbsence');if(deleteBlock){deleteAbsence(deleteBlock.dataset.id);return}const pending=e.target.closest('.removePendingPhoto');if(pending){removePendingPhoto(Number(pending.dataset.index));return}const stored=e.target.closest('.removeStoredPhoto');if(stored){removeStoredPhoto(Number(stored.dataset.index));return}const r=e.target.closest('.routeBtn');if(r){location.href=navUrl(r.dataset.q);return}const f=e.target.closest('.finishBtn');if(f){openFinish(f.dataset.id);return}const up=e.target.closest('.moveUp');if(up){move(up.dataset.id,-1);return}const down=e.target.closest('.moveDown');if(down){move(down.dataset.id,1);return}const eye=e.target.closest('.eyeBtn');if(eye){editingTime=eye.dataset.id;renderToday();return}const sv=e.target.closest('.saveTimeBtn');if(sv){const v=db.visits.find(x=>x.id===sv.dataset.id);if(v){v.time=$('editStart-'+v.id).value;v.end=$('editEnd-'+v.id).value;editingTime=null;save();renderAll();syncPlanningToSupabase().catch(console.error)}return}const rem=e.target.closest('.removePlan');if(rem){if(confirm(t('removeConfirm'))){const v=db.visits.find(x=>x.id===rem.dataset.id);if(v){v.status='Uit planning';save();renderAll()}}return}const day=e.target.closest('.monthDay');if(day){openDay(day.dataset.date);return}if(e.target.id==='finishOverlay')closeFinish()});$('depart').onchange=async()=>{try{await saveDepartureToSupabase(todayIso(),$('depart').value)}catch(e){alert('Vertrektijd opslaan mislukt: '+e.message)}};$('fullRouteBtn').onclick=()=>{location.href=fullRouteUrl()};$('togglePause').onclick=()=>{db.visits.filter(v=>v.pause&&v.date===todayIso()).forEach(v=>v.active=v.active===false?true:false);save();renderAll()};$('recalcBtn').onclick=()=>manualSync(true);$('prevMonth').onclick=()=>{monthOffset--;renderAll()};$('nextMonth').onclick=()=>{monthOffset++;renderAll()};$('search').oninput=renderOverview;$('finishClose').onclick=closeFinish;$('btnDone').onclick=()=>finish('Uitgevoerd');$('btnNotDone').onclick=()=>finish('Niet uitgevoerd');$('blockStart').onchange=()=>{const start=$('blockStart').value;$('blockEnd').min=start;if(!$('blockEnd').value||$('blockEnd').value<start)$('blockEnd').value=start};$('blockEnd').onchange=()=>{const min=$('blockStart').value;if($('blockEnd').value<min)$('blockEnd').value=min};$('saveBlock').onclick=saveAbsenceForm;$('cancelBlockEdit').onclick=resetAbsenceForm;$('lang').onchange=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);save();location.reload()};$('saveSettings').onclick=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);if($('defaultSettings').checked)localStorage.setItem('gj_theme',db.settings.theme);save();location.reload()};renderAll();openDay(selectedCalendarDate);setTimeout(()=>{const sp=$('splash'); if(sp){sp.classList.add('hide'); sp.style.display='none'}},700)}
+async function init(){console.info('Planning GJ mobiel v11.3.5 - centrale Supabase planning');db=load();db.settings=db.settings||{};db.settings.language=localStorage.getItem('gj_app_language')||db.settings.language||'nl';const supaOk=await loadPlanningFromSupabase();if(!supaOk)throw new Error('De werkruimte kon niet veilig uit Supabase worden geladen.');applyTheme();$('lang').value=db.settings.language||'nl';$('depart').value=(db.dayDepartures||{})[todayIso()]||'08:00';$('blockStart').value=todayIso();$('blockEnd').value=todayIso();$('blockEnd').min=todayIso();$('menuBtn').onclick=()=>$('menuPanel').classList.toggle('open');const uid=window.GJ_AUTH?.profile?.id;const savedProfilePhoto=uid?localStorage.getItem('gj_profile_photo_'+uid):null;if(savedProfilePhoto){$('profileImage').src=savedProfilePhoto;$('profileButton').classList.add('hasPhoto')}/* v10.5: profielfoto uitsluitend via Instellingen → Profiel */$('menuLogout').onclick=async()=>{try{sessionStorage.removeItem('gj_impersonate_user_v102');sessionStorage.removeItem('gj_workspace_storage_id');sessionStorage.removeItem('gj_authenticated_user_id');sessionStorage.removeItem('gj_app_open_session');if(window.GJ_AUTH?.sb)await GJ_AUTH.sb.auth.signOut()}finally{location.reload()}};$('syncBtn').onclick=()=>manualSync(true);$('btnTakePhoto').onclick=togglePhotoDeleteMode;$('btnChoosePhoto').onclick=()=>$('finishPhotos').click();$('finishCamera').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};$('finishPhotos').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manualSync(false)});window.addEventListener('focus',()=>manualSync(false));document.querySelectorAll('#menuPanel button[data-screen]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(b.dataset.screen).classList.add('active');document.querySelectorAll('#menuPanel button[data-screen]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('menuPanel').classList.remove('open');renderAll()});document.addEventListener('click',e=>{const editBlock=e.target.closest('.editAbsence');if(editBlock){editAbsence(editBlock.dataset.id);return}const deleteBlock=e.target.closest('.deleteAbsence');if(deleteBlock){deleteAbsence(deleteBlock.dataset.id);return}const pending=e.target.closest('.removePendingPhoto');if(pending){removePendingPhoto(Number(pending.dataset.index));return}const stored=e.target.closest('.removeStoredPhoto');if(stored){removeStoredPhoto(Number(stored.dataset.index));return}const r=e.target.closest('.routeBtn');if(r){location.href=navUrl(r.dataset.q);return}const f=e.target.closest('.finishBtn');if(f){openFinish(f.dataset.id);return}const up=e.target.closest('.moveUp');if(up){move(up.dataset.id,-1);return}const down=e.target.closest('.moveDown');if(down){move(down.dataset.id,1);return}const eye=e.target.closest('.eyeBtn');if(eye){editingTime=eye.dataset.id;renderToday();return}const sv=e.target.closest('.saveTimeBtn');if(sv){const v=db.visits.find(x=>x.id===sv.dataset.id);if(v){v.time=$('editStart-'+v.id).value;v.end=$('editEnd-'+v.id).value;editingTime=null;save();renderAll();syncPlanningToSupabase().catch(console.error)}return}const rem=e.target.closest('.removePlan');if(rem){if(confirm(t('removeConfirm'))){const v=db.visits.find(x=>x.id===rem.dataset.id);if(v){v.status='Uit planning';save();renderAll()}}return}const day=e.target.closest('.monthDay');if(day){openDay(day.dataset.date);return}if(e.target.id==='finishOverlay')closeFinish()});$('depart').onchange=async()=>{try{await saveDepartureToSupabase(todayIso(),$('depart').value)}catch(e){alert('Vertrektijd opslaan mislukt: '+e.message)}};$('fullRouteBtn').onclick=()=>{location.href=fullRouteUrl()};$('togglePause').onclick=()=>{db.visits.filter(v=>v.pause&&v.date===todayIso()).forEach(v=>v.active=v.active===false?true:false);save();renderAll()};$('recalcBtn').onclick=()=>manualSync(true);$('prevMonth').onclick=()=>{monthOffset--;renderAll()};$('nextMonth').onclick=()=>{monthOffset++;renderAll()};$('search').oninput=renderOverview;$('finishClose').onclick=closeFinish;$('btnDone').onclick=()=>finish('Uitgevoerd');$('btnNotDone').onclick=()=>finish('Niet uitgevoerd');$('blockStart').onchange=()=>{const start=$('blockStart').value;$('blockEnd').min=start;if(!$('blockEnd').value||$('blockEnd').value<start)$('blockEnd').value=start};$('blockEnd').onchange=()=>{const min=$('blockStart').value;if($('blockEnd').value<min)$('blockEnd').value=min};$('saveBlock').onclick=saveAbsenceForm;$('cancelBlockEdit').onclick=resetAbsenceForm;$('lang').onchange=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);save();location.reload()};$('saveSettings').onclick=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);if($('defaultSettings').checked)localStorage.setItem('gj_theme',db.settings.theme);save();location.reload()};renderAll();openDay(selectedCalendarDate);setTimeout(()=>{const sp=$('splash'); if(sp){sp.classList.add('hide'); sp.style.display='none'}},700)}
 window.GJ_MOBILE={
   state:()=>db,
   persist:()=>save(),
@@ -1031,6 +1032,17 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     if(error)throw error;
   }
 
+  async function removeVisitStorageFiles(){
+    const rows=await GJ_AUTH.sb.from('visit_photos').select('file_path').limit(10000);
+    if(rows.error)throw rows.error;
+    const paths=[...new Set((rows.data||[]).map(row=>row.file_path).filter(Boolean))];
+    for(let index=0;index<paths.length;index+=100){
+      const removed=await GJ_AUTH.sb.storage.from('visit-photos').remove(paths.slice(index,index+100));
+      if(removed.error)throw new Error('Bezoekfoto’s uit Storage verwijderen mislukt: '+removed.error.message);
+    }
+    return paths.length;
+  }
+
   async function clearAction(action){
     if(!GJ_AUTH?.isAdmin)throw new Error('Geen beheerdersrechten.');
     const labels={
@@ -1044,6 +1056,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
     if(action!=='routes'&&!requireConfirm(labels[action]||'Definitief verwijderen?'))return;
     setStatus('mAdminSystemStatus','Bezig met verwijderen…','busy');
     try{
+      if(['history','database','all'].includes(action))await removeVisitStorageFiles();
       if(action==='planning') await deleteAll('planning');
       if(action==='fixed'){
         await deleteAll('fixed_appointments');
@@ -1272,7 +1285,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
-<script src="v110.js?v=113100"></script>
-<script src="v11.js?v=113100"></script>
-<script src="v113.js?v=113000"></script>
+<script src="v110.js?v=113500"></script>
+<script src="v11.js?v=113500"></script>
+<script src="v113.js?v=113500"></script>
 </body></html>

@@ -7,11 +7,11 @@
   'use strict';
 
   const chainProfiles={
-    bijenkorf:{displayName:'de Bijenkorf',aliases:['bijenkorf','de bijenkorf'],primary:[171,132,62],secondary:[27,27,27],soft:[247,243,234],logo:null},
-    scapino:{displayName:'Scapino',aliases:['scapino'],primary:[211,21,34],secondary:[36,36,36],soft:[253,239,240],logo:null},
-    inno:{displayName:'INNO',aliases:['inno','galeria inno'],primary:[0,105,105],secondary:[11,47,48],soft:[231,245,244],logo:null},
-    intersport:{displayName:'INTERSPORT',aliases:['intersport'],primary:[0,82,156],secondary:[221,31,45],soft:[233,242,250],logo:null},
-    van_tilburg_sport:{displayName:'Van Tilburg Sport',aliases:['van tilburg sport','van tilburg'],primary:[35,35,35],secondary:[191,157,91],soft:[245,242,235],logo:null},
+    bijenkorf:{displayName:'de Bijenkorf',aliases:['bijenkorf','de bijenkorf'],primary:[171,132,62],secondary:[27,27,27],soft:[247,243,234],banner:{source:'assets/chain-banners-core.png',x:0,y:0,w:1774,h:177}},
+    scapino:{displayName:'Scapino',aliases:['scapino'],primary:[211,21,34],secondary:[36,36,36],soft:[253,239,240],banner:{source:'assets/chain-banners-core.png',x:0,y:177,w:1774,h:177}},
+    inno:{displayName:'INNO',aliases:['inno','galeria inno'],primary:[0,105,105],secondary:[11,47,48],soft:[231,245,244],banner:{source:'assets/chain-banners-core.png',x:0,y:354,w:1774,h:177}},
+    intersport:{displayName:'INTERSPORT',aliases:['intersport'],primary:[0,82,156],secondary:[221,31,45],soft:[233,242,250],banner:{source:'assets/chain-banners-core.png',x:0,y:531,w:1774,h:177}},
+    van_tilburg_sport:{displayName:'Van Tilburg Sport',aliases:['van tilburg sport','van tilburg'],primary:[35,35,35],secondary:[191,157,91],soft:[245,242,235],banner:{source:'assets/chain-banners-core.png',x:0,y:708,w:1774,h:179}},
     van_haren:{displayName:'Van Haren',aliases:['van haren','vanharen'],primary:[4,20,37],secondary:[232,85,34],soft:[238,243,248],banner:{x:0,y:0,w:512,h:116}},
     bomont:{displayName:'Bomont',aliases:['bomont'],primary:[28,28,28],secondary:[179,153,119],soft:[246,243,238],banner:{x:768,y:0,w:512,h:116}},
     daka:{displayName:'DAKA',aliases:['daka'],primary:[211,0,27],secondary:[25,25,25],soft:[253,238,240],banner:{x:0,y:256,w:512,h:116}},
@@ -41,31 +41,30 @@
     const v=clean(value);const m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);
     return m?`${m[3]}-${m[2]}-${m[1]}`:v;
   }
-  function formatGeneratedDate(value){
-    const d=value?new Date(value):new Date();
-    return Number.isNaN(d.getTime())?clean(value):d.toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'});
-  }
   function value(report,...keys){
     for(const key of keys){const v=report?.[key];if(v!==undefined&&v!==null&&clean(v)!=='')return clean(v)}
     return '';
   }
   function buildDetailFields(report){
+    const store=value(report,'storeName','customerName')||'Onbekende klant';
+    const branch=value(report,'branch');
     const address=[value(report,'street','address'),value(report,'houseNumber')].filter(Boolean).join(' ');
     const city=[value(report,'postalCode'),value(report,'city')].filter(Boolean).join(' ');
+    const location=[branch&&normalizeChain(branch)!==normalizeChain(store)?branch:'',address,city].filter(Boolean).join(', ');
     return [
-      ['Adres',address],['Postcode en plaats',city],['Contactpersoon',value(report,'contactPerson')],
-      ['Bezoeker',value(report,'visitor')],['Bezoekdatum',displayDate(value(report,'visitDate','date'))],
-      ['Activiteit',value(report,'activity')],['Status',value(report,'status')],
-      ['Reden niet uitgevoerd',value(report,'reason')],
-      ['Vervolgactie',value(report,'followUp')],['Opmerkingen',value(report,'remarks')]
+      ['Winkel',store],['Locatie',location],['Datum',displayDate(value(report,'visitDate','date'))],
+      ['Activiteit',value(report,'activity')],['Bezoeker',value(report,'visitor')],
+      ['Contactpersoon',value(report,'contactPerson')]
     ].filter(([,v])=>v);
   }
   function buildTextSections(report){
     const candidates=[
+      ['Reden niet uitgevoerd',value(report,'reason')],
       ['Bevindingen en samenvatting',value(report,'summary','findings')],
       ['Uitgevoerde werkzaamheden',value(report,'workPerformed')],
       ['Aandachtspunten',value(report,'attentionPoints')],
-      ['Vervolgactie',value(report,'followUp')]
+      ['Vervolgactie',value(report,'followUp')],
+      ['Opmerkingen',value(report,'remarks')]
     ];
     const seen=new Set();
     return candidates.filter(([,text])=>{
@@ -77,52 +76,68 @@
     if(browserJsPDF)return browserJsPDF;
     try{return require('jspdf').jsPDF}catch(_){throw new Error('PDF-bibliotheek is niet beschikbaar.')}
   }
-  let bannerImagePromise=null;
+  const bannerImagePromises=new Map();
   function loadBannerSprite(source=bannerSprite){
     if(typeof Image==='undefined')return Promise.reject(new Error('Bannerafbeeldingen zijn alleen in de browser beschikbaar.'));
-    if(!bannerImagePromise)bannerImagePromise=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('De ketenbanner kon niet worden geladen.'));image.src=source});
-    return bannerImagePromise;
+    if(!bannerImagePromises.has(source))bannerImagePromises.set(source,new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('De ketenbanner kon niet worden geladen.'));image.src=source}));
+    return bannerImagePromises.get(source);
   }
   async function prepareReportAssets(report,options={}){
     const resolved=resolveChainProfile(value(report,'chain')),banner=resolved.profile.banner;
-    if(!banner||typeof document==='undefined')return report;
+    if(typeof document==='undefined')return report;
+    const prepared={...report};
+    const cropPhoto=photo=>new Promise(resolve=>{
+      const data=imageData(photo);if(!data){resolve(photo);return}
+      const image=new Image();
+      image.onload=()=>{
+        try{
+          const ratio=4/3,sourceW=image.naturalWidth||image.width,sourceH=image.naturalHeight||image.height,sourceRatio=sourceW/sourceH;
+          let sx=0,sy=0,sw=sourceW,sh=sourceH;
+          if(sourceRatio>ratio){sw=sourceH*ratio;sx=(sourceW-sw)/2}else if(sourceRatio<ratio){sh=sourceW/ratio;sy=(sourceH-sh)/2}
+          const canvas=document.createElement('canvas');canvas.width=1600;canvas.height=1200;
+          const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+          resolve({...photo,data:canvas.toDataURL('image/jpeg',.9),width:canvas.width,height:canvas.height,format:'JPEG',pdfCropped:true});
+        }catch(_){resolve(photo)}
+      };
+      image.onerror=()=>resolve(photo);image.src=data;
+    });
+    prepared.photos=await Promise.all((report.photos||[]).map(cropPhoto));
+    if(!banner)return prepared;
     try{
-      const image=await loadBannerSprite(options.bannerSource||bannerSprite),canvas=document.createElement('canvas');
+      const image=await loadBannerSprite(options.bannerSource||banner.source||bannerSprite),canvas=document.createElement('canvas');
       canvas.width=banner.w;canvas.height=banner.h;
       const context=canvas.getContext('2d');context.drawImage(image,banner.x,banner.y,banner.w,banner.h,0,0,banner.w,banner.h);
-      return {...report,bannerImage:canvas.toDataURL('image/jpeg',.94)};
-    }catch(error){console.warn('Ketenbanner niet beschikbaar:',error.message);return report}
+      return {...prepared,bannerImage:canvas.toDataURL('image/jpeg',.94)};
+    }catch(error){console.warn('Ketenbanner niet beschikbaar:',error.message);return prepared}
   }
   function textColor(doc,color){doc.setTextColor(color[0],color[1],color[2])}
   function fillColor(doc,color){doc.setFillColor(color[0],color[1],color[2])}
   function drawHeader(doc,report,profile){
     const pageW=doc.internal.pageSize.getWidth();
+    const bannerRatio=Number(profile.banner?.w)/Number(profile.banner?.h)||4.42;
+    const headerH=report.bannerImage?Math.max(20,Math.min(48,pageW/bannerRatio)):44;
     if(report.bannerImage){
-      doc.setFillColor(255,255,255);doc.rect(0,0,pageW,52,'F');
-      doc.addImage(report.bannerImage,'JPEG',14,6,182,41.2,undefined,'FAST');
-      doc.setDrawColor(profile.secondary[0],profile.secondary[1],profile.secondary[2]);doc.setLineWidth(.6);doc.line(14,49.5,196,49.5);
-      return 54;
+      doc.setFillColor(255,255,255);doc.rect(0,0,pageW,headerH,'F');
+      doc.addImage(report.bannerImage,'JPEG',0,0,pageW,headerH,undefined,'FAST');
+    }else{
+      fillColor(doc,profile.primary);doc.rect(0,0,pageW,headerH,'F');
+      fillColor(doc,profile.secondary);doc.rect(0,headerH-4,pageW,4,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(profile.displayName.length>17?20:27);doc.setTextColor(255,255,255);
+      doc.text(profile.displayName,14,21,{maxWidth:150});
+      doc.setFont('helvetica','normal');doc.setFontSize(7.2);doc.text('WINKELBEZOEKRAPPORT',12,33);
     }
-    fillColor(doc,profile.primary);doc.rect(0,0,pageW,42,'F');
-    fillColor(doc,profile.secondary);doc.rect(pageW-10,0,10,42,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(profile.displayName.length>17?18:23);doc.setTextColor(255,255,255);
-    doc.text(profile.displayName,14,18,{maxWidth:76});
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('WINKELBEZOEKRAPPORT',14,29);
-    const store=value(report,'storeName','customerName')||'Onbekende klant';
-    const branch=value(report,'branch');const place=value(report,'city');
-    doc.setFont('helvetica','bold');doc.setFontSize(store.length>30?11:14);doc.text(store,96,14,{maxWidth:99});
-    doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-    const location=[branch&&branch!==store?branch:'',place].filter(Boolean).join(' - ');
-    if(location)doc.text(location,96,21,{maxWidth:99});
-    const visitDate=displayDate(value(report,'visitDate','date'));
-    if(visitDate)doc.text(visitDate,96,28);
-    const status=value(report,'status');
+    doc.setDrawColor(profile.secondary[0],profile.secondary[1],profile.secondary[2]);doc.setLineWidth(.7);doc.line(0,headerH,pageW,headerH);
+    return headerH;
+  }
+  function drawReportIntro(doc,report,y,profile){
+    const pageW=doc.internal.pageSize.getWidth(),status=value(report,'status');
+    doc.setFont('helvetica','bold');doc.setFontSize(15);textColor(doc,profile.primary);doc.text('WINKELBEZOEKRAPPORT',14,y);
     if(status){
-      const notDone=normalizeChain(status).includes('niet uitgevoerd');
-      fillColor(doc,notDone?[157,45,45]:[30,122,73]);doc.roundedRect(156,31,39,7,2,2,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);doc.text(status,175.5,35.7,{align:'center',maxWidth:36});
+      const notDone=normalizeChain(status).includes('niet uitgevoerd'),badgeW=Math.min(38,Math.max(26,status.length*2.05));
+      fillColor(doc,notDone?[157,45,45]:[30,122,73]);doc.roundedRect(pageW-14-badgeW,y-5.6,badgeW,7.2,1.8,1.8,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(6.6);doc.setTextColor(255,255,255);doc.text(status,pageW-14-badgeW/2,y-1,{align:'center',maxWidth:badgeW-3});
     }
-    return 42;
+    return y+10;
   }
   function drawSectionTitle(doc,title,y,profile){
     doc.setFont('helvetica','bold');doc.setFontSize(10);textColor(doc,profile.primary);doc.text(title.toUpperCase(),14,y);
@@ -130,18 +145,20 @@
   }
   function drawDetails(doc,report,y,profile){
     const fields=buildDetailFields(report);if(!fields.length)return y;
-    const columns=[[],[]];fields.forEach((item,index)=>columns[index%2].push(item));
-    const rowHeights=columns.map(col=>col.map(([,v])=>Math.max(6,doc.splitTextToSize(v,60).length*4.1+1)));
-    const boxH=Math.max(22,...rowHeights.map(rows=>rows.reduce((a,b)=>a+b,0)+14));
-    drawSectionTitle(doc,'Bezoekgegevens',y,profile);y+=6;
+    const columns=3,cellW=56,rows=[];
+    for(let index=0;index<fields.length;index+=columns)rows.push(fields.slice(index,index+columns));
+    const rowHeights=rows.map(row=>Math.max(12,...row.map(([,v])=>doc.splitTextToSize(v,cellW-4).length*3.6+7)));
+    const boxH=rowHeights.reduce((sum,height)=>sum+height,0)+8;
     fillColor(doc,profile.soft);doc.setDrawColor(222,226,233);doc.roundedRect(14,y,182,boxH,2.5,2.5,'FD');
-    columns.forEach((col,colIndex)=>{
-      const x=20+colIndex*89;let cy=y+9;
-      col.forEach(([label,val],rowIndex)=>{
-        doc.setFont('helvetica','bold');doc.setFontSize(7.2);textColor(doc,profile.primary);doc.text(label,x,cy);
-        doc.setFont('helvetica','normal');doc.setFontSize(8.4);doc.setTextColor(35,40,47);
-        const lines=doc.splitTextToSize(val,58);doc.text(lines,x+27,cy,{lineHeightFactor:1.15});cy+=rowHeights[colIndex][rowIndex];
+    let rowY=y+7;
+    rows.forEach((row,rowIndex)=>{
+      row.forEach(([label,val],colIndex)=>{
+        const x=20+colIndex*59;
+        doc.setFont('helvetica','bold');doc.setFontSize(6.2);doc.setCharSpace(.35);textColor(doc,profile.primary);doc.text(label.toUpperCase(),x,rowY);doc.setCharSpace(0);
+        doc.setFont('helvetica','bold');doc.setFontSize(8.4);doc.setTextColor(35,40,47);
+        doc.text(doc.splitTextToSize(val,cellW-4),x,rowY+4.5,{lineHeightFactor:1.08});
       });
+      rowY+=rowHeights[rowIndex];
     });
     return y+boxH+7;
   }
@@ -153,20 +170,19 @@
   function drawImageCover(doc,photo,x,y,w,h){
     const data=imageData(photo);if(!data)return false;
     try{
-      const size=imageDimensions(doc,data,photo),canClip=typeof doc.saveGraphicsState==='function'&&typeof doc.clip==='function'&&typeof doc.restoreGraphicsState==='function',scale=canClip?Math.max(w/size.width,h/size.height):Math.min(w/size.width,h/size.height),iw=size.width*scale,ih=size.height*scale;
+      const size=imageDimensions(doc,data,photo),scale=photo?.pdfCropped?Math.max(w/size.width,h/size.height):Math.min(w/size.width,h/size.height),iw=size.width*scale,ih=size.height*scale;
       doc.setFillColor(246,248,251);doc.rect(x,y,w,h,'F');
-      if(canClip){doc.saveGraphicsState();doc.rect(x,y,w,h);doc.clip();doc.discardPath?.()}
-      doc.addImage(data,photo?.format||undefined,x+(w-iw)/2,y+(h-ih)/2,iw,ih,undefined,'FAST');
-      if(canClip)doc.restoreGraphicsState();
+      if(photo?.pdfCropped)doc.addImage(data,photo?.format||undefined,x,y,w,h,undefined,'FAST');
+      else doc.addImage(data,photo?.format||undefined,x+(w-iw)/2,y+(h-ih)/2,iw,ih,undefined,'FAST');
       doc.setDrawColor(220,224,230);doc.rect(x,y,w,h,'S');return true;
     }catch(_){return false}
   }
   function photoLayout(count,x,y,w,maxH){
     const gap=3.5,items=[];
-    if(count===1){const h=Math.min(maxH,78);items.push({x,y,w,h});return {items,height:h}}
-    if(count===2){const h=Math.min(maxH,57),cw=(w-gap)/2;return {items:[{x,y,w:cw,h},{x:x+cw+gap,y,w:cw,h}],height:h}}
-    if(count===3){const top=Math.min(39,maxH*.46),bottom=Math.min(42,maxH-top-gap),cw=(w-gap)/2;return {items:[{x,y,w:cw,h:top},{x:x+cw+gap,y,w:cw,h:top},{x:x+w*.18,y:y+top+gap,w:w*.64,h:bottom}],height:top+gap+bottom}}
-    const cols=count<=4?2:(count<=6?3:4),rows=Math.ceil(count/cols),cw=(w-gap*(cols-1))/cols,ch=Math.min(count<=4?37:31,(maxH-gap*(rows-1))/rows);
+    if(count===1){const fw=Math.min(w,120),h=Math.min(maxH,72,fw*.75);items.push({x:x+(w-fw)/2,y,w:fw,h});return {items,height:h}}
+    if(count===2){const h=Math.min(maxH,55),cw=(w-gap)/2;return {items:[{x,y,w:cw,h},{x:x+cw+gap,y,w:cw,h}],height:h}}
+    if(count===3){const cw=(w-gap)/2,ch=Math.min(37,(maxH-gap)/2);return {items:[{x,y,w:cw,h:ch},{x:x+cw+gap,y,w:cw,h:ch},{x:x+(w-cw)/2,y:y+ch+gap,w:cw,h:ch}],height:ch*2+gap}}
+    const cols=count===4?4:(count<=6?3:4),rows=Math.ceil(count/cols),cw=(w-gap*(cols-1))/cols,ch=Math.min(count===4?40:(count<=6?29:28),(maxH-gap*(rows-1))/rows);
     for(let i=0;i<count;i++)items.push({x:x+(i%cols)*(cw+gap),y:y+Math.floor(i/cols)*(ch+gap),w:cw,h:ch});
     return {items,height:rows*ch+(rows-1)*gap};
   }
@@ -197,12 +213,11 @@
     }
     return y;
   }
-  function drawFooter(doc,page,total,generatedAt,profile){
+  function drawFooter(doc,page,total,profile){
     const pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight();
     doc.setDrawColor(profile.secondary[0],profile.secondary[1],profile.secondary[2]);doc.setLineWidth(.4);doc.line(14,pageH-15,pageW-14,pageH-15);
     doc.setFont('helvetica','normal');doc.setFontSize(7.2);doc.setTextColor(85,90,98);
-    doc.text('Planning-GJsystems  -  Stichd',14,pageH-8);
-    doc.text(`Gegenereerd: ${formatGeneratedDate(generatedAt)}`,pageW/2,pageH-8,{align:'center'});
+    doc.text('GJsystems',14,pageH-8);
     doc.text(`Pagina ${page} van ${total}`,pageW-14,pageH-8,{align:'right'});
   }
   function createDocument(report,options={}){
@@ -210,20 +225,22 @@
     const resolved=resolveChainProfile(value(report,'chain')),{profile}=resolved;
     const photos=(report.photos||[]).filter(p=>imageData(p));
     const headerBottom=drawHeader(doc,report,profile);
-    let y=drawDetails(doc,report,headerBottom+8,profile);
+    let y=drawReportIntro(doc,report,headerBottom+13,profile);
+    y=drawDetails(doc,report,y,profile);
+    y=drawTextSections(doc,report,buildTextSections(report),y,profile);
     const firstPhotos=photos.slice(0,8),remainingPhotos=photos.slice(8);
     if(firstPhotos.length){
       const wanted=firstPhotos.length<=2?65:82;
-      if(y+wanted>216)y=addPage(doc,report,profile);
+      const preview=photoLayout(firstPhotos.length,14,y+9,182,wanted),blockHeight=preview.height+20;
+      if(y+blockHeight>274)y=addPage(doc,report,profile);
       y=drawPhotoBlock(doc,firstPhotos,y,profile,wanted);
     }
-    y=drawTextSections(doc,report,buildTextSections(report),y,profile);
     for(let offset=0;offset<remainingPhotos.length;offset+=8){
       y=addPage(doc,report,profile);
       y=drawPhotoBlock(doc,remainingPhotos.slice(offset,offset+8),y,profile,198);
     }
     const total=doc.getNumberOfPages();
-    for(let page=1;page<=total;page++){doc.setPage(page);drawFooter(doc,page,total,report.generatedAt,profile)}
+    for(let page=1;page<=total;page++){doc.setPage(page);drawFooter(doc,page,total,profile)}
     const fileName=`Winkelbezoek_${safeFilename(displayDate(value(report,'visitDate','date')))}_${safeFilename(value(report,'storeName','customerName')||'Klant')}.pdf`;
     return {doc,fileName,pageCount:total,profileKey:resolved.key,photoCount:photos.length};
   }

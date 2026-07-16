@@ -10,10 +10,12 @@
   const sb=()=>auth()?.sb;
   const workspace=()=>auth()?.workspaceUserId||auth()?.profile?.id||null;
   let historyRows=[],historyLoaded=false,historyLoading=false,historyPage=0,historyHasMore=false,realtime=null,syncTimer=null;
+  const historyPhotoRows=new Map();
 
   function applyReleaseUi(){
     document.title='Planning-GJsystems';
     document.querySelectorAll('.version,.productVersion,.settingsVersion,#v108DevBanner').forEach(element=>element.remove());
+    document.querySelectorAll('.v106Maintenance').forEach(element=>element.remove());
   }
 
   function mobileState(){
@@ -94,7 +96,7 @@
     if(!historyLoaded){list.innerHTML='<div class="card empty">Historie wordt geladen…</div>';loadMobileHistory();return}
     const query=String($('historyMobileSearch')?.value||'').toLowerCase(),status=$('historyMobileStatus')?.value||'',from=$('historyMobileFrom')?.value||'',to=$('historyMobileTo')?.value||'';
     const filtered=historyRows.filter(row=>(!query||[row.customerName,row.city,row.chain,row.samenvatting,row.activiteit,row.opmerkingen,row.reden].join(' ').toLowerCase().includes(query))&&(!status||row.status===status)&&(!from||row.bezoekdatum>=from)&&(!to||row.bezoekdatum<=to));
-    list.innerHTML=filtered.length?filtered.map(row=>`<article class="mobileHistoryCard"><div class="mobileHistoryHead"><div><strong>${esc(row.customerName)}</strong><div class="muted">${esc(row.bezoekdatum)}${row.starttijd?' · '+esc(String(row.starttijd).slice(0,5)):''} · ${esc(row.city)}</div></div><span class="mobileHistoryStatus ${row.status==='Niet uitgevoerd'?'notDone':''}">${esc(row.status||'Uitgevoerd')}</span></div><div class="mobileHistorySummary">${esc(row.samenvatting||row.reden||'Geen samenvatting.')}</div><div class="mobileHistoryActions"><button type="button" class="secondary" data-v11-history="${esc(row.id)}">Bekijken</button>${row.status==='Niet uitgevoerd'?`<button type="button" data-v11-replan="${esc(row.id)}">Opnieuw plannen</button>`:''}</div></article>`).join(''):'<div class="card empty">Geen historie gevonden.</div>';
+    list.innerHTML=filtered.length?filtered.map(row=>`<article class="mobileHistoryCard"><div class="mobileHistoryHead"><div><strong>${esc(row.customerName)}</strong><div class="muted">${esc(row.bezoekdatum)}${row.starttijd?' · '+esc(String(row.starttijd).slice(0,5)):''} · ${esc(row.city)}</div></div><span class="mobileHistoryStatus ${row.status==='Niet uitgevoerd'?'notDone':''}">${esc(row.status||'Uitgevoerd')}</span></div><div class="mobileHistorySummary">${esc(row.samenvatting||row.reden||'Geen samenvatting.')}</div><div class="mobileHistoryActions"><button type="button" class="secondary" data-v11-history="${esc(row.id)}">Bekijken</button><button type="button" class="visitPdfBtn secondary" data-id="${esc(row.id)}">PDF</button>${row.status==='Niet uitgevoerd'?`<button type="button" data-v11-replan="${esc(row.id)}">Opnieuw plannen</button>`:''}</div></article>`).join(''):'<div class="card empty">Geen historie gevonden.</div>';
     if($('historyMobileMore'))$('historyMobileMore').hidden=!historyHasMore;
   };
 
@@ -108,9 +110,22 @@
     const dialog=ensureHistoryDialog();dialog.hidden=false;$('historyDetailV11Title').textContent=row.customerName;$('historyDetailV11Sub').textContent=[row.bezoekdatum,row.status,row.city].filter(Boolean).join(' · ');$('historyDetailV11Body').innerHTML='<p>Foto’s en bezoekgegevens worden geladen…</p>';
     try{
       const photos=await sb().from('visit_photos').select('*').eq('history_id',row.id).order('created_at');if(photos.error)throw photos.error;
-      const urls=(await Promise.all((photos.data||[]).map(photo=>core.signedPhotoUrl(sb(),photo.file_path)))).filter(Boolean);
-      $('historyDetailV11Body').innerHTML=`<div class="meta"><div><strong>Activiteit</strong><br>${esc(row.activiteit||'—')}</div><div><strong>Bezoeker</strong><br>${esc(auth()?.profile?.full_name||auth()?.profile?.email||'—')}</div><div><strong>Start</strong><br>${esc(String(row.starttijd||'—').slice(0,5))}</div><div><strong>Einde</strong><br>${esc(String(row.eindtijd||'—').slice(0,5))}</div></div>${row.samenvatting?`<h3>Samenvatting</h3><p>${esc(row.samenvatting)}</p>`:''}${row.opmerkingen?`<h3>Opmerkingen</h3><p>${esc(row.opmerkingen)}</p>`:''}${row.reden?`<h3>Reden niet uitgevoerd</h3><p>${esc(row.reden)}</p>`:''}${row.vervolgactie?`<h3>Vervolgactie</h3><p>${esc(row.vervolgactie)}</p>`:''}${urls.length?`<h3>Foto's</h3><div class="photoGrid">${urls.map(url=>`<img src="${esc(url)}" alt="Bezoekfoto">`).join('')}</div>`:''}`;
+      const photoRows=photos.data||[];historyPhotoRows.set(String(row.id),photoRows);
+      const urls=(await Promise.all(photoRows.map(photo=>core.signedPhotoUrl(sb(),photo.file_path)))).filter(Boolean);
+      $('historyDetailV11Body').innerHTML=`<div class="mobileHistoryActions"><button type="button" class="visitPdfBtn secondary" data-id="${esc(row.id)}">PDF maken</button></div><div class="meta"><div><strong>Activiteit</strong><br>${esc(row.activiteit||'—')}</div><div><strong>Bezoeker</strong><br>${esc(auth()?.profile?.full_name||auth()?.profile?.email||'—')}</div><div><strong>Start</strong><br>${esc(String(row.starttijd||'—').slice(0,5))}</div><div><strong>Einde</strong><br>${esc(String(row.eindtijd||'—').slice(0,5))}</div></div>${row.samenvatting?`<h3>Samenvatting</h3><p>${esc(row.samenvatting)}</p>`:''}${row.opmerkingen?`<h3>Opmerkingen</h3><p>${esc(row.opmerkingen)}</p>`:''}${row.reden?`<h3>Reden niet uitgevoerd</h3><p>${esc(row.reden)}</p>`:''}${row.vervolgactie?`<h3>Vervolgactie</h3><p>${esc(row.vervolgactie)}</p>`:''}${photoRows.length?`<h3>Foto's</h3><button type="button" class="secondary" data-v11-photo-zip="${esc(row.id)}">Alle foto's opslaan (.zip)</button>${urls.length?`<div class="photoGrid">${urls.map(url=>`<img src="${esc(url)}" alt="Bezoekfoto">`).join('')}</div>`:'<p class="muted">Voorbeeldfoto’s konden niet worden geladen; downloaden wordt rechtstreeks vanuit Storage geprobeerd.</p>'}`:''}`;
     }catch(error){$('historyDetailV11Body').innerHTML=`<p>Bezoekdetails konden niet volledig worden geladen: ${esc(error.message)}</p>`}
+  }
+
+  async function downloadMobileHistoryZip(id,button){
+    const row=historyRows.find(item=>String(item.id)===String(id));if(!row)return;
+    if(!window.GJPhotoZip)return alert('De fotodownload is niet geladen. Sluit de app en open hem opnieuw.');
+    const original=button.textContent;button.disabled=true;
+    try{
+      let photos=historyPhotoRows.get(String(id));
+      if(!photos){const response=await sb().from('visit_photos').select('*').eq('history_id',id).order('created_at');if(response.error)throw response.error;photos=response.data||[];historyPhotoRows.set(String(id),photos)}
+      const result=await window.GJPhotoZip.download({client:sb(),photos:photos.map(photo=>({path:photo.file_path,name:String(photo.file_path||'').split('/').pop(),created_at:photo.created_at})),customerName:row.customerName,visitDate:row.bezoekdatum,subject:row.activiteit||'',summary:row.samenvatting||'',onProgress:(done,total)=>button.textContent=`Foto's ophalen ${Math.min(done+1,total)}/${total}`});
+      if(result.failed.length)alert(`${result.downloaded} foto's opgeslagen. ${result.failed.length} foto('s) konden niet worden opgehaald.`);
+    }catch(error){alert('Foto’s downloaden mislukt: '+error.message)}finally{button.disabled=false;button.textContent=original}
   }
 
   async function replanHistory(id){
@@ -164,6 +179,7 @@
       if(event.target.closest('#recalcBtn')){event.preventDefault();event.stopImmediatePropagation();const button=$('recalcBtn');button.disabled=true;try{await window.GJ_MOBILE.recalculate(core.localIso(),true);alert('De efficiëntste volgorde en alle tijden zijn opnieuw berekend.')}catch(error){alert('Route optimaliseren mislukt: '+error.message)}finally{button.disabled=false}return}
       const today=event.target.closest('[data-v11-today]');if(today){event.preventDefault();await moveAssignmentToToday(today);return}
       const history=event.target.closest('[data-v11-history]');if(history){event.preventDefault();await openMobileHistory(history.dataset.v11History);return}
+      const photoZip=event.target.closest('[data-v11-photo-zip]');if(photoZip){event.preventDefault();await downloadMobileHistoryZip(photoZip.dataset.v11PhotoZip,photoZip);return}
       const replan=event.target.closest('[data-v11-replan]');if(replan){event.preventDefault();await replanHistory(replan.dataset.v11Replan);return}
       if(event.target.closest('#saveSettings')){event.preventDefault();event.stopImmediatePropagation();const button=$('saveSettings');button.disabled=true;try{await window.GJ_MOBILE.saveSettings();alert('Instellingen zijn centraal opgeslagen.')}catch(error){alert(error.message)}finally{button.disabled=false}}
     },true);

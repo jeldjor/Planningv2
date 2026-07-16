@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.3.1
+# Planning-GJsystems v11.3.5
 
-Deze productierelease maakt de centrale route-, database- en historielaag stabiel voor dagelijks gebruik. v11.3.1 houdt een ongewijzigde groene route groen zonder opnieuw TomTom aan te roepen, controleert klantcoördinaten vóór planning en import, rondt bezoeken op laptop en iPhone atomair af en toont berekende wachttijd in de iPhone-dagroute.
+Deze productierelease maakt de centrale route-, database-, historie- en PDF-laag stabiel voor dagelijks gebruik. v11.3.5 gebruikt de gekozen rustige PDF-layout met de ketenbanner onvervormd over de volledige paginabreedte, zonder dubbele bezoekinformatie en zonder bezoektijden.
 
 ## Belangrijkste verbeteringen
 
@@ -24,6 +24,8 @@ Deze productierelease maakt de centrale route-, database- en historielaag stabie
 - De database toont locatiekwaliteit en filters voor alle, actieve en inactieve klanten; import controleert ontbrekende coördinaten vóór upload.
 - Afronden gebruikt de atomaire RPC `complete_visit`, zodat een klantnummer nooit meer in een UUID-veld terechtkomt en planning en historie niet half kunnen worden opgeslagen.
 - Grote bezoekfoto's worden op laptop en iPhone vóór upload automatisch verkleind; de private Storage-bucket blijft daardoor beschermd tegen onnodig grote camerabestanden.
+- Een geopend historiebezoek kan op laptop en iPhone met één knop als ZIP worden opgeslagen. De ZIP heet naar klant en bezoekdatum en bevat `Bezoekverslag.txt` plus iedere foto als los fotobestand.
+- `Historie legen`, `Database leegmaken` en `Alles resetten` verwijderen voortaan eerst de gekoppelde bestanden via de officiële Supabase Storage API en daarna de foto-, historie- en planningsregels in veilige volgorde.
 
 ## Installeren of bijwerken
 
@@ -36,8 +38,9 @@ Maak eerst een databaseback-up en test op een afzonderlijke Supabase-ontwikkelom
 3. Voer daarna `SUPABASE_V11_1_RELEASE.sql` uit als dat nog niet is gebeurd.
 4. Voer `SUPABASE_V11_2_RELEASE.sql` uit als dat nog niet is gebeurd.
 5. Voer daarna `SUPABASE_V11_3_RELEASE.sql` uit. Dit voegt de atomaire bezoekafronding en unieke historiekoppeling toe.
-6. Deploy de meegeleverde Edge Function `tomtom-proxy` als v11.2 nog niet actief was.
-7. Bouw en publiceer de app en voer de live acceptatiepunten uit.
+6. Voer `SUPABASE_V11_3_2_RELEASE.sql` uit. Dit bevat ook de v11.3.1-correcties en installeert de betrouwbare leegmaakfunctie.
+7. Deploy de meegeleverde Edge Function `tomtom-proxy` als v11.2 nog niet actief was.
+8. Bouw en publiceer de app en voer de live acceptatiepunten uit.
 
 De releasemigraties zijn herhaalbaar en voegen de benodigde kolommen, indexen, private Storage-regels en beveiligde RPC's toe:
 
@@ -49,7 +52,7 @@ De releasemigraties zijn herhaalbaar en voegen de benodigde kolommen, indexen, p
 
 ### Nieuw, leeg Supabase-project
 
-Voer in deze volgorde uit: `SUPABASE_V10_7_DEV_BASELINE.sql`, `SUPABASE_V11_1_RELEASE.sql`, `SUPABASE_V11_2_RELEASE.sql` en `SUPABASE_V11_3_RELEASE.sql`.
+Voer in deze volgorde uit: `SUPABASE_V10_7_DEV_BASELINE.sql`, `SUPABASE_V11_1_RELEASE.sql`, `SUPABASE_V11_2_RELEASE.sql`, `SUPABASE_V11_3_RELEASE.sql` en `SUPABASE_V11_3_2_RELEASE.sql`.
 
 Maak geen gebruikers, wachtwoorden, service-role-key of productiegegevens onderdeel van de repository.
 
@@ -112,11 +115,11 @@ Beschikbare profielen:
 - Berden
 - Stichd als algemene terugvaltemplate
 
-Een nieuw profiel wordt als één configuratieobject aan `chainProfiles` toegevoegd. De acht goedgekeurde ketenbanners staan gezamenlijk in `assets/chain-banners.png` en worden per keten automatisch uitgesneden. Zonder goedgekeurd logo of banner toont de generator een tekstheader in de ketenkleuren; een ontbrekende afbeelding verschijnt nooit als kapot element. Een winkelbezoekrapport vermeldt alleen de bezoekdatum en nooit de start- of eindtijd.
+Een nieuw profiel wordt als één configuratieobject aan `chainProfiles` toegevoegd. De vijf oorspronkelijke banners staan in `assets/chain-banners-core.png`; de acht later aangeleverde banners staan in `assets/chain-banners.png`. De banner loopt over de volledige paginabreedte en behoudt de oorspronkelijke verhouding. Zonder goedgekeurd logo of banner toont de generator een tekstheader in de ketenkleuren; een ontbrekende afbeelding verschijnt nooit als kapot element. Een winkelbezoekrapport vermeldt alleen de bezoekdatum en nooit de start- of eindtijd.
 
 De generator gebruikt bestaande data uit `visit_history`, `planning`, `customers`, `profiles` en `visit_photos`. Lege velden worden verborgen. Foto's worden uit de private bucket `visit-photos` gedownload en, indien nodig, met een signed URL van vijf minuten opgehaald. Een ontbrekende foto wordt veilig overgeslagen. Lange tekst en meer dan acht foto's lopen automatisch door op een vervolgpagina.
 
-Zie `PDF_README_V11.0.md` voor de veldmapping en uitbreidingsinstructies. De map `output/pdf` bevat de veertien gegenereerde controlescenario's.
+Zie `PDF_README_V11.0.md` voor de veldmapping en uitbreidingsinstructies. De map `output/pdf` bevat de tweeëntwintig gegenereerde controlescenario's.
 
 ## Synchronisatie en historie
 
@@ -141,10 +144,13 @@ De geautomatiseerde suite controleert code, simulaties, beveiligingscontracten, 
 - `SUPABASE_V11_1_RELEASE.sql` – Live Locaties, 30 minuten live volgen en v11.1-herstel
 - `SUPABASE_V11_3_RELEASE.sql` – atomaire bezoekafronding en unieke historiekoppeling
 - `SUPABASE_V11_3_1_RELEASE.sql` – veilige bewerking van status, verslag en werkelijke uitvoeringsdatum
+- `SUPABASE_V11_3_2_RELEASE.sql` – cumulatieve statuscorrectie en volledig legen in veilige volgorde
+- `CHANGELOG_V11.3.5.md` – wijzigingen in foto-ZIP, historie en leegmaken
+- `TESTCONTROLE_V11.3.5.md` – werkelijk uitgevoerde v11.3.5-controles
 - `CHANGELOG_V11.3.md` – functionele wijzigingen en gewijzigde bestanden
 - `TESTCONTROLE_V11.3.md` – werkelijk uitgevoerde tests en vijf live controles
 - `INSTALLATIE_V11.3.md` – stappen voor de huidige GitHub- en Supabase-omgeving
-- `INSTALLATIE_V11.3.1.md` – installatie van deze complete v11.3.1-release
+- `INSTALLATIE_V11.3.5.md` – installatie van deze complete v11.3.5-release
 - `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
 - `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
 

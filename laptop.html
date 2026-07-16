@@ -9,8 +9,9 @@
 <script src="runtime-config.js"></script>
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
-<script src="visit-pdf.js?v=113100"></script>
-<script src="planning-core.js?v=113100"></script>
+<script src="photo-zip.js?v=113500"></script>
+<script src="visit-pdf.js?v=113500"></script>
+<script src="planning-core.js?v=113500"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -3677,7 +3678,31 @@ function partialBlockForDate(date){
   return db.blocks.find(x=>date>=x.start&&date<=x.end&&!isFullDayBlock(x))||null;
 }
 
-function addBlock(){if(!$("blockStart").value)return;let end=$("blockEnd").value||$("blockStart").value;if(end<$("blockStart").value)end=$("blockStart").value;db.blocks.push({id:uuid(),type:$("blockType").value,start:$("blockStart").value,end,startTime:$("blockStartTime").value,endTime:$("blockEndTime").value,note:$("blockNote").value});db.routeStats={};save();render()} function delBlock(id){db.blocks=db.blocks.filter(b=>b.id!==id);db.routeStats={};save();render()} function addFixed(){const val=$("fixedCustomer").value,id=val.split(" - ")[0].trim(),c=getC(id)||db.customers.find(x=>low(x.Winkel)===low(val));if(!c||!$("fixedDate").value)return alert("Kies klant en datum.");const vid=uuid(),f={id:uuid(),visitId:vid,customerId:c.ID,date:$("fixedDate").value,time:$("fixedTime").value,duration:$("fixedDuration").value,note:$("fixedNote").value};db.fixed.push(f);db.visits.push({id:vid,customerId:c.ID,date:f.date,time:f.time,status:"Vast",duration:f.duration});save();refreshDayRoute(f.date)} function unfixFixedAppointment(id){const f=db.fixed.find(x=>x.id===id);if(!f)return;const v=db.visits.find(x=>x.id===f.visitId);if(v){v.status="Gepland";v.time="";}db.fixed=db.fixed.filter(x=>x.id!==id);db.routeStats={};save();refreshDayRoute(f.date);alert("Vaste afspraak losgemaakt. Dit bezoek is nu weer herplanbaar.")}
+function datesForBlock(block){const dates=[];if(!block?.start)return dates;for(let day=dateObj(block.start),end=dateObj(block.end||block.start),guard=0;day<=end&&guard++<370;day=addDays(day,1))dates.push(iso(day));return dates}
+async function addBlock(){
+  const start=$("blockStart").value;if(!start)return alert('Vul een startdatum in.');
+  let end=$("blockEnd").value||start;if(end<start)end=start;
+  const startTime=$("blockStartTime").value,endTime=$("blockEndTime").value;
+  if((startTime&&!endTime)||(!startTime&&endTime))return alert('Vul zowel starttijd als eindtijd in, of laat beide leeg.');
+  if(start===end&&startTime&&endTime&&t2m(endTime)<=t2m(startTime))return alert('De eindtijd moet later zijn dan de starttijd.');
+  const payload={type:$("blockType").value,start_date:start,end_date:end,start_time:startTime||null,end_time:endTime||null,note:$("blockNote").value||''};
+  try{
+    const client=window.GJ_AUTH?.sb;if(!client)throw new Error('Supabase is nog niet verbonden.');
+    const result=await client.from('app_absences').insert(payload).select('*').single();if(result.error)throw result.error;
+    const row=result.data,block={id:row.id,type:row.type||'Overig',start:row.start_date,end:row.end_date||row.start_date,startTime:row.start_time?String(row.start_time).slice(0,5):'',endTime:row.end_time?String(row.end_time).slice(0,5):'',note:row.note||'',supabase:true};
+    const existing=db.blocks.findIndex(item=>String(item.id)===String(block.id));if(existing>=0)db.blocks[existing]=block;else db.blocks.push(block);db.routeStats={};save();render();if(window.refreshChangedDays)await window.refreshChangedDays(datesForBlock(block));
+  }catch(error){alert('Afwezigheid opslaan mislukt: '+error.message)}
+}
+async function delBlock(id){
+  const block=db.blocks.find(item=>String(item.id)===String(id));if(!block)return;
+  if(!confirm('Weet je zeker dat je deze afwezigheid wilt verwijderen?'))return;
+  try{
+    const client=window.GJ_AUTH?.sb;if(!client)throw new Error('Supabase is nog niet verbonden.');
+    const result=await client.from('app_absences').delete().eq('id',block.id);if(result.error)throw result.error;
+    db.blocks=db.blocks.filter(item=>String(item.id)!==String(block.id));db.routeStats={};save();render();if(window.refreshChangedDays)await window.refreshChangedDays(datesForBlock(block));
+  }catch(error){alert('Afwezigheid verwijderen mislukt: '+error.message)}
+}
+function addFixed(){const val=$("fixedCustomer").value,id=val.split(" - ")[0].trim(),c=getC(id)||db.customers.find(x=>low(x.Winkel)===low(val));if(!c||!$("fixedDate").value)return alert("Kies klant en datum.");const vid=uuid(),f={id:uuid(),visitId:vid,customerId:c.ID,date:$("fixedDate").value,time:$("fixedTime").value,duration:$("fixedDuration").value,note:$("fixedNote").value};db.fixed.push(f);db.visits.push({id:vid,customerId:c.ID,date:f.date,time:f.time,status:"Vast",duration:f.duration});save();refreshDayRoute(f.date)} function unfixFixedAppointment(id){const f=db.fixed.find(x=>x.id===id);if(!f)return;const v=db.visits.find(x=>x.id===f.visitId);if(v){v.status="Gepland";v.time="";}db.fixed=db.fixed.filter(x=>x.id!==id);db.routeStats={};save();refreshDayRoute(f.date);alert("Vaste afspraak losgemaakt. Dit bezoek is nu weer herplanbaar.")}
 function readParttimeSettings(){const out={};[0,1,2,3,4,5,6].forEach(d=>{const even=$("pt"+d+"even")?.checked||false,odd=$("pt"+d+"odd")?.checked||false;if(even||odd)out[d]={even,odd}});return out}
 async function saveSettings(){
   const address=$("setStart").value.trim();let lat=parseFloat($("setStartLat")?.value),lng=parseFloat($("setStartLng")?.value);
@@ -4016,7 +4041,7 @@ function openHistoryDetail(id,photoIndex=0){
         <div class="historyFullSummary">${esc(h.summary||"Geen samenvatting.")}</div>
       </div>
       <div class="historyDetailRight">
-        <h3>Foto's</h3>
+        <div class="sectionHead"><h3>Foto's</h3>${h.photos?.length?`<button type="button" class="secondary" onclick="downloadHistoryPhotosZip('${h.id}',this)">Alle foto's opslaan (.zip)</button>`:''}</div>
         ${h.photos?.length?`<div class="historyPhotoGrid compact">${h.photos.map((p,i)=>`
           <div class="historyPhoto">
             <img src="${p.data}">
@@ -4026,6 +4051,25 @@ function openHistoryDetail(id,photoIndex=0){
     </div>
   `;
   $("historyDetailDialog").showModal();
+}
+async function downloadHistoryPhotosZip(id,button){
+  const h=db.history.find(x=>String(x.id)===String(id));
+  if(!h)return alert('Het historiebezoek is niet gevonden.');
+  if(!window.GJPhotoZip)return alert('De fotodownload is niet geladen. Vernieuw de pagina en probeer opnieuw.');
+  const original=button?.textContent||"Alle foto's opslaan (.zip)";
+  if(button)button.disabled=true;
+  try{
+    const result=await window.GJPhotoZip.download({
+      client:window.GJ_AUTH?.sb,
+      photos:h.photos||[],
+      customerName:h.customerName||getC(h.customerId)?.Winkel||'Klant',
+      visitDate:h.date||'',
+      subject:h.activity||h.activiteit||'',
+      summary:h.summary||h.samenvatting||'',
+      onProgress:(done,total)=>{if(button)button.textContent=`Foto's ophalen ${Math.min(done+1,total)}/${total}`}
+    });
+    if(result.failed.length)alert(`${result.downloaded} foto's opgeslagen. ${result.failed.length} foto('s) konden niet worden opgehaald.`);
+  }catch(error){alert('Foto’s downloaden mislukt: '+error.message)}finally{if(button){button.disabled=false;button.textContent=original}}
 }
 function moveOut(id){
   const v=db.visits.find(x=>x.id===id);
@@ -5289,12 +5333,21 @@ async function drawVisitPdfLayout(doc,visit){
     return true;
   }
 
+  async function loadAbsencesFromSupabase(){
+    const client=syncClient();if(!client||typeof db==='undefined')return false;
+    const response=await client.from('app_absences').select('*').order('start_date',{ascending:true}).order('start_time',{ascending:true});
+    if(response.error)throw response.error;
+    db.blocks=(response.data||[]).map(row=>({id:row.id,type:row.type||'Overig',start:row.start_date,end:row.end_date||row.start_date,startTime:row.start_time?String(row.start_time).slice(0,5):'',endTime:row.end_time?String(row.end_time).slice(0,5):'',note:row.note||'',supabase:true}));
+    return true;
+  }
+
   async function syncFromSupabase(reason){
     if(syncBusy || document.hidden) return;
     syncBusy=true;
     try{
       if(typeof setSyncStatus==='function') setSyncStatus('Supabase: wijzigingen ophalen...','busy');
       if(typeof window.loadPlanningFromSupabase==='function') await window.loadPlanningFromSupabase();
+      await loadAbsencesFromSupabase();
       await loadVisitHistoryFromSupabase();
       if(typeof save==='function') save();
       if(typeof render==='function') render();
@@ -5480,6 +5533,16 @@ async function drawVisitPdfLayout(doc,visit){
     }
     localSaveRender();
   }
+  async function removeVisitStorageFiles(){
+    const c=client(),rows=await c.from('visit_photos').select('file_path').limit(10000);
+    if(rows.error)throw rows.error;
+    const paths=[...new Set((rows.data||[]).map(row=>row.file_path).filter(Boolean))];
+    for(let index=0;index<paths.length;index+=100){
+      const removed=await c.storage.from('visit-photos').remove(paths.slice(index,index+100));
+      if(removed.error)throw new Error('Bezoekfoto’s uit Storage verwijderen mislukt: '+removed.error.message);
+    }
+    return paths.length;
+  }
   async function directFallback(action){
     const c=client();
     const all=q=>q.not('id','is',null);
@@ -5500,6 +5563,7 @@ async function drawVisitPdfLayout(doc,visit){
   async function remoteClear(action){
     if(action==='unplanned'||action==='routes') return {local_only:true};
     const c=client();
+    if(['history','database','all'].includes(action))await removeVisitStorageFiles();
     const {data,error}=await c.rpc('gj_clear_data',{p_action:action});
     if(!error) return data||{};
     console.warn('RPC niet beschikbaar, directe verwijdering wordt geprobeerd:',error.message);
@@ -5780,8 +5844,8 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
-<script src="v110.js?v=113100"></script>
-<script src="v11.js?v=113100"></script>
-<script src="v113.js?v=113000"></script>
+<script src="v110.js?v=113500"></script>
+<script src="v11.js?v=113500"></script>
+<script src="v113.js?v=113500"></script>
 </body>
 </html>

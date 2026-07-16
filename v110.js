@@ -236,10 +236,14 @@
     // terugrit. Daardoor gebruikt het dagtotaal exact dezelfde trajecten als laptop.
   }
 
-  function localHistory(ref){return (db.history||[]).find(h=>String(h.id)===String(ref)||String(h.supabaseHistoryId)===String(ref)||String(h.planningId)===String(ref))||null}
+  function appState(){
+    if(isLaptop)return typeof db!=='undefined'?db:{};
+    return window.GJ_MOBILE?.state?.()||{history:[],customers:[]};
+  }
+  function localHistory(ref){const state=appState();return (state.history||[]).find(h=>String(h.id)===String(ref)||String(h.supabaseHistoryId)===String(ref)||String(h.planningId)===String(ref))||null}
   function localCustomer(id){
     if(isLaptop)return typeof getC==='function'?getC(id)||{}:{};
-    return (db.customers||[]).find(c=>String(c.id)===String(id))||{};
+    const state=appState();return (state.customers||[]).find(c=>String(c.id)===String(id))||{};
   }
   function blobToDataUrl(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error||new Error('Foto kon niet worden gelezen.'));reader.readAsDataURL(blob)})}
   async function fetchAsDataUrl(url){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error('Foto is niet bereikbaar.');return blobToDataUrl(await response.blob())}
