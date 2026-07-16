@@ -23,11 +23,11 @@ const [mobile,laptop,auth,app,css,legacyLocation,sql,baseline,edge,serviceWorker
 
 test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten geladen',()=>{
   new vm.Script(app,{filename:'v11.js'});
-  assert.equal(JSON.parse(pkg).version,'11.3.1');
+  assert.equal(JSON.parse(pkg).version,'11.3.5');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=113100/);
+    assert.match(html,/planning-core\.js\?v=113500/);
     assert.match(html,/v11\.css\?v=112000/);
-    assert.match(html,/v11\.js\?v=113100/);
+    assert.match(html,/v11\.js\?v=113500/);
   }
 });
 
@@ -163,7 +163,7 @@ test('app-shellcache bewaart geen runtimeconfig of Supabase-data',()=>{
   assert.match(serviceWorker,/url\.origin!==self\.location\.origin/);
   assert.doesNotMatch(serviceWorker,/unregister\s*\(/);
   assert.doesNotMatch(serviceWorker,/supabase\.co/);
-  for(const file of ['service-worker.js','planning-core.js','visit-pdf.js','v11.js','v11.css']){
+  for(const file of ['service-worker.js','planning-core.js','visit-pdf.js','photo-zip.js','v11.js','v11.css']){
     assert.match(buildScript,new RegExp(file.replace('.','\\.')));
   }
 });

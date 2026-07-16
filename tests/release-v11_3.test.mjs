@@ -11,7 +11,7 @@ const [mobile,laptop,v11,v110,v113,css,pdf,sql,sql131,pkg,worker,build]=await Pr
 ]);
 
 test('v11.3 gebruikt een stabiele invoerhash en hergebruikt ongewijzigde groene routes',()=>{
-  assert.equal(core.VERSION,'11.3.1');assert.equal(JSON.parse(pkg).version,'11.3.1');
+  assert.equal(core.VERSION,'11.3.5');assert.equal(JSON.parse(pkg).version,'11.3.5');
   const input={date:'2026-07-16',departure:'08:30',home:{lat:51.69,lng:5.3},visits:[{id:'a',order:1,duration:30,customer:{lat:51.7,lng:5.4}}],absences:[],parkingMinutes:15,walkThresholdMeters:300,pauseEnabled:true};
   const hash=core.routeInputHash(input);
   assert.equal(hash,core.routeInputHash(input));
@@ -47,9 +47,9 @@ test('database heeft locatiebolletjes, actieve filters en importcontrole vóór 
 
 test('datumvelden blijven compact naast elkaar en release-assets worden gedeployed',()=>{
   assert.match(v113,/v113CompactDates/);assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
-  assert.match(laptop,/v113\.css\?v=113001/);assert.match(laptop,/v113\.js\?v=113000/);
-  assert.match(mobile,/v113\.js\?v=113000/);assert.match(build,/'v113\.js', 'v113\.css'/);
-  assert.match(worker,/planning-gjsystems-shell-v11\.3\.1-r1/);
+  assert.match(laptop,/v113\.css\?v=113001/);assert.match(laptop,/v113\.js\?v=113500/);
+  assert.match(mobile,/v113\.js\?v=113500/);assert.match(build,/'v113\.js', 'v113\.css'/);
+  assert.match(worker,/planning-gjsystems-shell-v11\.3\.5-r1/);
 });
 
 test('grote bezoekfoto’s worden vóór laptop- en iPhone-upload veilig verkleind',async()=>{
