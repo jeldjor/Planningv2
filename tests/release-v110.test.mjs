@@ -12,9 +12,9 @@ const [script,laptop,mobile,manifestText,pkgText]=await Promise.all([
 
 test('v10.10 modules zijn syntactisch geldig en lokaal geladen',()=>{
   new vm.Script(script,{filename:'v110.js'});
-  assert.equal(JSON.parse(pkgText).version,'11.3.0');
+  assert.equal(JSON.parse(pkgText).version,'11.3.1');
   for(const html of [laptop,mobile]){
-    assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=11000/);assert.match(html,/v110\.js\?v=112000/);
+    assert.match(html,/vendor\/jspdf\.umd\.min\.js\?v=251/);assert.match(html,/visit-pdf\.js\?v=113100/);assert.match(html,/v110\.js\?v=113100/);
     assert.doesNotMatch(html,/cdn\.jsdelivr\.net\/npm\/jspdf/);
   }
 });
@@ -24,14 +24,23 @@ test('ketenherkenning gebruikt het centrale ketenprofiel en veilige fallback',()
   assert.equal(pdf.resolveChainProfile('INTERSPORT Nederland').key,'intersport');
   assert.equal(pdf.resolveChainProfile('de Bijenkorf').key,'bijenkorf');
   assert.equal(pdf.resolveChainProfile('Van Tilburg Sport').key,'van_tilburg_sport');
+  assert.equal(pdf.resolveChainProfile('Van Haren Eindhoven').key,'van_haren');
+  assert.equal(pdf.resolveChainProfile('Bomont').key,'bomont');
+  assert.equal(pdf.resolveChainProfile('DAKA').key,'daka');
+  assert.equal(pdf.resolveChainProfile('E5 Mode').key,'e5');
+  assert.equal(pdf.resolveChainProfile('Molecule').key,'molecule');
+  assert.equal(pdf.resolveChainProfile('Torfs').key,'torfs');
+  assert.equal(pdf.resolveChainProfile('Veritas').key,'veritas');
+  assert.equal(pdf.resolveChainProfile('Berden').key,'berden');
   assert.equal(pdf.resolveChainProfile('Niet bekende winkelgroep').key,'stichd');
   assert.equal(pdf.resolveChainProfile('').key,'stichd');
 });
 
 test('lege PDF-velden en ontbrekende foto-inhoud worden niet gerenderd',()=>{
-  const details=pdf.buildDetailFields({storeName:'Test',city:'Eindhoven',contactPerson:'',remarks:''});
+  const details=pdf.buildDetailFields({storeName:'Test',city:'Eindhoven',contactPerson:'',remarks:'',startTime:'09:00',endTime:'10:00'});
   assert.equal(details.some(([label])=>label==='Contactpersoon'),false);
   assert.equal(details.some(([label])=>label==='Opmerkingen'),false);
+  assert.equal(details.some(([label])=>label==='Starttijd'||label==='Eindtijd'),false);
   const result=pdf.createDocument({chain:'Scapino',storeName:'Scapino Test',visitDate:'2026-07-13',status:'Uitgevoerd',summary:'Controle uitgevoerd.',photos:[{data:''}]});
   assert.equal(result.profileKey,'scapino');assert.equal(result.photoCount,0);assert.equal(result.pageCount,1);
 });

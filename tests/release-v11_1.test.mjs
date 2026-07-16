@@ -67,7 +67,7 @@ test('oude DEV-module wordt niet meer geladen en releasecache is vernieuwd',()=>
   assert.doesNotMatch(mobile,/src="v111\.js/);
   assert.doesNotMatch(laptop,/src="v111\.js/);
   assert.match(mobile,/maximum-scale=1,user-scalable=no/);
-  assert.match(mobile,/v110\.js\?v=112000/);
+  assert.match(mobile,/v110\.js\?v=113100/);
   assert.match(laptop,/v108\.js\?v=113000/);
   assert.doesNotMatch(v110,/maximaal 45 seconden/);
 });

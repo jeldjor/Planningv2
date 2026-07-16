@@ -23,11 +23,11 @@ const [mobile,laptop,auth,app,css,legacyLocation,sql,baseline,edge,serviceWorker
 
 test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten geladen',()=>{
   new vm.Script(app,{filename:'v11.js'});
-  assert.equal(JSON.parse(pkg).version,'11.3.0');
+  assert.equal(JSON.parse(pkg).version,'11.3.1');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=113002/);
+    assert.match(html,/planning-core\.js\?v=113100/);
     assert.match(html,/v11\.css\?v=112000/);
-    assert.match(html,/v11\.js\?v=113001/);
+    assert.match(html,/v11\.js\?v=113100/);
   }
 });
 

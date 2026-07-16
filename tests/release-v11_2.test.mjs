@@ -12,11 +12,11 @@ const [mobile,laptop,v109,edge,sql,pkg,worker]=await Promise.all([
 ]);
 
 test('v11.2 gebruikt één gedeelde TomTom-dagbatch zonder losse routecyclus',()=>{
-  assert.equal(JSON.parse(pkg).version,'11.3.0');
-  assert.equal(core.VERSION,'11.3.0');
+  assert.equal(JSON.parse(pkg).version,'11.3.1');
+  assert.equal(core.VERSION,'11.3.1');
   assert.match(core.requestRouteBatch.toString(),/action:'route-batch'/);
   assert.doesNotMatch([mobile,laptop,v109].join('\n'),/functions\.invoke\('tomtom-proxy',[\s\S]{0,180}action:'route'/);
-  assert.match(worker,/planning-gjsystems-shell-v11\.3\.0/);
+  assert.match(worker,/planning-gjsystems-shell-v11\.3\.1/);
 });
 
 test('TomTom Edge Function heeft begrensde paralleliteit en een stabiel foutcontract',()=>{
