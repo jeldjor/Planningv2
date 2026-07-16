@@ -75,7 +75,7 @@
     "name": "09-lange-samenvatting",
     "file": "output/pdf/09-lange-samenvatting.pdf",
     "profile": "bijenkorf",
-    "pages": 2,
+    "pages": 1,
     "photos": 4,
     "customer": "de Bijenkorf Utrecht",
     "status": "Uitgevoerd"
@@ -123,6 +123,78 @@
     "pages": 2,
     "photos": 10,
     "customer": "Scapino Utrecht",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "15-van-haren-banner",
+    "file": "output/pdf/15-van-haren-banner.pdf",
+    "profile": "van_haren",
+    "pages": 1,
+    "photos": 4,
+    "customer": "Van Haren Den Bosch",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "16-bomont-banner",
+    "file": "output/pdf/16-bomont-banner.pdf",
+    "profile": "bomont",
+    "pages": 1,
+    "photos": 4,
+    "customer": "Bomont Breda",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "17-daka-banner",
+    "file": "output/pdf/17-daka-banner.pdf",
+    "profile": "daka",
+    "pages": 1,
+    "photos": 4,
+    "customer": "DAKA Rotterdam",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "18-e5-banner",
+    "file": "output/pdf/18-e5-banner.pdf",
+    "profile": "e5",
+    "pages": 1,
+    "photos": 4,
+    "customer": "E5 Antwerpen",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "19-molecule-banner",
+    "file": "output/pdf/19-molecule-banner.pdf",
+    "profile": "molecule",
+    "pages": 1,
+    "photos": 4,
+    "customer": "Molecule Antwerpen",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "20-torfs-banner",
+    "file": "output/pdf/20-torfs-banner.pdf",
+    "profile": "torfs",
+    "pages": 1,
+    "photos": 4,
+    "customer": "Torfs Turnhout",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "21-veritas-banner",
+    "file": "output/pdf/21-veritas-banner.pdf",
+    "profile": "veritas",
+    "pages": 1,
+    "photos": 4,
+    "customer": "Veritas Hasselt",
+    "status": "Uitgevoerd"
+  },
+  {
+    "name": "22-berden-banner",
+    "file": "output/pdf/22-berden-banner.pdf",
+    "profile": "berden",
+    "pages": 1,
+    "photos": 4,
+    "customer": "Berden Uden",
     "status": "Uitgevoerd"
   }
 ]
