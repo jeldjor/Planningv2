@@ -51,7 +51,7 @@ h1{font-size:18px;line-height:1.05;margin:1px 0 4px}h2{font-size:14px;margin:0 0
 .panel,.card{background:var(--panel);border:1px solid #dce4f0;border-radius:14px;box-shadow:0 5px 18px rgba(5,45,104,.08);padding:8px;margin-bottom:7px;overflow:hidden}
 .grid2{display:flex;gap:5px;align-items:flex-end;max-width:100%;overflow:hidden}.grid2>*{flex:1 1 0;min-width:0}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:8px}.stat{background:#fff;border:1px solid #dce4f0;border-radius:11px;padding:7px 2px;text-align:center;min-width:0;min-height:72px;display:grid;place-items:center;align-content:center;box-shadow:0 2px 8px rgba(5,45,104,.05)}.statIcon{font-size:22px;line-height:1;color:var(--primary);margin-bottom:4px}.stat strong{display:block;font-size:17px;line-height:1;color:#082b63}.stat span{display:block;font-size:10px;line-height:1.05;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.leg{display:flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:4px 6px;margin:3px 0;font-size:11px;font-weight:850;color:#334155;max-width:100%;overflow:hidden;min-height:27px;line-height:1.1}.leg.walk{background:#ecfdf3;color:#166534;border-color:#bbf7d0}.leg.home,.leg.pause{background:#fff7ed;color:#92400e;border-color:#fed7aa}.leg.pause{border-style:dashed}.leg.disabled{opacity:.45;text-decoration:line-through}
+.leg{display:flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:4px 6px;margin:3px 0;font-size:11px;font-weight:850;color:#334155;max-width:100%;overflow:hidden;min-height:27px;line-height:1.1}.leg.walk{background:#ecfdf3;color:#166534;border-color:#bbf7d0}.leg.home,.leg.pause{background:#fff7ed;color:#92400e;border-color:#fed7aa}.leg.pause{border-style:dashed}.leg.waiting{background:#fffbeb;color:#854d0e;border-color:#fde68a}.leg.disabled{opacity:.45;text-decoration:line-through}
 .visitCard{border-left:3px solid var(--primary);padding:6px 6px 6px 7px;border-radius:11px;margin-bottom:5px}.visitCard.done{border-left-color:var(--green);background:var(--green-bg);border-color:#9bd5ad}.visitCard.notdone{border-left-color:var(--orange);background:var(--orange-bg);border-color:#fdba74}.visitCard.out{opacity:.55;border-left-color:#94a3b8;background:#f8fafc}.visitTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px;align-items:start}.visitTop strong{font-size:16px;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pill{display:inline-flex;align-items:center;background:#f1f5f9;border-radius:999px;padding:3px 6px;font-size:10.5px;font-weight:850;white-space:nowrap;line-height:1}.routeMode{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 6px;font-size:10.5px;font-weight:900;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;white-space:nowrap;line-height:1}.routeMode.walk{background:#ecfdf3;color:#166534;border-color:#bbf7d0}
 .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}.btnRow button{min-height:31px;font-size:13px;padding:5px}.smallBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:4px}.smallBtns button{min-height:28px;padding:4px 2px;font-size:11px;border-radius:8px}.savedLine{margin-top:4px;padding:4px 6px;border-radius:7px;background:#dcfce7;color:#166534;font-weight:950;font-size:11px;line-height:1.05}.visitCard.notdone .savedLine{background:#ffedd5;color:#c2410c}
@@ -306,8 +306,8 @@ body:not(.gj-admin) #adminMobile{display:none!important}
 <script src="runtime-config.js"></script>
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
-<script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=113002"></script>
+<script src="visit-pdf.js?v=113100"></script>
+<script src="planning-core.js?v=113100"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style id="gjMobileAdminCss">
@@ -461,7 +461,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <section id="calendar" class="screen"><h1 data-key="calendar">Kalender</h1><div class="panel calendarPanel"><div class="monthHead"><button id="prevMonth" class="secondary" type="button">‹</button><div id="monthTitle" class="monthTitle">Maand</div><button id="nextMonth" class="secondary" type="button">›</button></div><div id="calendarList"></div></div><div id="calendarDetail"></div></section>
 <section id="overview" class="screen"><h1 data-key="overview">Overzicht</h1><label><span data-key="search">Zoeken</span><input id="search" data-ph="searchPh" placeholder="Zoek klant, plaats of postcode"></label><div id="overviewList" style="margin-top:8px"></div></section>
 <section id="historyMobile" class="screen"><h1>Historie</h1><div class="historyFiltersMobile"><input id="historyMobileSearch" type="search" placeholder="Zoek klant, plaats of samenvatting"><select id="historyMobileStatus"><option value="">Alle statussen</option><option>Uitgevoerd</option><option>Niet uitgevoerd</option></select><input id="historyMobileFrom" type="date" aria-label="Startdatum"><input id="historyMobileTo" type="date" aria-label="Einddatum"></div><div id="historyMobileList"></div><button id="historyMobileMore" type="button" class="secondary" hidden>Meer historie laden</button></section>
-<section id="absence" class="screen"><h1 data-key="absence">Afwezigheid</h1><div class="panel"><div class="form"><label><span data-key="type">Type</span><select id="blockType"><option>Verlof</option><option>Ziekte</option><option>Training</option><option>Overig</option></select></label><div class="formRow absenceDates"><label class="compactDateField"><span data-key="startDate">Startdatum</span><input id="blockStart" type="date"></label><label class="compactDateField"><span data-key="endDate">Einddatum</span><input id="blockEnd" type="date"></label></div><div class="formRow absenceTimes"><label class="compactTimeField"><span data-key="startTime">Starttijd</span><input id="blockStartTime" type="time" placeholder="09:00"></label><label class="compactTimeField"><span data-key="endTime">Eindtijd</span><input id="blockEndTime" type="time" placeholder="12:30"></label></div><label><span data-key="description">Omschrijving</span><textarea id="blockNote" data-ph="absencePh" placeholder="Bijv. tandarts, verlof ochtend of training"></textarea></label><button id="saveBlock" type="button" data-key="save">Opslaan</button></div></div><div id="absenceList"></div></section>
+<section id="absence" class="screen"><h1 data-key="absence">Afwezigheid</h1><div class="panel"><div class="form"><label><span data-key="type">Type</span><select id="blockType"><option>Verlof</option><option>Ziekte</option><option>Training</option><option>Overig</option></select></label><div class="formRow absenceDates"><label class="compactDateField"><span data-key="startDate">Startdatum</span><input id="blockStart" type="date"></label><label class="compactDateField"><span data-key="endDate">Einddatum</span><input id="blockEnd" type="date"></label></div><div class="formRow absenceTimes"><label class="compactTimeField"><span data-key="startTime">Starttijd</span><input id="blockStartTime" type="time" placeholder="09:00"></label><label class="compactTimeField"><span data-key="endTime">Eindtijd</span><input id="blockEndTime" type="time" placeholder="12:30"></label></div><label><span data-key="description">Omschrijving</span><textarea id="blockNote" data-ph="absencePh" placeholder="Bijv. tandarts, verlof ochtend of training"></textarea></label><div class="formRow"><button id="saveBlock" type="button" data-key="save">Opslaan</button><button id="cancelBlockEdit" type="button" class="secondary" hidden>Annuleren</button></div></div></div><div id="absenceList"></div></section>
 <section id="settings" class="screen"><h1 data-key="settings">Instellingen</h1><div class="v102SettingsGrid">
 <div class="v102Card"><h3>Profiel</h3><p class="muted">Wijzig hier je centraal gesynchroniseerde profielfoto.</p><div class="v109ProfilePreview"><span>Profielfoto</span><img id="mV102ProfilePreview" class="v102ProfilePreview" alt=""></div><input id="mV102ProfileFile" type="file" accept="image/*" hidden><button id="mV102ChooseProfile" type="button">Profielfoto wijzigen</button></div>
 <div class="v102Card"><h3>Wachtwoord wijzigen</h3><label>Huidig wachtwoord<input id="mV102CurrentPassword" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="mV102NewPassword" type="password" autocomplete="new-password"></label><label>Nieuw wachtwoord herhalen<input id="mV102NewPasswordAgain" type="password" autocomplete="new-password"></label><div id="mV102PasswordCriteria" class="v102Criteria"></div><button id="mV102ChangePassword" type="button">Wachtwoord wijzigen</button><div id="mV102PasswordStatus" class="adminStatus"></div></div></div><div class="panel form"><label><span data-key="language">Taal</span><select id="lang"><option value="nl">Nederlands</option><option value="de">Deutsch</option><option value="en">English</option></select></label><label>Startadres<input id="mobileStartAddress" autocomplete="street-address" placeholder="Straat, huisnummer, postcode en plaats"></label><div class="grid2"><label>Startbreedtegraad<input id="mobileStartLat" type="number" step="any"></label><label>Startlengtegraad<input id="mobileStartLng" type="number" step="any"></label></div><div class="grid2"><label>Parkeerbuffer (minuten)<input id="mobileParkingMinutes" type="number" min="0" max="60" value="15"></label><label>Loopafstand (meter)<input id="mobileWalkThreshold" type="number" min="0" max="2000" value="300"></label></div><div class="muted">Deze route-instellingen worden centraal gesynchroniseerd met de laptop.</div><button id="saveSettings" type="button" data-key="saveSettings">Instellingen opslaan</button></div></section>
@@ -545,11 +545,11 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
   </div>
 </section>
 
-<div id="finishOverlay" class="finishOverlay"><div class="finishSheet"><div class="finishHead"><div><strong id="finishTitle">Klant afronden</strong><div id="finishMeta" class="muted"></div></div><button id="finishClose" class="finishClose" type="button" data-key="close">Sluit</button></div><div class="form"><label><span data-key="activity">Activiteit</span><input id="finishActivity" data-ph="activityPh" placeholder="Bijv. winkelcheck, schapcontrole"></label><label><span data-key="summary">Samenvatting</span><textarea id="finishSummary" data-ph="summaryPh" placeholder="Typ hier uitgebreid wat er is gedaan, bijzonderheden, afspraken of opmerkingen..."></textarea></label><div class="photoBox"><strong data-key="photos">Foto's</strong><div class="photoActions"><button id="btnTakePhoto" type="button" class="secondary">📷 Maak foto</button><button id="btnChoosePhoto" type="button" class="ghost">🖼 Kies foto</button></div><input id="finishCamera" type="file" accept="image/*" capture="environment" multiple><input id="finishPhotos" type="file" accept="image/*" multiple><div id="selectedPhotos" class="photoSelection">Nog geen nieuwe foto’s gekozen.</div><div id="existingPhotos" class="photoList"></div><span id="photoHelp" class="muted" data-key="photoHelp">Maak een foto of kies er één uit Foto’s, iCloud Drive of Bestanden.</span></div><div class="finishActions"><button id="btnDone" type="button" data-key="executed">Uitgevoerd</button><button id="btnNotDone" class="orange" type="button" data-key="notExecuted">Niet uitgevoerd</button></div></div></div></div>
+<div id="finishOverlay" class="finishOverlay"><div class="finishSheet"><div class="finishHead"><div><strong id="finishTitle">Klant afronden</strong><div id="finishMeta" class="muted"></div></div><button id="finishClose" class="finishClose" type="button" data-key="close">Sluit</button></div><div class="form"><label id="finishExecutionDateLabel" hidden><span>Datum uitvoering</span><input id="finishExecutionDate" type="date"></label><label><span data-key="activity">Activiteit</span><input id="finishActivity" data-ph="activityPh" placeholder="Bijv. winkelcheck, schapcontrole"></label><label><span data-key="summary">Samenvatting</span><textarea id="finishSummary" data-ph="summaryPh" placeholder="Typ hier uitgebreid wat er is gedaan, bijzonderheden, afspraken of opmerkingen..."></textarea></label><div class="photoBox"><strong data-key="photos">Foto's</strong><div class="photoActions"><button id="btnChoosePhoto" type="button" class="ghost">🖼 Kies foto</button><button id="btnTakePhoto" type="button" class="red">🗑 Foto verwijderen</button></div><input id="finishCamera" type="file" accept="image/*" capture="environment" multiple><input id="finishPhotos" type="file" accept="image/*" multiple><div id="selectedPhotos" class="photoSelection">Nog geen nieuwe foto’s gekozen.</div><div id="existingPhotos" class="photoList"></div><span id="photoHelp" class="muted" data-key="photoHelp">Kies foto; iPhone biedt daarna camera, fotobibliotheek en bestanden aan.</span></div><div class="finishActions"><button id="btnDone" type="button" data-key="executed">Uitgevoerd</button><button id="btnNotDone" class="orange" type="button" data-key="notExecuted">Niet uitgevoerd</button></div></div></div></div>
 </main>
 <script>
 (function(){
-const VERSION='v11.1',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
+const VERSION='v11.3.1',STORAGE='gj_mobile_v56_data_'+(sessionStorage.getItem('gj_workspace_storage_id')||'guest');
 let sb=null;
 window.addEventListener('gj-auth-ready',()=>{if(window.GJ_AUTH?.sb)sb=window.GJ_AUTH.sb});
 const COLORS={blue:['#083b86','#052d68','#eef4ff']};
@@ -557,7 +557,7 @@ const TR={nl:{today:'Vandaag',calendar:'Kalender',overview:'Overzicht',absence:'
 const $=id=>document.getElementById(id);
 function localIso(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function parseLocalDate(iso){const [y,m,d]=String(iso||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1)}
-const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,pendingFinishFiles=[],finishBusy=false,mobileSyncPromise=null;
+const todayIso=()=>localIso(new Date());let db,activeVisitId=null,monthOffset=0,selectedCalendarDate=todayIso(),editingTime=null,editingAbsenceId=null,pendingFinishFiles=[],finishBusy=false,mobileSyncPromise=null;
 function t(k){return (TR[db?.settings?.language||'nl']||TR.nl)[k]||TR.nl[k]||k}
 function ts(status){
   const m={Gepland:'planned',Uitgevoerd:'executed','Niet uitgevoerd':'notExecuted','Uit planning':'remove'};
@@ -590,10 +590,12 @@ async function loadPlanningFromSupabase(){
     if(customersRes.error)throw customersRes.error;
     const planning=planningRes.data||[];
     db.customers=(customersRes.data||[]).map(r=>({id:String(r.id),name:r.winkel||r.naam||r.klantnaam||r.keten||'Onbekende klant',chain:r.keten||'',street:r.straat||r.adres||'',nr:r.huisnr||r.huisnummer||'',postal:r.postcode||'',city:r.plaats||'',country:r.land||'',lat:r.latitude,lng:r.longitude,opening:r.openingstijden||null,visitDuration:Number(r.bezoektijd||30),active:r.actief!==false&&r.meenemen_in_planning!==false}));
+    const waitingByVisit=new Map();
+    if(!daysRes.error)(daysRes.data||[]).forEach(day=>Object.entries(day.settings?.day_route?.visitWaits||{}).forEach(([id,min])=>waitingByVisit.set(String(id),Math.max(0,Number(min)||0))));
     const customerIds=new Set(db.customers.map(c=>c.id));
-    db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),fixedStart:String(p.fixed_starttijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,parking:Number(p.parking_min||0),distanceKm:kms,routeLive:p.route_live===true,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true,rescheduledFromHistoryId:p.rescheduled_from_history_id||null}});
+    db.visits=planning.filter(p=>p.datum&&customerIds.has(String(p.customer_id))).map(p=>{const mins=Number(p.reistijd_min||0),kms=Number(p.afstand_km||0),mode=p.route_mode==='walk'?'walk':'drive';return{id:String(p.id),planningId:String(p.id),customerId:String(p.customer_id),date:p.datum,time:String(p.starttijd||'').slice(0,5),end:String(p.eindtijd||'').slice(0,5),fixedStart:String(p.fixed_starttijd||'').slice(0,5),status:p.status||'Gepland',order:Number(p.route_volgorde||999),travel:mins,parking:Number(p.parking_min||0),waiting:Number(waitingByVisit.get(String(p.id))||0),distanceKm:kms,routeLive:p.route_live===true,duration:Number(p.bezoekduur_min||30),pause:false,mode,leg:mins?((mode==='walk'?'🚶 ':'🚗 ')+fmtTravel(mins)+(kms?' · '+fmtKm(kms):'')):'',updatedAt:p.updated_at||'',fromSupabase:true,rescheduledFromHistoryId:p.rescheduled_from_history_id||null}});
     db.dayDepartures={};db.mobileRouteStats={};db.pauseEnabled={};
-    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route&&Number.isFinite(Number(route.km))&&Number.isFinite(Number(route.travelMin)))db.mobileRouteStats[r.datum]={km:Number(route.km),min:Number(route.travelMin),live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
+    if(!daysRes.error)(daysRes.data||[]).forEach(r=>{if(r.datum&&r.vertrektijd)db.dayDepartures[r.datum]=String(r.vertrektijd).slice(0,5);const route=r.settings?.day_route;if(r.datum&&route&&Number.isFinite(Number(route.km))&&Number.isFinite(Number(route.travelMin)))db.mobileRouteStats[r.datum]={km:Number(route.km),min:Number(route.travelMin),waitingMin:Number(route.waitingMin||0),live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null,updatedAt:route.calculatedAt};if(r.datum)db.pauseEnabled[r.datum]=r.settings?.pause_enabled!==false});
     db.blocks=absRes.error?[]:(absRes.data||[]).map(r=>({id:String(r.id),type:r.type||'Overig',start:r.start_date,end:r.end_date||r.start_date,startTime:String(r.start_time||'').slice(0,5),endTime:String(r.end_time||'').slice(0,5),note:r.note||'',fromSupabase:true}));
     db.settings={...db.settings,...settingsRes,language:settingsRes.language||db.settings.language||'nl'};
     save();return true;
@@ -634,10 +636,10 @@ async function recalculateMobileDayRoute(date,optimize=false){
     const calculated=await window.GJPlanningCore.calculateDay({sb,workspaceId:window.GJ_AUTH?.workspaceUserId,...routeArgs,optimize});
     calculated.visits.forEach((ordered,index)=>{
       const visit=db.visits.find(v=>v.id===ordered.id),row=calculated.result.rows[index];if(!visit||!row)return;
-      visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.travel=row.travelMin;visit.parking=row.parkingMin;visit.distanceKm=row.distanceKm;visit.routeLive=row.routeLive;visit.mode=row.routeMode==='walk'?'walk':'drive';visit.leg=(row.routeMode==='walk'?'🚶 ':'🚗 ')+fmtTravel(row.travelMin)+(row.distanceKm?' · '+fmtKm(row.distanceKm):'');
+      visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.travel=row.travelMin;visit.parking=row.parkingMin;visit.waiting=row.waitingMin;visit.distanceKm=row.distanceKm;visit.routeLive=row.routeLive;visit.mode=row.routeMode==='walk'?'walk':'drive';visit.leg=(row.routeMode==='walk'?'🚶 ':'🚗 ')+fmtTravel(row.travelMin)+(row.distanceKm?' · '+fmtKm(row.distanceKm):'');
     });
     db.mobileRouteStats=db.mobileRouteStats||{};
-    db.mobileRouteStats[date]={km:calculated.result.totals.km,min:calculated.result.totals.travelMin,live:calculated.result.live,includesReturn:true,returnLeg:calculated.result.returnLeg||null,inputHash:calculated.result.inputHash||null,updatedAt:calculated.result.calculatedAt};
+    db.mobileRouteStats[date]={km:calculated.result.totals.km,min:calculated.result.totals.travelMin,waitingMin:calculated.result.totals.waitingMin,live:calculated.result.live,includesReturn:true,returnLeg:calculated.result.returnLeg||null,inputHash:calculated.result.inputHash||null,updatedAt:calculated.result.calculatedAt};
     save();renderAll();return true;
   });
 }
@@ -655,9 +657,48 @@ async function manualSync(showMessage=false){
   try{await mobileSyncPromise;if(showMessage)alert('Planning is bijgewerkt.');return true}
   finally{mobileSyncPromise=null;if(button)button.disabled=false}
 }
-async function saveAbsenceToSupabase(b){
-  const {data,error}=await sb.from('app_absences').insert({type:b.type,start_date:b.start,end_date:b.end,start_time:b.startTime||null,end_time:b.endTime||null,note:b.note||''}).select('*').single();
-  if(error)throw error; b.id=String(data.id);b.fromSupabase=true;save();renderAll();
+function absenceDates(block){
+  const dates=[],end=block.end||block.start;let current=block.start,guard=0;
+  while(current&&current<=end&&guard++<370){dates.push(current);current=addDaysIso(current,1)}
+  return dates;
+}
+async function recalculateAbsenceDates(blocks){
+  const dates=[...new Set((blocks||[]).flatMap(absenceDates))].sort();
+  for(const date of dates)await recalculateMobileDayRoute(date,false);
+}
+async function saveAbsenceToSupabase(block){
+  const payload={type:block.type,start_date:block.start,end_date:block.end||block.start,start_time:block.startTime||null,end_time:block.endTime||null,note:block.note||''};
+  const query=block.id?sb.from('app_absences').update({...payload,updated_at:new Date().toISOString()}).eq('id',block.id):sb.from('app_absences').insert(payload);
+  const {data,error}=await query.select('*').single();if(error)throw error;
+  return{id:String(data.id),type:data.type||'Overig',start:data.start_date,end:data.end_date||data.start_date,startTime:String(data.start_time||'').slice(0,5),endTime:String(data.end_time||'').slice(0,5),note:data.note||'',fromSupabase:true};
+}
+function resetAbsenceForm(){
+  editingAbsenceId=null;$('blockType').value='Verlof';$('blockStart').value=todayIso();$('blockEnd').value=todayIso();$('blockEnd').min=todayIso();$('blockStartTime').value='';$('blockEndTime').value='';$('blockNote').value='';$('saveBlock').textContent='Opslaan';$('cancelBlockEdit').hidden=true;
+}
+function editAbsence(id){
+  const block=db.blocks.find(item=>String(item.id)===String(id));if(!block)return;
+  editingAbsenceId=block.id;$('blockType').value=block.type||'Overig';$('blockStart').value=block.start;$('blockEnd').min=block.start;$('blockEnd').value=block.end||block.start;$('blockStartTime').value=block.startTime||'';$('blockEndTime').value=block.endTime||'';$('blockNote').value=block.note||'';$('saveBlock').textContent='Wijzigingen opslaan';$('cancelBlockEdit').hidden=false;document.querySelector('#absence .panel')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function deleteAbsence(id){
+  const block=db.blocks.find(item=>String(item.id)===String(id));if(!block||!confirm('Weet je zeker dat je deze afwezigheid wilt verwijderen?'))return;
+  try{
+    const result=await sb.from('app_absences').delete().eq('id',block.id);if(result.error)throw result.error;
+    db.blocks=db.blocks.filter(item=>String(item.id)!==String(block.id));if(String(editingAbsenceId)===String(block.id))resetAbsenceForm();save();renderAll();await recalculateAbsenceDates([block]);openDay(selectedCalendarDate);
+  }catch(error){console.error(error);alert('Afwezigheid verwijderen mislukt: '+error.message)}
+}
+async function saveAbsenceForm(){
+  const start=$('blockStart').value,end=$('blockEnd').value||start,startTime=$('blockStartTime').value,endTime=$('blockEndTime').value;
+  if(!start)return alert('Vul een startdatum in.');if(end<start)return alert('De einddatum mag niet vóór de startdatum liggen.');
+  if((startTime&&!endTime)||(!startTime&&endTime))return alert('Vul zowel starttijd als eindtijd in, of laat beide leeg voor een hele dag.');
+  if(start===end&&startTime&&endTime&&timeToMin(endTime)<=timeToMin(startTime))return alert('De eindtijd moet later zijn dan de starttijd.');
+  const previous=editingAbsenceId?db.blocks.find(item=>String(item.id)===String(editingAbsenceId)):null;
+  const block={id:editingAbsenceId||null,type:$('blockType').value,start,end,startTime,endTime,note:$('blockNote').value.trim()};
+  const button=$('saveBlock');button.disabled=true;
+  try{
+    const savedBlock=await saveAbsenceToSupabase(block),index=db.blocks.findIndex(item=>String(item.id)===String(savedBlock.id));
+    if(index>=0)db.blocks[index]=savedBlock;else db.blocks.push(savedBlock);
+    save();resetAbsenceForm();renderAll();await recalculateAbsenceDates([previous,savedBlock].filter(Boolean));openDay(selectedCalendarDate);alert(previous?'Afwezigheid gewijzigd en route opnieuw berekend.':t('absenceSaved')+' Route opnieuw berekend.');
+  }catch(error){console.error(error);alert('Afwezigheid opslaan mislukt: '+error.message)}finally{button.disabled=false}
 }
 function customer(id){return db.customers.find(c=>c.id===id)||{}}function todayVisits(includeOut=false){return db.visits.filter(v=>v.date===todayIso()&&(includeOut||v.status!=='Uit planning')&&(!v.pause||v.active!==false)).sort((a,b)=>(a.order||0)-(b.order||0))}function address(c){return [c.street,c.nr,c.postal,c.city].filter(Boolean).join(' ')}function navUrl(q){const app=$('navApp').value;if(app==='Waze')return 'https://waze.com/ul?q='+q+'&navigate=yes'; if(app==='Apple Kaarten')return 'http://maps.apple.com/?q='+q; return 'https://www.google.com/maps/search/?api=1&query='+q}function fullRouteUrl(){const pts=todayVisits().filter(v=>!v.pause&&v.status!=='Uit planning').map(v=>address(customer(v.customerId))),home=String(db.settings?.start||'').trim();if(!home)return pts.length?navUrl(pts[0]):'#';return 'https://www.google.com/maps/dir/'+[home].concat(pts).concat([home]).map(encodeURIComponent).join('/')}function timeToMin(x){if(!x)return null;const p=x.split(':').map(Number);return p[0]*60+p[1]}function minToTime(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}function durationOf(v){const s=timeToMin(v.time),e=timeToMin(v.end);if(s!==null&&e!==null){let d=e-s;if(d<0)d+=1440;return Math.max(5,d)}return v.pause?30:35}function parseLegInfo(txt){
   const s=String(txt||'');
@@ -727,9 +768,89 @@ function openDay(iso){
   $('calendarDetail').innerHTML='<div class="card calendarDayCard"><div class="calendarDayHead"><div><div class="calendarDayTitle">'+esc(title)+'</div><div class="calendarDaySummary">'+summary+'</div></div><span class="pill">'+real.length+' 👥</span></div>'+absenceHtml+(!vs.length?'<div class="calendarEmpty">'+t('dayNoPlan')+'</div>':vs.map(v=>{if(v.pause)return '<div class="leg pause calendarPause">'+esc((v.time||'')+' - '+(v.end||'')+' '+(v.leg||'Pauze'))+'</div>';const c=customer(v.customerId),q=encodeURIComponent(address(c));return '<div class="calendarVisit"><div class="calendarVisitTime">'+esc(v.time||'--:--')+'<br>'+esc(v.end||'--:--')+'</div><div><div class="calendarVisitName">'+esc(c.name||'Klant')+'</div><div class="calendarVisitMeta">'+esc([c.city,ts(v.status||'Gepland')].filter(Boolean).join(' · '))+'</div></div><button class="routeBtn" data-q="'+q+'">↗</button></div>'}).join(''))+'</div>';
   renderCalendar();
 }
-function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().reverse().map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+' t/m '+esc(b.end||b.start)+'</div><div class="muted">'+esc([b.startTime,b.endTime].filter(Boolean).join(' - '))+'</div><div>'+esc(b.note)+'</div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();const active=document.querySelector('.screen.active')?.id||'today';if(active==='today')renderToday();else if(active==='calendar')openDay(selectedCalendarDate);else if(active==='overview')renderOverview();else if(active==='absence')renderAbsence();else if(active==='historyMobile')renderMobileHistory()}
+function renderAbsence(){$('absenceList').innerHTML=(db.blocks||[]).length?db.blocks.slice().sort((a,b)=>String(b.start).localeCompare(String(a.start))).map(b=>'<div class="card"><strong>'+esc(b.type)+'</strong><div>'+esc(b.start)+(b.end&&b.end!==b.start?' t/m '+esc(b.end):'')+'</div><div class="muted">'+esc(b.startTime&&b.endTime?b.startTime+' - '+b.endTime:'Hele dag')+'</div><div>'+esc(b.note)+'</div><div class="btnRow"><button type="button" class="secondary editAbsence" data-id="'+esc(b.id)+'">Wijzigen</button><button type="button" class="red deleteAbsence" data-id="'+esc(b.id)+'">Verwijderen</button></div></div>').join(''):'<div class="card empty">'+t('noAbsence')+'</div>'}function renderAll(){applyLang();const active=document.querySelector('.screen.active')?.id||'today';if(active==='today')renderToday();else if(active==='calendar')openDay(selectedCalendarDate);else if(active==='overview')renderOverview();else if(active==='absence')renderAbsence();else if(active==='historyMobile')renderMobileHistory()}
 async function saveVisitOrderToSupabase(date){const rows=db.visits.filter(v=>v.date===date&&!v.pause&&v.status!=='Uit planning').sort((a,b)=>(a.order||999)-(b.order||999));for(let i=0;i<rows.length;i++){const result=await sb.from('planning').update({route_volgorde:i+1,route_live:false,updated_at:new Date().toISOString()}).eq('id',rows[i].planningId);if(result.error)throw result.error;rows[i].order=i+1}}
-async function move(id,dir){const vs=todayVisits(true).filter(v=>!v.pause&&v.status!=='Uit planning'),i=vs.findIndex(v=>v.id===id),j=i+dir;if(i<0||j<0||j>=vs.length)return;const original=new Map(vs.map(v=>[v.id,v.order]));try{[vs[i],vs[j]]=[vs[j],vs[i]];vs.forEach((v,idx)=>v.order=idx+1);renderAll();await recalculateMobileDayRoute(todayIso(),false)}catch(error){vs.forEach(v=>v.order=original.get(v.id));renderAll();alert('Volgorde opslaan mislukt: '+error.message)}}function photoFingerprint(f){return [f?.name||'',f?.size||0,f?.lastModified||0,f?.type||''].join('|')}function renderSelectedPhotos(){const el=$('selectedPhotos');if(!el)return;el.textContent=pendingFinishFiles.length?(pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ')):'Nog geen nieuwe foto’s gekozen.'}function addSelectedPhotos(files){const known=new Set(pendingFinishFiles.map(photoFingerprint));for(const f of Array.from(files||[])){const key=photoFingerprint(f);if(f&&String(f.type||'').startsWith('image/')&&!known.has(key)){known.add(key);pendingFinishFiles.push(f)}}renderSelectedPhotos()}function openFinish(id){activeVisitId=id;const v=db.visits.find(x=>x.id===id);if(!v)return;const c=customer(v.customerId);$('finishTitle').textContent=c.name||'Klant afronden';$('finishMeta').textContent=[(v.time||'')+' - '+(v.end||''),c.city].filter(Boolean).join(' · ');$('finishActivity').value=v.activity||'';$('finishSummary').value=v.summary||'';pendingFinishFiles=[];$('finishPhotos').value='';$('finishCamera').value='';renderSelectedPhotos();$('existingPhotos').innerHTML=(v.photos||[]).map(p=>'<span class="photoTag">📷 '+esc(p.name||'foto')+'</span>').join('');$('finishOverlay').classList.add('open')}function closeFinish(){activeVisitId=null;$('finishOverlay').classList.remove('open')}async function prepareVisitPhoto(file){
+async function move(id,dir){
+ const vs=todayVisits(true).filter(v=>!v.pause&&v.status!=='Uit planning'),i=vs.findIndex(v=>v.id===id),j=i+dir;
+ if(i<0||j<0||j>=vs.length)return;
+ const original=new Map(vs.map(v=>[v.id,v.order]));
+ try{[vs[i],vs[j]]=[vs[j],vs[i]];vs.forEach((v,idx)=>v.order=idx+1);renderAll();await recalculateMobileDayRoute(todayIso(),false)}
+ catch(error){vs.forEach(v=>v.order=original.get(v.id));renderAll();alert('Volgorde opslaan mislukt: '+error.message)}
+}
+let photoDeleteMode=false;
+function photoFingerprint(f){return [f?.name||'',f?.size||0,f?.lastModified||0,f?.type||''].join('|')}
+function renderFinishPhotos(){
+ const selected=$('selectedPhotos'),existing=$('existingPhotos'),visit=db.visits.find(v=>v.id===activeVisitId);
+ if(selected){
+  if(!pendingFinishFiles.length)selected.textContent='Nog geen nieuwe foto’s gekozen.';
+  else if(photoDeleteMode)selected.innerHTML=pendingFinishFiles.map((file,index)=>'<button type="button" class="photoTag removePendingPhoto" data-index="'+index+'">🗑 '+esc(file.name||'Nieuwe foto')+'</button>').join('');
+  else selected.textContent=pendingFinishFiles.length+' nieuwe foto'+(pendingFinishFiles.length===1?'':'s')+' geselecteerd: '+pendingFinishFiles.map(f=>f.name||'foto').join(', ');
+ }
+ if(existing){
+  const photos=visit?.photos||[];
+  existing.innerHTML=photos.map((photo,index)=>photoDeleteMode?'<button type="button" class="photoTag removeStoredPhoto" data-index="'+index+'">🗑 '+esc(photo.name||'Opgeslagen foto')+'</button>':'<span class="photoTag">📷 '+esc(photo.name||'foto')+'</span>').join('');
+ }
+ if($('btnTakePhoto'))$('btnTakePhoto').textContent=photoDeleteMode?'✓ Klaar met verwijderen':'🗑 Foto verwijderen';
+}
+function renderSelectedPhotos(){renderFinishPhotos()}
+function addSelectedPhotos(files){
+ const known=new Set(pendingFinishFiles.map(photoFingerprint));
+ for(const file of Array.from(files||[])){const key=photoFingerprint(file);if(file&&String(file.type||'').startsWith('image/')&&!known.has(key)){known.add(key);pendingFinishFiles.push(file)}}
+ renderFinishPhotos();
+}
+async function findVisitHistory(visit){
+ if(!sb||!visit?.planningId)return null;
+ const result=await sb.from('visit_history').select('*').eq('planning_id',visit.planningId).order('created_at',{ascending:false}).limit(1).maybeSingle();
+ if(result.error)throw new Error('Bezoekhistorie laden mislukt: '+result.error.message);
+ return result.data||null;
+}
+async function loadStoredVisitPhotos(visit,historyId){
+ if(!sb||!historyId)return visit.photos||[];
+ const rows=await sb.from('visit_photos').select('id,file_path,created_at').eq('history_id',historyId).order('created_at',{ascending:true});
+ if(rows.error)throw new Error('Bezoekfoto’s laden mislukt: '+rows.error.message);
+ return Promise.all((rows.data||[]).map(async row=>{const signed=await sb.storage.from('visit-photos').createSignedUrl(row.file_path,900);return{id:row.id,path:row.file_path,name:row.file_path.split('/').pop()||'foto',data:signed.error?'':signed.data.signedUrl}}));
+}
+async function openFinish(id){
+ activeVisitId=id;const visit=db.visits.find(v=>v.id===id);if(!visit)return;
+ const customerRow=customer(visit.customerId),completed=['Uitgevoerd','Niet uitgevoerd'].includes(visit.status);
+ $('finishTitle').textContent=customerRow.name||'Klant afronden';$('finishMeta').textContent=[(visit.time||'')+' - '+(visit.end||''),customerRow.city].filter(Boolean).join(' · ');
+ $('finishActivity').value=visit.activity||'';$('finishSummary').value=visit.summary||'';pendingFinishFiles=[];photoDeleteMode=false;
+ $('finishPhotos').value='';$('finishCamera').value='';$('finishExecutionDateLabel').hidden=!completed;$('finishExecutionDate').value=visit.date||todayIso();
+ $('finishOverlay').classList.add('open');renderFinishPhotos();
+ if(completed&&sb&&visit.planningId){
+  try{
+   const history=await findVisitHistory(visit);if(!history||activeVisitId!==id)return;
+   visit.completedHistoryId=history.id;visit.activity=history.activiteit||visit.activity||'';visit.summary=history.samenvatting||history.reden||visit.summary||'';
+   $('finishActivity').value=visit.activity;$('finishSummary').value=visit.summary;$('finishExecutionDate').value=history.bezoekdatum||visit.date||todayIso();
+   visit.photos=await loadStoredVisitPhotos(visit,history.id);save();renderFinishPhotos();
+  }catch(error){console.error(error);alert(error.message)}
+ }
+}
+function closeFinish(){activeVisitId=null;photoDeleteMode=false;$('finishOverlay').classList.remove('open')}
+function togglePhotoDeleteMode(){
+ const visit=db.visits.find(v=>v.id===activeVisitId),count=pendingFinishFiles.length+(visit?.photos?.length||0);
+ if(!count){alert('Er zijn nog geen foto’s om te verwijderen.');return}
+ photoDeleteMode=!photoDeleteMode;renderFinishPhotos();
+}
+function removePendingPhoto(index){pendingFinishFiles.splice(index,1);renderFinishPhotos()}
+async function removeStoredPhoto(index){
+ const visit=db.visits.find(v=>v.id===activeVisitId),photo=visit?.photos?.[index];if(!visit||!photo)return;
+ if(!confirm('Weet je zeker dat je deze opgeslagen foto definitief wilt verwijderen?'))return;
+ try{
+  let historyId=visit.completedHistoryId;if(!historyId){const history=await findVisitHistory(visit);historyId=history?.id;visit.completedHistoryId=historyId}
+  if(!historyId||!photo.path)throw new Error('De opgeslagen fotokoppeling ontbreekt.');
+  const storageResult=await sb.storage.from('visit-photos').remove([photo.path]);if(storageResult.error)throw new Error('Foto verwijderen mislukt: '+storageResult.error.message);
+  const linkResult=await sb.from('visit_photos').delete().eq('history_id',historyId).eq('file_path',photo.path);if(linkResult.error)throw new Error('Fotokoppeling verwijderen mislukt: '+linkResult.error.message);
+  visit.photos.splice(index,1);const local=db.history.find(h=>String(h.supabaseHistoryId||h.id)===String(historyId)||String(h.planningId)===String(visit.planningId));if(local)local.photos=visit.photos;
+  save();renderFinishPhotos();
+ }catch(error){console.error(error);alert(error.message)}
+}
+async function updateMobileHistory(historyId,status,activity,summary,visitDate){
+ const result=await sb.rpc('update_visit_history',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_history_id:historyId,p_visit_date:visitDate,p_status:status,p_activity:activity||'',p_summary:summary||''});
+ if(result.error){if(/does not exist|schema cache|PGRST202/i.test(String(result.error.message||'')))throw new Error('Datum aanpassen ontbreekt nog in Supabase. Voer SUPABASE_V11_3_1_RELEASE.sql uit.');throw new Error('Bezoek aanpassen mislukt: '+result.error.message)}
+ return result.data;
+}
+async function prepareVisitPhoto(file){
  return window.GJPlanningCore.prepareVisitPhoto(file);
 }
 async function uploadVisitPhotos(historyId,planningId,files){
@@ -754,22 +875,28 @@ async function finish(status){
  if(finishBusy)return;
  const v=db.visits.find(x=>x.id===activeVisitId);if(!v)return;
  finishBusy=true;$('btnDone').classList.add('v109Busy');$('btnNotDone').classList.add('v109Busy');
- const before={status:v.status,activity:v.activity,summary:v.summary,completedAt:v.completedAt,photos:[...(v.photos||[])]};
+ const before={status:v.status,activity:v.activity,summary:v.summary,completedAt:v.completedAt,completedHistoryId:v.completedHistoryId,photos:[...(v.photos||[])]};
  try{
-  const selectedFiles=pendingFinishFiles.slice();
+  const selectedFiles=pendingFinishFiles.slice(),wasCompleted=['Uitgevoerd','Niet uitgevoerd'].includes(v.status),executionDate=wasCompleted?($('finishExecutionDate').value||v.date):v.date;
   v.status=status;v.activity=$('finishActivity').value.trim();v.summary=$('finishSummary').value.trim();v.completedAt=new Date().toISOString();
-  let uploaded=[];
+  let uploaded=[],historyId=v.completedHistoryId||null;
   if(sb&&v.planningId){
-    const completed=await sb.rpc('complete_visit',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_planning_id:v.planningId,p_status:status,p_activity:v.activity||'',p_summary:v.summary||'',p_start:v.time||null,p_end:v.end||null,p_duration:durationOf(v),p_distance:Number(v.distanceKm||0),p_travel:Number(v.travel||0)});
-    if(completed.error){if(/does not exist|schema cache|PGRST202/i.test(String(completed.error.message||'')))throw new Error('De veilige historie-opslag ontbreekt. Voer SUPABASE_V11_3_RELEASE.sql uit.');throw new Error('Opdracht opslaan mislukt: '+completed.error.message)}
-    const historyId=completed.data?.history_id;
+    if(wasCompleted){
+      if(!historyId)historyId=(await findVisitHistory(v))?.id||null;
+      if(!historyId)throw new Error('De bestaande bezoekhistorie kon niet worden gevonden.');
+      await updateMobileHistory(historyId,status,v.activity,v.summary,executionDate);
+    }else{
+      const completed=await sb.rpc('complete_visit',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_planning_id:v.planningId,p_status:status,p_activity:v.activity||'',p_summary:v.summary||'',p_start:v.time||null,p_end:v.end||null,p_duration:durationOf(v),p_distance:Number(v.distanceKm||0),p_travel:Number(v.travel||0)});
+      if(completed.error){if(/does not exist|schema cache|PGRST202/i.test(String(completed.error.message||'')))throw new Error('De veilige historie-opslag ontbreekt. Voer SUPABASE_V11_3_RELEASE.sql uit.');throw new Error('Opdracht opslaan mislukt: '+completed.error.message)}
+      historyId=completed.data?.history_id;
+    }
     if(!historyId)throw new Error('Supabase heeft geen historie-ID teruggegeven.');
     if(selectedFiles.length)uploaded=await uploadVisitPhotos(historyId,v.planningId,selectedFiles);
   }
-  v.status=status;
+  v.status=status;v.completedHistoryId=historyId||v.completedHistoryId;
   const knownPaths=new Set((v.photos||[]).map(p=>p.path).filter(Boolean));
   v.photos=(v.photos||[]).concat(uploaded.filter(p=>!knownPaths.has(p.path)));
-  const item={visitId:v.id,planningId:v.planningId||v.id,customerId:v.customerId,status,activity:v.activity,summary:v.summary,photos:v.photos,createdAt:v.completedAt};
+  const item={id:historyId||v.completedHistoryId||v.id,supabaseHistoryId:historyId||null,visitId:v.id,planningId:v.planningId||v.id,customerId:v.customerId,date:executionDate,status,activity:v.activity,summary:v.summary,photos:v.photos,createdAt:v.completedAt};
   const idx=db.history.findIndex(h=>h.visitId===v.id);if(idx>=0)db.history[idx]=item;else db.history.push(item);
   pendingFinishFiles=[];save();closeFinish();renderAll();alert(ts(status)+' '+t('saved'));
  }catch(err){Object.assign(v,before);save();renderAll();console.error(err);alert(err.message)}finally{finishBusy=false;$('btnDone').classList.remove('v109Busy');$('btnNotDone').classList.remove('v109Busy')}
@@ -818,10 +945,13 @@ cardHtml=function(v){
   const html=mobileCardHtmlWithoutOpening(v);if(v?.pause)return html;
   const c=customer(v.customerId),addressText=[c.street,c.nr,c.postal].filter(Boolean).join(' '),openingWindow=window.GJPlanningCore?.openingWindowForDate(c.opening,v.date);
   const openingText=!openingWindow?'Onbekend':(openingWindow.closed||!openingWindow.open||!openingWindow.close?'Gesloten':`${openingWindow.open}–${openingWindow.close}`);
-  return html.replace(`<div>${esc(addressText)}</div>`,`<div class="mobileRouteAddress">${esc(addressText)} <span class="routeOpeningTime">${esc(openingText)}</span></div>`);
+  let decorated=html.replace(`<div>${esc(addressText)}</div>`,`<div class="mobileRouteAddress">${esc(addressText)} <span class="routeOpeningTime">${esc(openingText)}</span></div>`);
+  const waiting=Math.max(0,Math.round(Number(v.waiting)||0));
+  if(waiting){const label=db.settings.language==='en'?'Waiting time':(db.settings.language==='de'?'Wartezeit':'Wachttijd'),waitHtml=`<div class="leg waiting">⏳ ${esc(label)} ${esc(fmtTravel(waiting))}</div>`,marker='<div class="card visitCard ';const index=decorated.indexOf(marker);if(index>=0)decorated=decorated.slice(0,index)+waitHtml+decorated.slice(index)}
+  return decorated;
 };
 setupProfileCropper($('profileFile'),$('profileButton'),$('profileImage'));
-async function init(){console.info('Planning GJ mobiel v10.6 - centrale Supabase planning');db=load();db.settings=db.settings||{};db.settings.language=localStorage.getItem('gj_app_language')||db.settings.language||'nl';const supaOk=await loadPlanningFromSupabase();if(!supaOk)throw new Error('De werkruimte kon niet veilig uit Supabase worden geladen.');applyTheme();$('lang').value=db.settings.language||'nl';$('depart').value=(db.dayDepartures||{})[todayIso()]||'08:00';$('blockStart').value=todayIso();$('blockEnd').value=addDaysIso(todayIso(),1);$('blockEnd').min=addDaysIso(todayIso(),1);$('menuBtn').onclick=()=>$('menuPanel').classList.toggle('open');const uid=window.GJ_AUTH?.profile?.id;const savedProfilePhoto=uid?localStorage.getItem('gj_profile_photo_'+uid):null;if(savedProfilePhoto){$('profileImage').src=savedProfilePhoto;$('profileButton').classList.add('hasPhoto')}/* v10.5: profielfoto uitsluitend via Instellingen → Profiel */$('menuLogout').onclick=async()=>{try{sessionStorage.removeItem('gj_impersonate_user_v102');sessionStorage.removeItem('gj_workspace_storage_id');sessionStorage.removeItem('gj_authenticated_user_id');sessionStorage.removeItem('gj_app_open_session');if(window.GJ_AUTH?.sb)await GJ_AUTH.sb.auth.signOut()}finally{location.reload()}};$('syncBtn').onclick=()=>manualSync(true);$('btnTakePhoto').onclick=()=>$('finishCamera').click();$('btnChoosePhoto').onclick=()=>$('finishPhotos').click();$('finishCamera').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};$('finishPhotos').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manualSync(false)});window.addEventListener('focus',()=>manualSync(false));document.querySelectorAll('#menuPanel button[data-screen]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(b.dataset.screen).classList.add('active');document.querySelectorAll('#menuPanel button[data-screen]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('menuPanel').classList.remove('open');renderAll()});document.addEventListener('click',e=>{const r=e.target.closest('.routeBtn');if(r){location.href=navUrl(r.dataset.q);return}const f=e.target.closest('.finishBtn');if(f){openFinish(f.dataset.id);return}const up=e.target.closest('.moveUp');if(up){move(up.dataset.id,-1);return}const down=e.target.closest('.moveDown');if(down){move(down.dataset.id,1);return}const eye=e.target.closest('.eyeBtn');if(eye){editingTime=eye.dataset.id;renderToday();return}const sv=e.target.closest('.saveTimeBtn');if(sv){const v=db.visits.find(x=>x.id===sv.dataset.id);if(v){v.time=$('editStart-'+v.id).value;v.end=$('editEnd-'+v.id).value;editingTime=null;save();renderAll();syncPlanningToSupabase().catch(console.error)}return}const rem=e.target.closest('.removePlan');if(rem){if(confirm(t('removeConfirm'))){const v=db.visits.find(x=>x.id===rem.dataset.id);if(v){v.status='Uit planning';save();renderAll()}}return}const day=e.target.closest('.monthDay');if(day){openDay(day.dataset.date);return}if(e.target.id==='finishOverlay')closeFinish()});$('depart').onchange=async()=>{try{await saveDepartureToSupabase(todayIso(),$('depart').value)}catch(e){alert('Vertrektijd opslaan mislukt: '+e.message)}};$('fullRouteBtn').onclick=()=>{location.href=fullRouteUrl()};$('togglePause').onclick=()=>{db.visits.filter(v=>v.pause&&v.date===todayIso()).forEach(v=>v.active=v.active===false?true:false);save();renderAll()};$('recalcBtn').onclick=()=>manualSync(true);$('prevMonth').onclick=()=>{monthOffset--;renderAll()};$('nextMonth').onclick=()=>{monthOffset++;renderAll()};$('search').oninput=renderOverview;$('finishClose').onclick=closeFinish;$('btnDone').onclick=()=>finish('Uitgevoerd');$('btnNotDone').onclick=()=>finish('Niet uitgevoerd');$('blockStart').onchange=()=>{const end=addDaysIso($('blockStart').value,1);$('blockEnd').value=end;$('blockEnd').min=end};$('blockEnd').onchange=()=>{const min=addDaysIso($('blockStart').value,1);if($('blockEnd').value<min)$('blockEnd').value=min};$('saveBlock').onclick=async()=>{if(!$('blockStart').value)return alert('Vul startdatum in.');if(!$('blockEnd').value)$('blockEnd').value=$('blockStart').value;const b={id:'b-'+Date.now(),type:$('blockType').value,start:$('blockStart').value,end:$('blockEnd').value||$('blockStart').value,startTime:$('blockStartTime').value,endTime:$('blockEndTime').value,note:$('blockNote').value};try{await saveAbsenceToSupabase(b);db.blocks.push(b);save();renderAll();alert(t('absenceSaved'))}catch(e){alert('Afwezigheid opslaan mislukt: '+e.message)}};$('lang').onchange=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);save();location.reload()};$('saveSettings').onclick=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);if($('defaultSettings').checked)localStorage.setItem('gj_theme',db.settings.theme);save();location.reload()};renderAll();openDay(selectedCalendarDate);setTimeout(()=>{const sp=$('splash'); if(sp){sp.classList.add('hide'); sp.style.display='none'}},700)}
+async function init(){console.info('Planning GJ mobiel v11.3.1 - centrale Supabase planning');db=load();db.settings=db.settings||{};db.settings.language=localStorage.getItem('gj_app_language')||db.settings.language||'nl';const supaOk=await loadPlanningFromSupabase();if(!supaOk)throw new Error('De werkruimte kon niet veilig uit Supabase worden geladen.');applyTheme();$('lang').value=db.settings.language||'nl';$('depart').value=(db.dayDepartures||{})[todayIso()]||'08:00';$('blockStart').value=todayIso();$('blockEnd').value=todayIso();$('blockEnd').min=todayIso();$('menuBtn').onclick=()=>$('menuPanel').classList.toggle('open');const uid=window.GJ_AUTH?.profile?.id;const savedProfilePhoto=uid?localStorage.getItem('gj_profile_photo_'+uid):null;if(savedProfilePhoto){$('profileImage').src=savedProfilePhoto;$('profileButton').classList.add('hasPhoto')}/* v10.5: profielfoto uitsluitend via Instellingen → Profiel */$('menuLogout').onclick=async()=>{try{sessionStorage.removeItem('gj_impersonate_user_v102');sessionStorage.removeItem('gj_workspace_storage_id');sessionStorage.removeItem('gj_authenticated_user_id');sessionStorage.removeItem('gj_app_open_session');if(window.GJ_AUTH?.sb)await GJ_AUTH.sb.auth.signOut()}finally{location.reload()}};$('syncBtn').onclick=()=>manualSync(true);$('btnTakePhoto').onclick=togglePhotoDeleteMode;$('btnChoosePhoto').onclick=()=>$('finishPhotos').click();$('finishCamera').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};$('finishPhotos').onchange=e=>{addSelectedPhotos(e.target.files);e.target.value=''};document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manualSync(false)});window.addEventListener('focus',()=>manualSync(false));document.querySelectorAll('#menuPanel button[data-screen]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(b.dataset.screen).classList.add('active');document.querySelectorAll('#menuPanel button[data-screen]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('menuPanel').classList.remove('open');renderAll()});document.addEventListener('click',e=>{const editBlock=e.target.closest('.editAbsence');if(editBlock){editAbsence(editBlock.dataset.id);return}const deleteBlock=e.target.closest('.deleteAbsence');if(deleteBlock){deleteAbsence(deleteBlock.dataset.id);return}const pending=e.target.closest('.removePendingPhoto');if(pending){removePendingPhoto(Number(pending.dataset.index));return}const stored=e.target.closest('.removeStoredPhoto');if(stored){removeStoredPhoto(Number(stored.dataset.index));return}const r=e.target.closest('.routeBtn');if(r){location.href=navUrl(r.dataset.q);return}const f=e.target.closest('.finishBtn');if(f){openFinish(f.dataset.id);return}const up=e.target.closest('.moveUp');if(up){move(up.dataset.id,-1);return}const down=e.target.closest('.moveDown');if(down){move(down.dataset.id,1);return}const eye=e.target.closest('.eyeBtn');if(eye){editingTime=eye.dataset.id;renderToday();return}const sv=e.target.closest('.saveTimeBtn');if(sv){const v=db.visits.find(x=>x.id===sv.dataset.id);if(v){v.time=$('editStart-'+v.id).value;v.end=$('editEnd-'+v.id).value;editingTime=null;save();renderAll();syncPlanningToSupabase().catch(console.error)}return}const rem=e.target.closest('.removePlan');if(rem){if(confirm(t('removeConfirm'))){const v=db.visits.find(x=>x.id===rem.dataset.id);if(v){v.status='Uit planning';save();renderAll()}}return}const day=e.target.closest('.monthDay');if(day){openDay(day.dataset.date);return}if(e.target.id==='finishOverlay')closeFinish()});$('depart').onchange=async()=>{try{await saveDepartureToSupabase(todayIso(),$('depart').value)}catch(e){alert('Vertrektijd opslaan mislukt: '+e.message)}};$('fullRouteBtn').onclick=()=>{location.href=fullRouteUrl()};$('togglePause').onclick=()=>{db.visits.filter(v=>v.pause&&v.date===todayIso()).forEach(v=>v.active=v.active===false?true:false);save();renderAll()};$('recalcBtn').onclick=()=>manualSync(true);$('prevMonth').onclick=()=>{monthOffset--;renderAll()};$('nextMonth').onclick=()=>{monthOffset++;renderAll()};$('search').oninput=renderOverview;$('finishClose').onclick=closeFinish;$('btnDone').onclick=()=>finish('Uitgevoerd');$('btnNotDone').onclick=()=>finish('Niet uitgevoerd');$('blockStart').onchange=()=>{const start=$('blockStart').value;$('blockEnd').min=start;if(!$('blockEnd').value||$('blockEnd').value<start)$('blockEnd').value=start};$('blockEnd').onchange=()=>{const min=$('blockStart').value;if($('blockEnd').value<min)$('blockEnd').value=min};$('saveBlock').onclick=saveAbsenceForm;$('cancelBlockEdit').onclick=resetAbsenceForm;$('lang').onchange=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);save();location.reload()};$('saveSettings').onclick=()=>{db.settings.language=$('lang').value;localStorage.setItem('gj_app_language',db.settings.language);if($('defaultSettings').checked)localStorage.setItem('gj_theme',db.settings.theme);save();location.reload()};renderAll();openDay(selectedCalendarDate);setTimeout(()=>{const sp=$('splash'); if(sp){sp.classList.add('hide'); sp.style.display='none'}},700)}
 window.GJ_MOBILE={
   state:()=>db,
   persist:()=>save(),
@@ -1142,7 +1272,7 @@ let appInitialized=false;async function initAfterAuth(){if(appInitialized||!wind
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
-<script src="v110.js?v=112000"></script>
-<script src="v11.js?v=113001"></script>
+<script src="v110.js?v=113100"></script>
+<script src="v11.js?v=113100"></script>
 <script src="v113.js?v=113000"></script>
 </body></html>

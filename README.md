@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.3.0
+# Planning-GJsystems v11.3.1
 
-Deze productierelease maakt de centrale route-, database- en historielaag stabiel voor dagelijks gebruik. v11.3.0 houdt een ongewijzigde groene route groen zonder opnieuw TomTom aan te roepen, controleert klantcoördinaten vóór planning en import en rondt bezoeken op laptop en iPhone atomair af.
+Deze productierelease maakt de centrale route-, database- en historielaag stabiel voor dagelijks gebruik. v11.3.1 houdt een ongewijzigde groene route groen zonder opnieuw TomTom aan te roepen, controleert klantcoördinaten vóór planning en import, rondt bezoeken op laptop en iPhone atomair af en toont berekende wachttijd in de iPhone-dagroute.
 
 ## Belangrijkste verbeteringen
 
@@ -20,6 +20,7 @@ Deze productierelease maakt de centrale route-, database- en historielaag stabie
 - Alleen de iPhone mag een apparaatlocatie aanvragen en verzenden. De laptop vraagt nooit locatietoestemming, maar kan als beheerder wel ontvangen iPhone-locaties bekijken.
 - Ongewijzigde groene dagen worden aan de hand van een invoerhash hergebruikt. Alleen een routebepalende wijziging start een nieuwe complete TomTom-berekening.
 - De centrale route-engine respecteert bij elke volgorde- en tijdwijziging de openingstijden van iedere klant; de dagroute toont de tijden compact naast het adres.
+- Wanneer de route vóór het geplande bezoekmoment of vóór opening aankomt, toont de iPhone direct boven de klant een gele regel met de berekende wachttijd. Deze wachttijd wordt in de bestaande dagroute-instellingen opgeslagen en blijft na synchroniseren of opnieuw inloggen zichtbaar.
 - De database toont locatiekwaliteit en filters voor alle, actieve en inactieve klanten; import controleert ontbrekende coördinaten vóór upload.
 - Afronden gebruikt de atomaire RPC `complete_visit`, zodat een klantnummer nooit meer in een UUID-veld terechtkomt en planning en historie niet half kunnen worden opgeslagen.
 - Grote bezoekfoto's worden op laptop en iPhone vóór upload automatisch verkleind; de private Storage-bucket blijft daardoor beschermd tegen onnodig grote camerabestanden.
@@ -101,9 +102,17 @@ Beschikbare profielen:
 - INNO
 - INTERSPORT
 - Van Tilburg Sport
+- Van Haren
+- Bomont
+- DAKA
+- E5
+- Molecule
+- Torfs
+- Veritas
+- Berden
 - Stichd als algemene terugvaltemplate
 
-Een nieuw profiel wordt als één configuratieobject aan `chainProfiles` toegevoegd. Zonder goedgekeurd logo toont de generator een tekstheader in de ketenkleuren; een ontbrekende afbeelding verschijnt nooit als kapot element.
+Een nieuw profiel wordt als één configuratieobject aan `chainProfiles` toegevoegd. De acht goedgekeurde ketenbanners staan gezamenlijk in `assets/chain-banners.png` en worden per keten automatisch uitgesneden. Zonder goedgekeurd logo of banner toont de generator een tekstheader in de ketenkleuren; een ontbrekende afbeelding verschijnt nooit als kapot element. Een winkelbezoekrapport vermeldt alleen de bezoekdatum en nooit de start- of eindtijd.
 
 De generator gebruikt bestaande data uit `visit_history`, `planning`, `customers`, `profiles` en `visit_photos`. Lege velden worden verborgen. Foto's worden uit de private bucket `visit-photos` gedownload en, indien nodig, met een signed URL van vijf minuten opgehaald. Een ontbrekende foto wordt veilig overgeslagen. Lange tekst en meer dan acht foto's lopen automatisch door op een vervolgpagina.
 
@@ -131,9 +140,11 @@ De geautomatiseerde suite controleert code, simulaties, beveiligingscontracten, 
 - `SUPABASE_V11_0_CORE.sql` – migratie voor een bestaande v10.11-database
 - `SUPABASE_V11_1_RELEASE.sql` – Live Locaties, 30 minuten live volgen en v11.1-herstel
 - `SUPABASE_V11_3_RELEASE.sql` – atomaire bezoekafronding en unieke historiekoppeling
+- `SUPABASE_V11_3_1_RELEASE.sql` – veilige bewerking van status, verslag en werkelijke uitvoeringsdatum
 - `CHANGELOG_V11.3.md` – functionele wijzigingen en gewijzigde bestanden
 - `TESTCONTROLE_V11.3.md` – werkelijk uitgevoerde tests en vijf live controles
 - `INSTALLATIE_V11.3.md` – stappen voor de huidige GitHub- en Supabase-omgeving
+- `INSTALLATIE_V11.3.1.md` – installatie van deze complete v11.3.1-release
 - `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
 - `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
 

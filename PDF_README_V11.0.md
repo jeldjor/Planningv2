@@ -11,27 +11,35 @@ De profielen staan in `chainProfiles` in `visit-pdf.js`:
 - `inno`
 - `intersport`
 - `van_tilburg_sport`
+- `van_haren`
+- `bomont`
+- `daka`
+- `e5`
+- `molecule`
+- `torfs`
+- `veritas`
+- `berden`
 - `stichd` als algemene terugval
 
-Voeg een keten toe door één object toe te voegen met `displayName`, `aliases`, `primary`, `secondary`, `soft` en eventueel `logo`. Wanneer geen goedgekeurd logo beschikbaar is, gebruikt de PDF automatisch een nette tekstheader.
+Voeg een keten toe door één object toe te voegen met `displayName`, `aliases`, `primary`, `secondary`, `soft` en eventueel `banner`. De goedgekeurde banners staan in `assets/chain-banners.png`; het `banner`-object bevat de uitsnede `x`, `y`, `w` en `h`. Wanneer geen goedgekeurde banner beschikbaar is, gebruikt de PDF automatisch een nette tekstheader.
 
 ## Gebruikte gegevens
 
 De bestaande PDF-knop haalt bij iedere klik de actuele gegevens op:
 
-- `visit_history`: klant- en planningkoppeling, bezoekdatum, start- en eindtijd, activiteit, status, reden, samenvatting, opmerkingen, uitgevoerde werkzaamheden, aandachtspunten en vervolgactie;
-- `planning`: klant, datum, tijden, status en notities als terugval;
+- `visit_history`: klant- en planningkoppeling, bezoekdatum, activiteit, status, reden, samenvatting, opmerkingen, uitgevoerde werkzaamheden, aandachtspunten en vervolgactie;
+- `planning`: klant, datum, status en notities als terugval;
 - `customers`: keten, winkelnaam, vestiging, adres, postcode, plaats en contactpersoon;
 - `profiles`: naam of e-mailadres van de bezoeker;
 - `visit_photos`: unieke Storage-paden van de bezoekfoto's.
 
-Lege optionele velden en secties worden niet getoond. De generator verzint geen inhoud.
+Lege optionele velden en secties worden niet getoond. De generator verzint geen inhoud. In het bezoekverslag wordt alleen de bezoekdatum getoond; start- en eindtijd worden bewust nooit afgedrukt.
 
 ## Foto's en Storage
 
 De bucket `visit-photos` is privé. De app probeert eerst een aangemelde Storage-download. Wanneer dat niet lukt, vraagt zij een signed URL met een geldigheid van vijf minuten aan. Ontbrekende of onbereikbare bestanden worden overgeslagen en veroorzaken geen kapotte afbeelding of technische fouttekst in de PDF.
 
-Het raster past zich aan nul tot acht foto's aan. Foto's behouden hun verhouding en worden binnen gelijke kaders geplaatst. Vanaf de negende foto volgt een vervolgpagina.
+Het raster past zich aan nul tot acht foto's aan. Foto's worden eerst met hun EXIF-oriëntatie opnieuw gedecodeerd, behouden daarna hun verhouding en worden binnen gelijke kaders geplaatst. Vanaf de negende foto volgt een vervolgpagina.
 
 ## Weergave
 
@@ -47,4 +55,4 @@ Op laptop wordt het rapport gedownload. Op iPhone wordt vooraf een voorbeeldvens
 
 ## Bekende beperking
 
-Er zijn geen externe ketenlogo's zonder expliciete merkrechtelijke toestemming toegevoegd. De zes profielen gebruiken daarom ketenspecifieke kleuren en een tekstlogo. Een later goedgekeurd logo kan via het profiel worden toegevoegd zonder de generator te herschrijven.
+Alleen de acht aangeleverde, goedgekeurde banners zijn als afbeeldingsheader opgenomen. Andere ketens gebruiken het configureerbare kleurprofiel met tekstheader totdat een goedgekeurde banner wordt toegevoegd.

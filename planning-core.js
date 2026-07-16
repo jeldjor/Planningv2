@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='11.3.0';
+  const VERSION='11.3.1';
   const dayLocks=new Map();
   const pad=n=>String(n).padStart(2,'0');
   const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
@@ -281,13 +281,14 @@
       const duration=Math.max(5,number(visit.duration||visit.bezoekduur_min,30));
       const visitStart=fitOutsideWindows(desired,duration,windows);
       totalWaiting+=Math.max(0,visitStart-desired);
+      const waiting=Math.max(0,visitStart-arrival);
       const visitEnd=visitStart+duration;
       if(visitEnd>openingEnd)throw new Error(`${label} past niet vóór sluitingstijd ${opening.close}.`);
       rows.push({
         id:String(visit.planningId||visit.id),order:index+1,
         start:fromMinutes(visitStart),end:fromMinutes(visitEnd),
         travelMin:Math.round(travel),parkingMin:Math.round(parking),distanceKm:Math.round(number(leg.km)*10)/10,
-        routeMode:leg.mode||'car',routeLive:leg.live===true
+        waitingMin:Math.round(waiting),routeMode:leg.mode||'car',routeLive:leg.live===true
       });
       totalKm+=number(leg.km);totalTravel+=travel;totalParking+=parking;totalVisit+=duration;cursor=visitEnd;
     }
@@ -327,7 +328,8 @@
   }
 
   async function persistDay(sb,{workspaceId,date,departure,result,pauseEnabled=true,inputHash=null}){
-    const summary={...result.totals,end:result.end,live:result.live,includesReturn:!!result.returnLeg,returnLeg:result.returnLeg,calculatedAt:result.calculatedAt,inputHash:inputHash||null,hash:stableHash({date,departure,rows:result.rows})};
+    const visitWaits=Object.fromEntries(result.rows.map(row=>[String(row.id),Math.max(0,Math.round(number(row.waitingMin)))]));
+    const summary={...result.totals,end:result.end,live:result.live,includesReturn:!!result.returnLeg,returnLeg:result.returnLeg,visitWaits,calculatedAt:result.calculatedAt,inputHash:inputHash||null,hash:stableHash({date,departure,rows:result.rows})};
     const rows=result.rows.map(row=>({id:row.id,route_volgorde:row.order,starttijd:row.start,eindtijd:row.end,reistijd_min:row.travelMin,parking_min:row.parkingMin,afstand_km:row.distanceKm,route_mode:row.routeMode,route_live:row.routeLive}));
     let timer;
     const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Het opslaan van de dagroute duurde te lang.')),15000)});

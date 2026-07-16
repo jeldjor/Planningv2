@@ -243,16 +243,27 @@
   }
   function blobToDataUrl(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error||new Error('Foto kon niet worden gelezen.'));reader.readAsDataURL(blob)})}
   async function fetchAsDataUrl(url){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error('Foto is niet bereikbaar.');return blobToDataUrl(await response.blob())}
+  async function normalizePdfPhoto(blob,name='foto',path=''){
+    let source=null,cleanup=()=>{};
+    try{
+      if(typeof createImageBitmap==='function'){source=await createImageBitmap(blob,{imageOrientation:'from-image'});cleanup=()=>source?.close?.()}
+      if(!source){const url=URL.createObjectURL(blob);cleanup=()=>URL.revokeObjectURL(url);source=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Foto kon niet rechtop worden gedecodeerd.'));image.src=url})}
+      const naturalWidth=Number(source.width||source.naturalWidth),naturalHeight=Number(source.height||source.naturalHeight),maxDimension=2400,scale=Math.min(1,maxDimension/Math.max(naturalWidth,naturalHeight));
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(naturalWidth*scale));canvas.height=Math.max(1,Math.round(naturalHeight*scale));
+      const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(source,0,0,canvas.width,canvas.height);
+      return{name,data:canvas.toDataURL('image/jpeg',.9),path,width:canvas.width,height:canvas.height,format:'JPEG'};
+    }finally{cleanup()}
+  }
   async function loadPhoto(path,fallback){
-    if(fallback?.data&&String(fallback.data).startsWith('data:'))return fallback;
+    if(fallback?.data&&String(fallback.data).startsWith('data:')){const response=await fetch(fallback.data);return normalizePdfPhoto(await response.blob(),fallback.name||'foto',path||fallback.path||'')}
     const sb=client();
     if(sb&&path){
       const downloaded=await sb.storage.from('visit-photos').download(path);
-      if(!downloaded.error&&downloaded.data)return {name:path.split('/').pop()||'foto',data:await blobToDataUrl(downloaded.data),path};
+      if(!downloaded.error&&downloaded.data)return normalizePdfPhoto(downloaded.data,path.split('/').pop()||'foto',path);
       const signed=await sb.storage.from('visit-photos').createSignedUrl(path,300);
-      if(!signed.error&&signed.data?.signedUrl)return {name:path.split('/').pop()||'foto',data:await fetchAsDataUrl(signed.data.signedUrl),path};
+      if(!signed.error&&signed.data?.signedUrl){const response=await fetch(signed.data.signedUrl,{cache:'no-store'});if(response.ok)return normalizePdfPhoto(await response.blob(),path.split('/').pop()||'foto',path)}
     }
-    if(fallback?.data){return {...fallback,data:await fetchAsDataUrl(fallback.data)}}
+    if(fallback?.data){const response=await fetch(fallback.data,{cache:'no-store'});if(response.ok)return normalizePdfPhoto(await response.blob(),fallback.name||'foto',path||fallback.path||'')}
     throw new Error('Foto ontbreekt of is niet bereikbaar.');
   }
   async function loadVisitReportData(reference){
@@ -293,7 +304,7 @@
     if(!window.GJ_VISIT_PDF)throw new Error('De PDF-generator is niet geladen.');
     const preview=isIOS()?window.open('about:blank','_blank'):null;document.body.classList.add('v110PdfBusy');
     try{
-      const report=await loadVisitReportData(reference),result=window.GJ_VISIT_PDF.createDocument(report);
+      const rawReport=await loadVisitReportData(reference),report=await window.GJ_VISIT_PDF.prepareReportAssets(rawReport),result=window.GJ_VISIT_PDF.createDocument(report);
       window.GJ_VISIT_PDF.openOrDownload(result,{previewWindow:preview,open:isIOS()});return result;
     }catch(error){if(preview&&!preview.closed)preview.close();console.error(error);alert('PDF maken mislukt: '+error.message);return null}
     finally{document.body.classList.remove('v110PdfBusy')}

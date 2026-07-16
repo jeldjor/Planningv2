@@ -9,8 +9,8 @@
 <script src="runtime-config.js"></script>
 <script src="app-config.js?v=10801"></script>
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
-<script src="visit-pdf.js?v=11000"></script>
-<script src="planning-core.js?v=113002"></script>
+<script src="visit-pdf.js?v=113100"></script>
+<script src="planning-core.js?v=113100"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -2008,7 +2008,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
   </div>
 </dialog>
 
-<dialog id="visitDialog"><form method="dialog" class="dialog"><h2 id="visitDialogTitle">Bezoek afronden</h2><p id="visitMeta"></p><label>Status<select id="visitStatus"><option>Uitgevoerd</option><option>Niet uitgevoerd</option></select></label><label>Activiteit<input id="visitActivity" placeholder="Beschrijf uitgevoerde werkzaamheden..."></label><label>Samenvatting<textarea id="visitSummary" placeholder="Beschrijf kort wat je hebt gedaan, wat is aangepast en eventuele bijzonderheden..."></textarea></label><label>Foto’s<input id="visitPhotos" type="file" accept="image/*" multiple></label><div class="actions"><button value="cancel" class="secondary">Annuleren</button><button id="btnSaveVisit" type="button" onclick="saveVisit()" value="default">Opslaan</button></div></form></dialog>
+<dialog id="visitDialog"><form method="dialog" class="dialog"><h2 id="visitDialogTitle">Bezoek afronden</h2><p id="visitMeta"></p><label id="visitExecutionDateLabel" hidden>Datum uitvoering<input id="visitExecutionDate" type="date"></label><label>Status<select id="visitStatus"><option>Uitgevoerd</option><option>Niet uitgevoerd</option></select></label><label>Activiteit<input id="visitActivity" placeholder="Beschrijf uitgevoerde werkzaamheden..."></label><label>Samenvatting<textarea id="visitSummary" placeholder="Beschrijf kort wat je hebt gedaan, wat is aangepast en eventuele bijzonderheden..."></textarea></label><label>Foto’s<input id="visitPhotos" type="file" accept="image/*" multiple></label><div class="actions"><button value="cancel" class="secondary">Annuleren</button><button id="btnSaveVisit" type="button" onclick="saveVisit()" value="default">Opslaan</button></div></form></dialog>
 
 
 
@@ -3802,8 +3802,11 @@ function openVisit(id){
   state.activeVisit=id;
   state.editingHistoryId=null;
   const v=db.visits.find(x=>x.id===id),c=getC(v?.customerId);
+  const completed=['Uitgevoerd','Niet uitgevoerd'].includes(v?.status),history=completed?db.history.find(h=>h.id===v?.completedHistoryId||String(h.planningId||'')===String(v?.planningId||v?.id)):null;
   if($("visitDialogTitle"))$("visitDialogTitle").textContent="Bezoek afronden";
   $("visitMeta").textContent=`${c?.Winkel||"Klant"} • ${displayDate(v?.date||"")}`;
+  if($("visitExecutionDateLabel"))$("visitExecutionDateLabel").hidden=!completed;
+  if($("visitExecutionDate"))$("visitExecutionDate").value=history?.date||v?.date||iso(new Date());
   $("visitSummary").value=v?.summary||"";
   if($("visitActivity"))$("visitActivity").value=v?.activity||"";
   $("visitStatus").value=v?.status==="Niet uitgevoerd"?"Niet uitgevoerd":"Uitgevoerd";
@@ -3817,11 +3820,20 @@ function openEditHistory(id){
   state.activeVisit=null;
   if($("visitDialogTitle"))$("visitDialogTitle").textContent="Bezoek bewerken";
   $("visitMeta").textContent=`${h.customerName||getC(h.customerId)?.Winkel||"Klant"} • ${displayDate(h.date||"")} • bestaande foto's blijven bewaard`;
+  if($("visitExecutionDateLabel"))$("visitExecutionDateLabel").hidden=false;
+  if($("visitExecutionDate"))$("visitExecutionDate").value=h.date||iso(new Date());
   $("visitSummary").value=h.summary||"";
   if($("visitActivity"))$("visitActivity").value=h.activity||"";
   $("visitStatus").value=h.status==="Niet uitgevoerd"?"Niet uitgevoerd":"Uitgevoerd";
   $("visitPhotos").value="";
   $("visitDialog").showModal();
+}
+async function updateLaptopHistory(historyId,status,activity,summary,visitDate){
+  const client=window.GJ_AUTH?.sb,remoteId=String(historyId||'').replace(/^supa-history-/,'');
+  if(!client||!remoteId)return null;
+  const result=await client.rpc('update_visit_history',{p_workspace_id:window.GJ_AUTH?.workspaceUserId||window.GJ_AUTH?.profile?.id,p_history_id:remoteId,p_visit_date:visitDate,p_status:status,p_activity:activity||'',p_summary:summary||''});
+  if(result.error){if(/does not exist|schema cache|PGRST202/i.test(String(result.error.message||'')))throw new Error('Datum aanpassen ontbreekt nog in Supabase. Voer SUPABASE_V11_3_1_RELEASE.sql uit.');throw new Error('Bezoek aanpassen mislukt: '+result.error.message)}
+  return result.data;
 }
 async function persistLaptopVisit(v,status,activity,summary,files,historyId=null){
   const client=window.GJ_AUTH?.sb;if(!client||!v?.id)return null;
@@ -3857,9 +3869,12 @@ async function saveVisit(){
     h.status=$("visitStatus").value;
     h.activity=$("visitActivity")?.value||h.activity||"";
     h.summary=$("visitSummary").value||"";
+    const executionDate=$("visitExecutionDate")?.value||h.date||iso(new Date());
     const linked=db.visits.find(x=>x.completedHistoryId===h.id);
-    if(linked&&window.GJ_AUTH?.sb){const remote=await persistLaptopVisit(linked,h.status,h.activity,h.summary,files,h.id);if(remote?.uploaded?.length)h.photos=[...(h.photos||[]),...remote.uploaded]}
+    if(linked&&window.GJ_AUTH?.sb){const remote=await persistLaptopVisit(linked,h.status,h.activity,h.summary,files,h.supabaseHistoryId||h.id);await updateLaptopHistory(remote?.historyId||h.supabaseHistoryId||h.id,h.status,h.activity,h.summary,executionDate);if(remote?.uploaded?.length)h.photos=[...(h.photos||[]),...remote.uploaded]}
+    else if(window.GJ_AUTH?.sb&&h.supabaseHistoryId)await updateLaptopHistory(h.supabaseHistoryId,h.status,h.activity,h.summary,executionDate);
     else if(photos.length)h.photos=[...(h.photos||[]),...photos];
+    h.date=executionDate;
     h.updatedAt=new Date().toISOString();
     db.visits.filter(x=>x.completedHistoryId===h.id).forEach(v=>{v.status=h.status;v.activity=h.activity||"";v.summary=h.summary;v.photos=h.photos||[];});
     if(!save())return;
@@ -3876,7 +3891,9 @@ async function saveVisit(){
   const files=$("visitPhotos").files,photos=await readFilesAsDataUrls(files);
   const status=$("visitStatus").value;
   const activity=$("visitActivity")?.value||"",summary=$("visitSummary").value||"";
+  const wasCompleted=['Uitgevoerd','Niet uitgevoerd'].includes(v.status),executionDate=wasCompleted?($("visitExecutionDate")?.value||v.date):v.date;
   const remote=window.GJ_AUTH?.sb?await persistLaptopVisit(v,status,activity,summary,files,v.completedHistoryId||null):null;
+  if(wasCompleted&&remote?.historyId)await updateLaptopHistory(remote.historyId,status,activity,summary,executionDate);
 
   const existingId=v.completedHistoryId;
   let item=existingId?db.history.find(h=>h.id===existingId):null;
@@ -3887,13 +3904,14 @@ async function saveVisit(){
       customerId:v.customerId,
       customerName:c.Winkel||"Klant",
       place:c.Plaats||"",
-      date:v.date,
+      date:executionDate,
       savedAt:new Date().toISOString()
     };
     db.history.push(item);
   }
 
   item.time=liveVisitTime(v)||v.time||"";
+  item.date=executionDate;
   item.status=status;
   item.activity=activity||item.activity||"";
   item.summary=summary;
@@ -4842,14 +4860,15 @@ async function drawVisitPdfLayout(doc,visit){
         if(!supaCustomerId){invalid.push((getC(v.customerId)||{}).Winkel||String(v.customerId));return;}
         const c=getC(v.customerId)||{};
         const t=tl.get(v.id)||{};
+        const planningStatus=v.status==='Vast'?'Vast':'Gepland';
         rows.push({
           customer_id:supaCustomerId,
           datum:date,
           starttijd:cleanTime(t.start||v.time),
           eindtijd:cleanTime(t.end||v.end),
-          status:v.status||'Gepland',
+          status:planningStatus,
           vast:v.status==='Vast',
-          uitgevoerd:v.status==='Bezocht'||v.status==='Uitgevoerd',
+          uitgevoerd:false,
           route_volgorde:idx+1,
           reistijd_min:t.travel_min??null,
           afstand_km:t.distance_km??null,
@@ -5189,7 +5208,7 @@ async function drawVisitPdfLayout(doc,visit){
   }
 
   function mapHistoryRow(r){
-    const customerId=String(r.customer_id||'');
+    const related=Array.isArray(r.customer)?r.customer[0]:(r.customer||{}),customerId=String(related.klantnummer||r.customer_id||'');
     const customer=(typeof getC==='function'?getC(customerId):null)||{};
     const status=r.status||((r.opmerkingen==='Niet uitgevoerd')?'Niet uitgevoerd':'Uitgevoerd');
     return {
@@ -5197,8 +5216,8 @@ async function drawVisitPdfLayout(doc,visit){
       supabaseHistoryId:r.id||null,
       planningId:r.planning_id||null,
       customerId,
-      customerName:customer.Winkel||customer.naam||customer.winkel||'Klant',
-      place:customer.Plaats||customer.plaats||'',
+      customerName:related.naam||customer.Winkel||customer.naam||customer.winkel||'Klant',
+      place:related.plaats||customer.Plaats||customer.plaats||'',
       date:r.bezoekdatum||'',
       time:r.starttijd?String(r.starttijd).slice(0,5):'',
       end:r.eindtijd?String(r.eindtijd).slice(0,5):'',
@@ -5215,7 +5234,7 @@ async function drawVisitPdfLayout(doc,visit){
   async function loadVisitHistoryFromSupabase(){
     const client=syncClient();
     if(!client || typeof db==='undefined') return false;
-    const {data,error}=await client.from('visit_history').select('*').order('created_at',{ascending:false}).limit(3000);
+    const {data,error}=await client.from('visit_history').select('*,customer:customers!visit_history_customer_id_fkey(naam,keten,plaats,klantnummer)').order('created_at',{ascending:false}).limit(3000);
     if(error){
       console.warn('Bezoekhistorie laden mislukt:',error.message);
       return false;
@@ -5761,8 +5780,8 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v106.js?v=10700"></script>
 <script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
-<script src="v110.js?v=112000"></script>
-<script src="v11.js?v=113001"></script>
+<script src="v110.js?v=113100"></script>
+<script src="v11.js?v=113100"></script>
 <script src="v113.js?v=113000"></script>
 </body>
 </html>

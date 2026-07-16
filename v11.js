@@ -81,10 +81,10 @@
     historyLoading=true;
     try{
       if(force){historyPage=0;historyRows=[];historyLoaded=false}
-      const pageSize=100,from=historyPage*pageSize,response=await sb().from('visit_history').select('*').order('bezoekdatum',{ascending:false}).order('created_at',{ascending:false}).range(from,from+pageSize-1);
+      const pageSize=100,from=historyPage*pageSize,response=await sb().from('visit_history').select('*,customer:customers!visit_history_customer_id_fkey(naam,keten,plaats,klantnummer)').order('bezoekdatum',{ascending:false}).order('created_at',{ascending:false}).range(from,from+pageSize-1);
       if(response.error)throw response.error;
       const customers=new Map((mobileState().customers||[]).map(customer=>[String(customer.id),customer]));
-      const mapped=(response.data||[]).map(row=>{const customer=customers.get(String(row.customer_id))||{};return{...row,customerName:customer.name||'Klant',city:customer.city||'',chain:customer.chain||''}});
+      const mapped=(response.data||[]).map(row=>{const local=customers.get(String(row.customer_id))||{},related=Array.isArray(row.customer)?row.customer[0]:row.customer||{};return{...row,customerName:related.naam||local.name||'Klant',city:related.plaats||local.city||'',chain:related.keten||local.chain||''}});
       const known=new Set(historyRows.map(row=>String(row.id)));historyRows=historyRows.concat(mapped.filter(row=>!known.has(String(row.id))));historyHasMore=mapped.length===pageSize;historyPage++;historyLoaded=true;renderMobileHistory();
     }catch(error){const list=$('historyMobileList');if(list)list.innerHTML=`<div class="card empty">Historie laden mislukt: ${esc(error.message)}</div>`}finally{historyLoading=false}
   }
@@ -143,7 +143,7 @@
     const dayChanged=payload=>{
       const state=mobileState(),row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,date=row?.datum;if(!date)return;state.dayDepartures=state.dayDepartures||{};state.mobileRouteStats=state.mobileRouteStats||{};state.pauseEnabled=state.pauseEnabled||{};
       if(payload.eventType==='DELETE'){delete state.dayDepartures[date];delete state.mobileRouteStats[date];delete state.pauseEnabled[date]}
-      else{if(row.vertrektijd)state.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)state.mobileRouteStats[date]={km:Number(route.km||0),min:Number(route.travelMin||0),live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null,updatedAt:route.calculatedAt};state.pauseEnabled[date]=row.settings?.pause_enabled!==false}draw();
+      else{if(row.vertrektijd)state.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route){state.mobileRouteStats[date]={km:Number(route.km||0),min:Number(route.travelMin||0),waitingMin:Number(route.waitingMin||0),live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null,updatedAt:route.calculatedAt};for(const [id,min] of Object.entries(route.visitWaits||{})){const visit=(state.visits||[]).find(item=>String(item.planningId||item.id)===String(id));if(visit)visit.waiting=Math.max(0,Number(min)||0)}}state.pauseEnabled[date]=row.settings?.pause_enabled!==false}draw();
     };
     const absenceChanged=payload=>{
       const state=mobileState(),row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,id=String(row?.id||'');if(!id)return;state.blocks=state.blocks||[];const index=state.blocks.findIndex(item=>String(item.id)===id);
@@ -179,7 +179,7 @@
       const inputHash=core.routeInputHash(routeArgs),current=db.routeStats?.[date];
       if(!optimize&&core.canReuseDayRoute(current,inputHash)){if(rerender&&typeof render==='function')render();return true}
       const result=await core.calculateDay({sb:sb(),workspaceId:workspace(),...routeArgs,optimize});
-      result.visits.forEach((ordered,index)=>{const visit=(db.visits||[]).find(item=>String(item.id)===String(ordered.id)),row=result.result.rows[index];if(!visit||!row)return;visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.reistijd_min=row.travelMin;visit.parking_min=row.parkingMin;visit.afstand_km=row.distanceKm;visit.route_mode=row.routeMode;visit.route_live=row.routeLive});
+      result.visits.forEach((ordered,index)=>{const visit=(db.visits||[]).find(item=>String(item.id)===String(ordered.id)),row=result.result.rows[index];if(!visit||!row)return;visit.order=row.order;visit.time=row.start;visit.end=row.end;visit.reistijd_min=row.travelMin;visit.parking_min=row.parkingMin;visit.waiting_min=row.waitingMin;visit.afstand_km=row.distanceKm;visit.route_mode=row.routeMode;visit.route_live=row.routeLive});
       db.routeStats=db.routeStats||{};db.routeStats[date]={km:result.result.totals.km,driveMin:result.result.totals.travelMin,totalMin:result.result.totals.dayMin,start:result.result.departure,end:result.result.end,calculated:result.result.live,live:result.result.live,includesReturn:true,returnLeg:result.result.returnLeg||null,inputHash:result.result.inputHash||null};
       if(typeof save==='function')save();if(rerender&&typeof render==='function')render();return true;
     });

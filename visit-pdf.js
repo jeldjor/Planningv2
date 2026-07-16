@@ -12,8 +12,17 @@
     inno:{displayName:'INNO',aliases:['inno','galeria inno'],primary:[0,105,105],secondary:[11,47,48],soft:[231,245,244],logo:null},
     intersport:{displayName:'INTERSPORT',aliases:['intersport'],primary:[0,82,156],secondary:[221,31,45],soft:[233,242,250],logo:null},
     van_tilburg_sport:{displayName:'Van Tilburg Sport',aliases:['van tilburg sport','van tilburg'],primary:[35,35,35],secondary:[191,157,91],soft:[245,242,235],logo:null},
+    van_haren:{displayName:'Van Haren',aliases:['van haren','vanharen'],primary:[4,20,37],secondary:[232,85,34],soft:[238,243,248],banner:{x:0,y:0,w:512,h:116}},
+    bomont:{displayName:'Bomont',aliases:['bomont'],primary:[28,28,28],secondary:[179,153,119],soft:[246,243,238],banner:{x:768,y:0,w:512,h:116}},
+    daka:{displayName:'DAKA',aliases:['daka'],primary:[211,0,27],secondary:[25,25,25],soft:[253,238,240],banner:{x:0,y:256,w:512,h:116}},
+    e5:{displayName:'E5',aliases:['e5','e5 mode'],primary:[21,21,21],secondary:[190,151,91],soft:[245,243,239],banner:{x:768,y:256,w:512,h:116}},
+    molecule:{displayName:'Molecule',aliases:['molecule'],primary:[244,183,0],secondary:[42,42,42],soft:[255,249,225],banner:{x:0,y:512,w:512,h:116}},
+    torfs:{displayName:'Torfs',aliases:['torfs'],primary:[52,52,52],secondary:[246,190,0],soft:[248,243,235],banner:{x:768,y:512,w:512,h:116}},
+    veritas:{displayName:'Veritas',aliases:['veritas'],primary:[30,30,30],secondary:[132,188,38],soft:[242,247,235],banner:{x:0,y:768,w:512,h:116}},
+    berden:{displayName:'Berden',aliases:['berden'],primary:[0,70,42],secondary:[181,151,93],soft:[237,246,241],banner:{x:768,y:768,w:512,h:116}},
     stichd:{displayName:'stichd',aliases:[],primary:[10,23,48],secondary:[245,102,0],soft:[244,246,249],logo:null}
   };
+  const bannerSprite='assets/chain-banners.png';
 
   const clean=value=>String(value??'').replace(/[\x00-\x1f]+/g,' ').replace(/\s+/g,' ').trim();
   const normalizeChain=value=>clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -46,7 +55,6 @@
     return [
       ['Adres',address],['Postcode en plaats',city],['Contactpersoon',value(report,'contactPerson')],
       ['Bezoeker',value(report,'visitor')],['Bezoekdatum',displayDate(value(report,'visitDate','date'))],
-      ['Starttijd',value(report,'startTime')],['Eindtijd',value(report,'endTime')],
       ['Activiteit',value(report,'activity')],['Status',value(report,'status')],
       ['Reden niet uitgevoerd',value(report,'reason')],
       ['Vervolgactie',value(report,'followUp')],['Opmerkingen',value(report,'remarks')]
@@ -69,10 +77,32 @@
     if(browserJsPDF)return browserJsPDF;
     try{return require('jspdf').jsPDF}catch(_){throw new Error('PDF-bibliotheek is niet beschikbaar.')}
   }
+  let bannerImagePromise=null;
+  function loadBannerSprite(source=bannerSprite){
+    if(typeof Image==='undefined')return Promise.reject(new Error('Bannerafbeeldingen zijn alleen in de browser beschikbaar.'));
+    if(!bannerImagePromise)bannerImagePromise=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('De ketenbanner kon niet worden geladen.'));image.src=source});
+    return bannerImagePromise;
+  }
+  async function prepareReportAssets(report,options={}){
+    const resolved=resolveChainProfile(value(report,'chain')),banner=resolved.profile.banner;
+    if(!banner||typeof document==='undefined')return report;
+    try{
+      const image=await loadBannerSprite(options.bannerSource||bannerSprite),canvas=document.createElement('canvas');
+      canvas.width=banner.w;canvas.height=banner.h;
+      const context=canvas.getContext('2d');context.drawImage(image,banner.x,banner.y,banner.w,banner.h,0,0,banner.w,banner.h);
+      return {...report,bannerImage:canvas.toDataURL('image/jpeg',.94)};
+    }catch(error){console.warn('Ketenbanner niet beschikbaar:',error.message);return report}
+  }
   function textColor(doc,color){doc.setTextColor(color[0],color[1],color[2])}
   function fillColor(doc,color){doc.setFillColor(color[0],color[1],color[2])}
   function drawHeader(doc,report,profile){
     const pageW=doc.internal.pageSize.getWidth();
+    if(report.bannerImage){
+      doc.setFillColor(255,255,255);doc.rect(0,0,pageW,52,'F');
+      doc.addImage(report.bannerImage,'JPEG',14,6,182,41.2,undefined,'FAST');
+      doc.setDrawColor(profile.secondary[0],profile.secondary[1],profile.secondary[2]);doc.setLineWidth(.6);doc.line(14,49.5,196,49.5);
+      return 54;
+    }
     fillColor(doc,profile.primary);doc.rect(0,0,pageW,42,'F');
     fillColor(doc,profile.secondary);doc.rect(pageW-10,0,10,42,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(profile.displayName.length>17?18:23);doc.setTextColor(255,255,255);
@@ -92,6 +122,7 @@
       fillColor(doc,notDone?[157,45,45]:[30,122,73]);doc.roundedRect(156,31,39,7,2,2,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);doc.text(status,175.5,35.7,{align:'center',maxWidth:36});
     }
+    return 42;
   }
   function drawSectionTitle(doc,title,y,profile){
     doc.setFont('helvetica','bold');doc.setFontSize(10);textColor(doc,profile.primary);doc.text(title.toUpperCase(),14,y);
@@ -122,9 +153,11 @@
   function drawImageCover(doc,photo,x,y,w,h){
     const data=imageData(photo);if(!data)return false;
     try{
-      const size=imageDimensions(doc,data,photo),scale=Math.min(w/size.width,h/size.height),iw=size.width*scale,ih=size.height*scale;
+      const size=imageDimensions(doc,data,photo),canClip=typeof doc.saveGraphicsState==='function'&&typeof doc.clip==='function'&&typeof doc.restoreGraphicsState==='function',scale=canClip?Math.max(w/size.width,h/size.height):Math.min(w/size.width,h/size.height),iw=size.width*scale,ih=size.height*scale;
       doc.setFillColor(246,248,251);doc.rect(x,y,w,h,'F');
+      if(canClip){doc.saveGraphicsState();doc.rect(x,y,w,h);doc.clip();doc.discardPath?.()}
       doc.addImage(data,photo?.format||undefined,x+(w-iw)/2,y+(h-ih)/2,iw,ih,undefined,'FAST');
+      if(canClip)doc.restoreGraphicsState();
       doc.setDrawColor(220,224,230);doc.rect(x,y,w,h,'S');return true;
     }catch(_){return false}
   }
@@ -146,7 +179,7 @@
   }
   function addPage(doc,report,profile){
     doc.addPage();doc.setFillColor(255,255,255);doc.rect(0,0,doc.internal.pageSize.getWidth(),doc.internal.pageSize.getHeight(),'F');
-    drawHeader(doc,report,profile);return 50;
+    return drawHeader(doc,report,profile)+8;
   }
   function drawTextSections(doc,report,sections,y,profile){
     const bottom=275;
@@ -176,8 +209,8 @@
     const JsPDF=getJsPDF(options.jsPDF),doc=new JsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
     const resolved=resolveChainProfile(value(report,'chain')),{profile}=resolved;
     const photos=(report.photos||[]).filter(p=>imageData(p));
-    drawHeader(doc,report,profile);
-    let y=drawDetails(doc,report,50,profile);
+    const headerBottom=drawHeader(doc,report,profile);
+    let y=drawDetails(doc,report,headerBottom+8,profile);
     const firstPhotos=photos.slice(0,8),remainingPhotos=photos.slice(8);
     if(firstPhotos.length){
       const wanted=firstPhotos.length<=2?65:82;
@@ -201,5 +234,5 @@
     else result.doc.save(result.fileName);
     setTimeout(()=>URL.revokeObjectURL(url),options.revokeDelay??60000);return result;
   }
-  return {chainProfiles,normalizeChain,resolveChainProfile,buildDetailFields,buildTextSections,createDocument,openOrDownload,safeFilename};
+  return {chainProfiles,normalizeChain,resolveChainProfile,buildDetailFields,buildTextSections,prepareReportAssets,createDocument,openOrDownload,safeFilename};
 });
