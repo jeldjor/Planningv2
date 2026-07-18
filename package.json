@@ -1,6 +1,6 @@
 {
   "name": "planyx-v11-production-core",
-  "version": "11.3.6",
+  "version": "11.3.7",
   "private": true,
   "description": "Planyx v11 met één centrale route-, tijd- en synchronisatielaag",
   "scripts": {

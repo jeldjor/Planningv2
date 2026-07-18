@@ -7,17 +7,17 @@ const root=path.resolve(import.meta.dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 
 test('Planyx is de appnaam op begin-, laptop- en iPhone-scherm',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.6');
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.7');
   for(const file of ['index.html','laptop.html','mobile.html'])assert.match(read(file),/<title>Planyx<\/title>/);
-  assert.match(read('auth.js'),/planyx-brand\.jpeg\?v=113600/);
-  assert.match(read('mobile.html'),/id="splash"[\s\S]*planyx-brand\.jpeg\?v=113600/);
+  assert.match(read('auth.js'),/planyx-brand\.jpeg\?v=113700/);
+  assert.match(read('mobile.html'),/id="splash"[\s\S]*planyx-brand\.jpeg\?v=113700/);
 });
 
 test('GJ Motion vervangt het oude bedrijfslogo in beide menu’s',()=>{
   const mobile=read('mobile.html'),laptop=read('laptop.html'),brand=read('brand.css');
-  assert.match(mobile,/class="menuBrand"[\s\S]*gj-motion-brand\.png\?v=113600/);
-  assert.match(laptop,/brand\.css\?v=113600/);
-  assert.match(brand,/\.productBrand \.productCard img[\s\S]*gj-motion-brand\.png\?v=113600/);
+  assert.match(mobile,/class="menuBrand"[\s\S]*gj-motion-brand\.png\?v=113700/);
+  assert.match(laptop,/brand\.css\?v=113700/);
+  assert.match(brand,/\.productBrand \.productCard img[\s\S]*gj-motion-brand\.png\?v=113700/);
   assert.doesNotMatch(mobile.match(/class="menuBrand"[\s\S]*?<\/div>/)?.[0]||'',/logo-menu\.png/);
 });
 
@@ -28,7 +28,7 @@ test('nieuwe merkbestanden worden gebouwd en veilig opnieuw gecachet',()=>{
     assert.match(build,new RegExp(asset.replace('.','\\.')));
     assert.match(worker,new RegExp(asset.replace('.','\\.')));
   }
-  assert.match(worker,/planyx-shell-v11\.3\.6-r1/);
+  assert.match(worker,/planyx-shell-v11\.3\.7-r1/);
   assert.match(worker,/planning-gjsystems-shell-/);
 });
 

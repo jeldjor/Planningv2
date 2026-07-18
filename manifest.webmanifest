@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Planyx",
+  "short_name": "Planyx",
+  "description": "Plan, bezoek, registreer en analyseer winkelbezoeken met Planyx.",
+  "lang": "nl-NL",
+  "start_url": "./index.html?v=113700",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#020a18",
+  "theme_color": "#03152c",
+  "icons": [
+    {"src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

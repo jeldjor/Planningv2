@@ -1,7 +1,7 @@
-/* Planyx v11.3.6 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
+/* Planyx v11.3.7 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
 'use strict';
-const CACHE='planyx-shell-v11.3.6-r1';
-const SHELL=['./','./index.html','./laptop.html','./mobile.html','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./photo-zip.js','./assets/chain-banners.png','./assets/chain-banners-core.png','./v11.js','./v11.css','./v113.js','./v113.css','./brand.css','./planyx-brand.jpeg','./gj-motion-brand.png'];
+const CACHE='planyx-shell-v11.3.7-r1';
+const SHELL=['./','./index.html','./laptop.html','./mobile.html','./manifest.webmanifest','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./photo-zip.js','./assets/chain-banners.png','./assets/chain-banners-core.png','./assets/icons/apple-touch-icon.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./v11.js','./v11.css','./v113.js','./v113.css','./brand.css','./planyx-brand.jpeg','./gj-motion-brand.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
