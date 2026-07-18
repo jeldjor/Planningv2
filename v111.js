@@ -2,7 +2,7 @@
 (()=>{
   'use strict';
   function applyReleaseUi(){
-    document.title='Planning-GJsystems v10.11 DEV';
+    document.title='Planyx';
     document.querySelectorAll('.version,.productVersion').forEach(el=>el.textContent='v10.11 DEV');
     document.getElementById('v108DevBanner')?.remove();
   }

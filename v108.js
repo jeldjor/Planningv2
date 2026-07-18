@@ -112,7 +112,7 @@
     },
 
     installDevelopmentLabel() {
-      document.title = 'Planning-GJsystems';
+      document.title = 'Planyx';
       document.querySelectorAll('.version,.productVersion,.settingsVersion,#v108DevBanner').forEach((element) => element.remove());
     },
 

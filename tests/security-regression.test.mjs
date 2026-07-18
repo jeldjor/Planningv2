@@ -43,7 +43,7 @@ test('lege developmentdatabase heeft een expliciete v10.7-baseline zonder produc
     assert.match(sql, new RegExp(`create table if not exists public\\.${table}`));
   }
   assert.match(sql, /role text not null default 'user'/);
-  assert.doesNotMatch(sql, /georgio_jejanan|hotmail\.com/i);
+  assert.doesNotMatch(sql, /production_owner|example\.invalid/i);
   assert.match(sql, /create or replace function public\.is_app_admin/);
   assert.match(sql, /create or replace function public\.protect_profile_security_fields/);
   assert.match(sql, /new\.role := old\.role/);
@@ -100,10 +100,10 @@ test('planning gebruikt uitsluitend de aangemelde werkruimteclient', async () =>
   assert.doesNotMatch(html.match(/function initSupabaseClient\(\)\{[\s\S]*?\n\}/)?.[0]||'', /createSupabaseClient\(\)/);
 });
 
-test('iPhone splash gebruikt het lichte logo en profielinstellingen openen de ronde cropper', async () => {
+test('iPhone splash gebruikt het Planyx-logo en profielinstellingen openen de ronde cropper', async () => {
   const mobile = await read('mobile.html');
   const laptop = await read('laptop.html');
-  assert.match(mobile, /id="splash"[\s\S]*logo-menu\.png\?v=10820/);
+  assert.match(mobile, /id="splash"[\s\S]*planyx-brand\.jpeg\?v=113600/);
   assert.doesNotMatch(mobile.match(/id="splash"[\s\S]*?<\/div><\/div>/)?.[0]||'', /Powered by/);
   for (const html of [mobile,laptop]) {
     assert.match(html, /settingsButton\?\.addEventListener\('click'/);

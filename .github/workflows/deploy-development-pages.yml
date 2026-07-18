@@ -1,4 +1,4 @@
-name: Test en deploy Planning-GJsystems v11.1.2
+name: Test en deploy Planyx v11.3.6
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
       - name: Maak uitsluitend development-runtimeconfig
         env:
           APP_ENV: development
-          APP_DEPLOYMENT_LABEL: Planning-GJsystems v11.1.2
+          APP_DEPLOYMENT_LABEL: Planyx v11.3.6
           SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
           SUPABASE_PROJECT_REF: ${{ secrets.DEV_SUPABASE_PROJECT_REF }}

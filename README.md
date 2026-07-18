@@ -1,6 +1,6 @@
-# Planning-GJsystems v11.3.5
+# Planyx v11.3.6
 
-Deze productierelease maakt de centrale route-, database-, historie- en PDF-laag stabiel voor dagelijks gebruik. v11.3.5 gebruikt de gekozen rustige PDF-layout met de ketenbanner onvervormd over de volledige paginabreedte, zonder dubbele bezoekinformatie en zonder bezoektijden.
+Planyx is de nieuwe naam van de planningsapp. Deze productierelease behoudt de stabiele route-, database-, historie- en PDF-laag van v11.3.5 en voegt uitsluitend de nieuwe Planyx- en GJ Motion-huisstijl toe.
 
 ## Belangrijkste verbeteringen
 
@@ -62,7 +62,7 @@ Kopieer `.env.example` naar `.env` en vul de waarden van de ontwikkelomgeving in
 
 ```text
 APP_ENV=development
-APP_DEPLOYMENT_LABEL=Planning-GJsystems
+APP_DEPLOYMENT_LABEL=Planyx
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_ANON_KEY=<anon-of-publishable-key>
 SUPABASE_PROJECT_REF=<project-ref>
@@ -147,10 +147,12 @@ De geautomatiseerde suite controleert code, simulaties, beveiligingscontracten, 
 - `SUPABASE_V11_3_2_RELEASE.sql` – cumulatieve statuscorrectie en volledig legen in veilige volgorde
 - `CHANGELOG_V11.3.5.md` – wijzigingen in foto-ZIP, historie en leegmaken
 - `TESTCONTROLE_V11.3.5.md` – werkelijk uitgevoerde v11.3.5-controles
+- `TESTCONTROLE_V11.3.6.md` – merk- en volledige regressiecontrole voor Planyx
 - `CHANGELOG_V11.3.md` – functionele wijzigingen en gewijzigde bestanden
 - `TESTCONTROLE_V11.3.md` – werkelijk uitgevoerde tests en vijf live controles
 - `INSTALLATIE_V11.3.md` – stappen voor de huidige GitHub- en Supabase-omgeving
 - `INSTALLATIE_V11.3.5.md` – installatie van deze complete v11.3.5-release
+- `INSTALLATIE_V11.3.6.md` – installatie van de Planyx/GJ Motion-merkrelease
 - `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
 - `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
 

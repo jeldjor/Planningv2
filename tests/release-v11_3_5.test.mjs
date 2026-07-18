@@ -9,7 +9,7 @@ const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const require=createRequire(import.meta.url);
 const visitPdf=require('../visit-pdf.js');
 
-test('v11.3.5 gebruikt de gekozen rustige ontwerp-1 indeling',()=>{
+test('v11.3.6 gebruikt de gekozen rustige ontwerp-1 indeling',()=>{
   const source=read('visit-pdf.js');
   assert.match(source,/drawReportIntro\(doc,report,headerBottom\+13,profile\)/);
   assert.match(source,/y=drawDetails\(doc,report,y,profile\);\s*y=drawTextSections/);
@@ -19,9 +19,9 @@ test('v11.3.5 gebruikt de gekozen rustige ontwerp-1 indeling',()=>{
 
 test('bezoekinformatie bevat precies één datum en nooit bezoekstijden',()=>{
   const fields=visitPdf.buildDetailFields({
-    storeName:'Van Haren Den Bosch',branch:'Centrum',street:'Marktstraat',houseNumber:'12',
-    postalCode:'5211 AA',city:"'s-Hertogenbosch",visitDate:'2026-07-16',
-    startTime:'08:30',endTime:'09:15',activity:'Winkelpresentatie',visitor:'Kim Kolijn',status:'Uitgevoerd'
+    storeName:'Voorbeeldwinkel Noord',branch:'Centrum',street:'Testlaan',houseNumber:'12',
+    postalCode:'1234 AB',city:'Voorbeeldstad',visitDate:'2026-07-16',
+    startTime:'08:30',endTime:'09:15',activity:'Winkelpresentatie',visitor:'Testgebruiker',status:'Uitgevoerd'
   });
   assert.deepEqual(fields.map(([label])=>label),['Winkel','Locatie','Datum','Activiteit','Bezoeker']);
   assert.equal(fields.filter(([label])=>label==='Datum').length,1);
@@ -29,7 +29,7 @@ test('bezoekinformatie bevat precies één datum en nooit bezoekstijden',()=>{
 });
 
 test('status en tekstvelden staan niet dubbel in informatieblok en tekstsecties',()=>{
-  const fields=visitPdf.buildDetailFields({storeName:'Scapino Breda',visitDate:'2026-07-16',status:'Uitgevoerd',summary:'Zelfde tekst',remarks:'Zelfde tekst'});
+  const fields=visitPdf.buildDetailFields({storeName:'Voorbeeldwinkel Zuid',visitDate:'2026-01-16',status:'Uitgevoerd',summary:'Zelfde tekst',remarks:'Zelfde tekst'});
   assert.ok(!fields.some(([label])=>['Status','Samenvatting','Opmerkingen','Vervolgactie'].includes(label)));
   const sections=visitPdf.buildTextSections({summary:'Zelfde tekst',remarks:'Zelfde tekst',followUp:'Controle bij volgend bezoek.'});
   assert.deepEqual(sections,[['Bevindingen en samenvatting','Zelfde tekst'],['Vervolgactie','Controle bij volgend bezoek.']]);
@@ -43,9 +43,9 @@ test('footer herhaalt de bezoekdatum niet als generatiedatum',()=>{
   assert.match(source,/Pagina \$\{page\} van \$\{total\}/);
 });
 
-test('v11.3.5 vernieuwt PDF-code en app-cache op laptop en iPhone',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.5');
-  assert.match(read('service-worker.js'),/planning-gjsystems-shell-v11\.3\.5-r1/);
+test('v11.3.6 vernieuwt PDF-code en app-cache op laptop en iPhone',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.6');
+  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.6-r1/);
   for(const html of ['laptop.html','mobile.html']){
     assert.match(read(html),/visit-pdf\.js\?v=113500/);
     assert.match(read(html),/planning-core\.js\?v=113500/);
