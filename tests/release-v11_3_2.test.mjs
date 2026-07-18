@@ -19,8 +19,8 @@ function storedZipEntries(bytes){
   return entries;
 }
 
-test('v11.3.5 laadt de gedeelde foto-ZIP module op laptop en iPhone',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.5');
+test('v11.3.6 laadt de gedeelde foto-ZIP module op laptop en iPhone',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.6');
   for(const file of ['laptop.html','mobile.html']){
     const html=read(file);assert.match(html,/photo-zip\.js\?v=113500/);assert.match(html,/planning-core\.js\?v=113500/);
   }
@@ -36,12 +36,12 @@ test('foto-ZIP bevat bezoekverslag en iedere foto als los bestand',async()=>{
     document:{createElement(){throw new Error('downloadfallback hoort niet gebruikt te worden')}}};
   vm.runInNewContext(read('photo-zip.js'),context);
   const client={storage:{from:()=>({download:async filePath=>({data:new Blob([`beeld:${filePath}`],{type:'image/jpeg'}),error:null})})}};
-  const result=await window.GJPhotoZip.download({client,photos:[{path:'a/eerste.jpeg'},{path:'b/tweede.png'}],customerName:'Bijenkorf Rotterdam',visitDate:'2026-07-15',subject:'Winkelcheck',summary:'Alles is gecontroleerd.'});
-  assert.equal(result.fileName,'Bijenkorf-Rotterdam_2026-07-15.zip');assert.equal(result.downloaded,2);assert.ok(sharedFile);
+  const result=await window.GJPhotoZip.download({client,photos:[{path:'a/eerste.jpeg'},{path:'b/tweede.png'}],customerName:'Voorbeeldwinkel Noord',visitDate:'2026-01-15',subject:'Testbezoek',summary:'Dit is een geanonimiseerde testsamenvatting.'});
+  assert.equal(result.fileName,'Voorbeeldwinkel-Noord_2026-01-15.zip');assert.equal(result.downloaded,2);assert.ok(sharedFile);
   const entries=storedZipEntries(new Uint8Array(await sharedFile.arrayBuffer()));
   assert.deepEqual([...entries.keys()],['Bezoekverslag.txt','foto-01.jpg','foto-02.png']);
   const report=new TextDecoder().decode(entries.get('Bezoekverslag.txt'));
-  assert.match(report,/Klant: Bijenkorf Rotterdam/);assert.match(report,/Onderwerp: Winkelcheck/);assert.match(report,/Datum bezoek: 2026-07-15/);assert.match(report,/Alles is gecontroleerd\./);
+  assert.match(report,/Klant: Voorbeeldwinkel Noord/);assert.match(report,/Onderwerp: Testbezoek/);assert.match(report,/Datum bezoek: 2026-01-15/);assert.match(report,/Dit is een geanonimiseerde testsamenvatting\./);
 });
 
 test('volledig legen verwijdert eerst Storage en daarna databasekoppelingen',()=>{

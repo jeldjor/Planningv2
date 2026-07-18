@@ -7,7 +7,8 @@ const files = [
   'v109.js', 'v109.css', 'v110.js', 'v110.css', 'v111.css', 'v11.js', 'v11.css', 'v113.js', 'v113.css', 'planning-core.js', 'visit-pdf.js', 'photo-zip.js',
   'vendor/jspdf.umd.min.js', 'vendor/jspdf-LICENSE.txt', 'assets/chain-banners.png', 'assets/chain-banners-core.png',
   'logo.png', 'logo-dark.png', 'logo-dark-menu.png', 'logo-header.png',
-  'logo-light.png', 'logo-login.png', 'logo-menu.png'
+  'logo-light.png', 'logo-login.png', 'logo-menu.png',
+  'brand.css', 'planyx-brand.jpeg', 'gj-motion-brand.png'
 ];
 const dist = resolve('dist');
 await rm(dist, { recursive: true, force: true });

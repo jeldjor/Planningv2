@@ -5,7 +5,7 @@
   const isLaptop=!!$('calendarBody');
 
   function setVersionLabels(){
-    document.title='Planning-GJsystems';
+    document.title='Planyx';
     document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach(el=>el.remove());
   }
 

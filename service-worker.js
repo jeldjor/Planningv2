@@ -1,14 +1,14 @@
-/* Planning-GJsystems v11.3 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
+/* Planyx v11.3.6 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
 'use strict';
-const CACHE='planning-gjsystems-shell-v11.3.5-r1';
-const SHELL=['./','./index.html','./laptop.html','./mobile.html','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./photo-zip.js','./assets/chain-banners.png','./assets/chain-banners-core.png','./v11.js','./v11.css','./v113.js','./v113.css'];
+const CACHE='planyx-shell-v11.3.6-r1';
+const SHELL=['./','./index.html','./laptop.html','./mobile.html','./auth.js','./app-config.js','./planning-core.js','./visit-pdf.js','./photo-zip.js','./assets/chain-banners.png','./assets/chain-banners-core.png','./v11.js','./v11.css','./v113.js','./v113.css','./brand.css','./planyx-brand.jpeg','./gj-motion-brand.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
 });
 
 self.addEventListener('activate',event=>{
-  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('planning-gjsystems-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>(key.startsWith('planning-gjsystems-shell-')||key.startsWith('planyx-shell-'))&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));
 });
 
 self.addEventListener('fetch',event=>{

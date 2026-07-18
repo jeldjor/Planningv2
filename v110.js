@@ -7,7 +7,7 @@
   let mutationDepth=0,pendingRemoteReload=false,liveRouteBusy=false,lastLiveRouteError=null;
 
   function setVersion(){
-    document.title='Planning-GJsystems';
+    document.title='Planyx';
     document.querySelectorAll('.version,.productVersion,.settingsVersion').forEach(el=>el.remove());
   }
   function beginMutation(){mutationDepth++;window.__GJ_LOCAL_MUTATION__=true}

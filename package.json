@@ -1,8 +1,8 @@
 {
-  "name": "planning-gjsystems-v11-production-core",
-  "version": "11.3.5",
+  "name": "planyx-v11-production-core",
+  "version": "11.3.6",
   "private": true,
-  "description": "Planning-GJsystems v11 met één centrale route-, tijd- en synchronisatielaag",
+  "description": "Planyx v11 met één centrale route-, tijd- en synchronisatielaag",
   "scripts": {
     "config:generate": "node scripts/generate-runtime-config.mjs",
     "build": "node scripts/prepare-dist.mjs",
