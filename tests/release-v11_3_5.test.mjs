@@ -9,7 +9,7 @@ const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const require=createRequire(import.meta.url);
 const visitPdf=require('../visit-pdf.js');
 
-test('v11.3.6 gebruikt de gekozen rustige ontwerp-1 indeling',()=>{
+test('v11.3.7 gebruikt de gekozen rustige ontwerp-1 indeling',()=>{
   const source=read('visit-pdf.js');
   assert.match(source,/drawReportIntro\(doc,report,headerBottom\+13,profile\)/);
   assert.match(source,/y=drawDetails\(doc,report,y,profile\);\s*y=drawTextSections/);
@@ -43,9 +43,9 @@ test('footer herhaalt de bezoekdatum niet als generatiedatum',()=>{
   assert.match(source,/Pagina \$\{page\} van \$\{total\}/);
 });
 
-test('v11.3.6 vernieuwt PDF-code en app-cache op laptop en iPhone',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.6');
-  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.6-r1/);
+test('v11.3.7 vernieuwt PDF-code en app-cache op laptop en iPhone',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.7');
+  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.7-r1/);
   for(const html of ['laptop.html','mobile.html']){
     assert.match(read(html),/visit-pdf\.js\?v=113500/);
     assert.match(read(html),/planning-core\.js\?v=113500/);
