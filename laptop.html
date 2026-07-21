@@ -1871,20 +1871,22 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
     <span class="settingHelp">Past menu, knoppen, actieve tabs en accenten direct aan. Tekst blijft donker en goed leesbaar.</span>
   </div>
 
-  <div class="formGrid settings">
-    <label class="wide">Startlocatie<input id="setStart" placeholder="Vul je start- en eindadres in"><span class="settingHelp">Adres waar de route standaard begint en eindigt.</span></label>
-    <label>Breedtegraad<input id="setStartLat" type="number" step="any"><span class="settingHelp">Wordt bij opslaan automatisch uit het adres bepaald.</span></label>
-    <label>Lengtegraad<input id="setStartLng" type="number" step="any"><span class="settingHelp">Wordt bij opslaan automatisch uit het adres bepaald.</span></label>
-    <label>Vertrek<input id="setDepart" type="time" value="08:30"><span class="settingHelp">Standaard vertrektijd van de dag.</span></label>
+  <div class="settingsSectionCard settingsPrimaryCard">
+    <div class="settingsSectionHead"><div><h3>Planning & thuislocatie</h3><p class="muted">De thuislocatie wordt automatisch gecontroleerd en omgezet naar routecoördinaten.</p></div><span id="homeAddressStatus" class="addressStatus">Nog niet gecontroleerd</span></div>
+    <div class="formGrid settings settingsCoreGrid">
+    <label class="wide homeAddressField">Thuisadres<input id="setStart" autocomplete="street-address" placeholder="Bijvoorbeeld: Markt 1, 5211 JV Den Bosch"><span class="settingHelp">Vul een volledig bestaand adres in. Bij opslaan controleert Planyx dit adres opnieuw.</span></label>
+    <input id="setStartLat" type="hidden"><input id="setStartLng" type="hidden">
+    <label>Vertrek<input id="setDepart" type="time" value="08:30"><span class="settingHelp">Standaard vertrektijd.</span></label>
     <label>Uiterlijk thuis<input id="setHome" type="time" value="18:00"><span class="settingHelp">De planning probeert voor deze tijd klaar te zijn.</span></label>
     <label>Max klanten/dag<input id="setMax" type="number" value="4"><span class="settingHelp">Normaal maximum aantal klanten per dag.</span></label>
     <label>Maximale werkdag (uur)<input id="setMaxWorkday" type="number" step="0.25" value="8.5"><span class="settingHelp">Boven deze werkduur krijgt de dag een glow.</span></label>
     <label>Parkeerbuffer<input id="setParking" type="number" value="15"><span class="settingHelp">Extra minuten per bezoek voor parkeren/lopen naar winkel.</span></label>
     <label>Pauze min<input id="setBreak" type="number" value="30"><span class="settingHelp">Standaard pauze die in de dagroute meetelt.</span></label>
     <label>Maximale loopafstand<input id="setWalk" type="number" value="300"><span class="settingHelp">Tot deze afstand adviseert de planner lopen in plaats van rijden.</span></label>
-</div>
+    </div>
+  </div>
 
-  <div class="settingsBlock">
+  <div class="settingsBlock settingsSectionCard">
     <h3>Thuiswerkdag</h3>
     <div class="homeDayLine">
       <label class="checkLine"><input id="setHomeDayEnabled" type="checkbox" checked> Thuiswerkdag gebruiken</label>
@@ -3727,15 +3729,38 @@ async function delBlock(id){
 }
 function addFixed(){const val=$("fixedCustomer").value,id=val.split(" - ")[0].trim(),c=getC(id)||db.customers.find(x=>low(x.Winkel)===low(val));if(!c||!$("fixedDate").value)return alert("Kies klant en datum.");const vid=uuid(),f={id:uuid(),visitId:vid,customerId:c.ID,date:$("fixedDate").value,time:$("fixedTime").value,duration:$("fixedDuration").value,note:$("fixedNote").value};db.fixed.push(f);db.visits.push({id:vid,customerId:c.ID,date:f.date,time:f.time,status:"Vast",duration:f.duration});save();refreshDayRoute(f.date)} function unfixFixedAppointment(id){const f=db.fixed.find(x=>x.id===id);if(!f)return;const v=db.visits.find(x=>x.id===f.visitId);if(v){v.status="Gepland";v.time="";}db.fixed=db.fixed.filter(x=>x.id!==id);db.routeStats={};save();refreshDayRoute(f.date);alert("Vaste afspraak losgemaakt. Dit bezoek is nu weer herplanbaar.")}
 function readParttimeSettings(){const out={};[0,1,2,3,4,5,6].forEach(d=>{const even=$("pt"+d+"even")?.checked||false,odd=$("pt"+d+"odd")?.checked||false;if(even||odd)out[d]={even,odd}});return out}
+async function verifyHomeAddress(address){
+  const client=window.GJ_AUTH?.sb;
+  if(!client)throw new Error('Supabase is nog niet verbonden.');
+  const response=await client.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:address}});
+  const result=response.data?.results?.[0];
+  const point=result?.position;
+  if(response.error||response.data?.error||!point)throw new Error(response.data?.error||response.error?.message||'Dit adres kon niet worden gevonden.');
+  const resolved=result.address||{};
+  const hasUsableAddress=Boolean(resolved.freeformAddress||resolved.streetName||resolved.municipality||resolved.postalCode);
+  if(!hasUsableAddress||!Number.isFinite(Number(point.lat))||!Number.isFinite(Number(point.lon)))throw new Error('Dit resultaat is geen bruikbaar routeadres. Vul straat, huisnummer, postcode en plaats in.');
+  return {lat:Number(point.lat),lng:Number(point.lon),label:resolved.freeformAddress||address};
+}
+function setHomeAddressStatus(text,state='idle'){
+  const el=$('homeAddressStatus');if(!el)return;el.textContent=text;el.dataset.state=state;
+}
 async function saveSettings(){
-  const address=$("setStart").value.trim();let lat=parseFloat($("setStartLat")?.value),lng=parseFloat($("setStartLng")?.value);
+  const address=$('setStart').value.trim();
   try{
-    if(!address)throw new Error('Vul eerst een start- en eindadres in.');
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)){const geo=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:address}}),point=geo.data?.results?.[0]?.position;if(geo.error||geo.data?.error||!point)throw new Error(geo.data?.error||geo.error?.message||'Startadres kon niet worden gevonden.');lat=Number(point.lat);lng=Number(point.lon)}
-    db.settings={start:address,startLat:lat,startLng:lng,depart:$("setDepart").value,home:$("setHome").value,max:num($("setMax").value,4),maxWorkday:num($("setMaxWorkday").value,8.5),theme:"blue",parking:num($("setParking").value,15),break:num($("setBreak").value,30),walk:num($("setWalk").value,300),tomtom:"",homeDayEnabled:$("setHomeDayEnabled").checked,homeDay:num($("setHomeDay").value,5),parttimeDays:readParttimeSettings(),nlHoliday:$("setNLHoliday").checked,beHoliday:$("setBEHoliday").checked,language:localStorage.getItem('gj_app_language')||'nl'};db.navPrefs={app:$("setNavApp").value,ask:$("setNavAsk").checked};db.routeStats={};save();
-    if(window.GJPlanningCore&&window.GJ_AUTH?.sb)await GJPlanningCore.saveUserSettings(GJ_AUTH.sb,db.settings,GJ_AUTH.workspaceUserId);render();
-  }catch(error){alert('Instellingen centraal opslaan mislukt: '+error.message)}
-} function fillSettings(){normalizeSettings();const s=db.settings;applyTheme(s.theme||"blue");document.querySelectorAll('input[name="themeMode"]').forEach(x=>x.checked=x.value===(s.theme||"blue"));$("setStart").value=s.start||'';if($("setStartLat"))$("setStartLat").value=s.startLat??'';if($("setStartLng"))$("setStartLng").value=s.startLng??'';$("setDepart").value=s.depart;$("setHome").value=s.home;$("setMax").value=s.max;$("setMaxWorkday").value=s.maxWorkday??8.5;$("setParking").value=s.parking;$("setBreak").value=s.break;$("setWalk").value=s.walk;$("setHomeDayEnabled").checked=s.homeDayEnabled!==false;$("setHomeDay").value=String(s.homeDay??5);[0,1,2,3,4,5,6].forEach(d=>{const cfg=(s.parttimeDays||{})[d]||(s.parttimeDays||{})[String(d)]||{};if($("pt"+d+"even"))$("pt"+d+"even").checked=!!cfg.even;if($("pt"+d+"odd"))$("pt"+d+"odd").checked=!!cfg.odd});$("setNLHoliday").checked=s.nlHoliday!==false;$("setBEHoliday").checked=s.beHoliday!==false;if($("setNavApp"))$("setNavApp").value=db.navPrefs?.app||"google";if($("setNavAsk"))$("setNavAsk").checked=db.navPrefs?.ask!==false}
+    if(!address)throw new Error('Vul eerst een volledig thuisadres in.');
+    setHomeAddressStatus('Adres controleren…','busy');
+    const verified=await verifyHomeAddress(address);
+    const lat=verified.lat,lng=verified.lng;
+    $('setStartLat').value=String(lat);$('setStartLng').value=String(lng);
+    $('setStart').value=verified.label;
+    db.settings={start:verified.label,startLat:lat,startLng:lng,depart:$('setDepart').value,home:$('setHome').value,max:num($('setMax').value,4),maxWorkday:num($('setMaxWorkday').value,8.5),theme:'blue',parking:num($('setParking').value,15),break:num($('setBreak').value,30),walk:num($('setWalk').value,300),tomtom:'',homeDayEnabled:$('setHomeDayEnabled').checked,homeDay:num($('setHomeDay').value,5),parttimeDays:readParttimeSettings(),nlHoliday:$('setNLHoliday').checked,beHoliday:$('setBEHoliday').checked,language:localStorage.getItem('gj_app_language')||'nl'};
+    db.navPrefs={app:$('setNavApp').value,ask:$('setNavAsk').checked};db.routeStats={};save();
+    if(window.GJPlanningCore&&window.GJ_AUTH?.sb)await GJPlanningCore.saveUserSettings(GJ_AUTH.sb,db.settings,GJ_AUTH.workspaceUserId);
+    setHomeAddressStatus('Adres gecontroleerd','ok');render();
+  }catch(error){setHomeAddressStatus('Adres niet geldig','error');alert('Instellingen centraal opslaan mislukt: '+error.message)}
+}
+function fillSettings(){normalizeSettings();const s=db.settings;applyTheme(s.theme||'blue');document.querySelectorAll('input[name="themeMode"]').forEach(x=>x.checked=x.value===(s.theme||'blue'));$('setStart').value=s.start||'';if($('setStartLat'))$('setStartLat').value=s.startLat??'';if($('setStartLng'))$('setStartLng').value=s.startLng??'';setHomeAddressStatus(s.start&&Number.isFinite(Number(s.startLat))&&Number.isFinite(Number(s.startLng))?'Adres opgeslagen':'Nog niet gecontroleerd',s.start&&Number.isFinite(Number(s.startLat))&&Number.isFinite(Number(s.startLng))?'ok':'idle');$('setDepart').value=s.depart;$('setHome').value=s.home;$('setMax').value=s.max;$('setMaxWorkday').value=s.maxWorkday??8.5;$('setParking').value=s.parking;$('setBreak').value=s.break;$('setWalk').value=s.walk;$('setHomeDayEnabled').checked=s.homeDayEnabled!==false;$('setHomeDay').value=String(s.homeDay??5);[0,1,2,3,4,5,6].forEach(d=>{const cfg=(s.parttimeDays||{})[d]||(s.parttimeDays||{})[String(d)]||{};if($('pt'+d+'even'))$('pt'+d+'even').checked=!!cfg.even;if($('pt'+d+'odd'))$('pt'+d+'odd').checked=!!cfg.odd});$('setNLHoliday').checked=s.nlHoliday!==false;$('setBEHoliday').checked=s.beHoliday!==false;if($('setNavApp'))$('setNavApp').value=db.navPrefs?.app||'google';if($('setNavAsk'))$('setNavAsk').checked=db.navPrefs?.ask!==false}
+
 
 function openMoveDialogForVisit(id){
   const v=db.visits.find(x=>x.id===id);

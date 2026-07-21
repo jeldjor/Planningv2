@@ -142,3 +142,24 @@ button:not(.secondary):not(.danger):not(.editBtn):not(.pdfBtn){border-color:rgba
   .dualBrandFooter .footerBrandPlanyx img{width:121px!important;top:-7px!important}
   .dualBrandFooter .footerBrandGJ img{width:121px!important;top:-8px!important}
 }
+
+/* v11.3.10 — compact professionele instellingen */
+#settings>.panel{max-width:1180px;margin:0 auto}
+#settings .v102SettingsGrid{grid-template-columns:minmax(260px,.8fr) minmax(320px,1fr)!important;gap:10px!important;margin-bottom:10px!important}
+#settings .v102Card,#settings .settingsSectionCard,#settings .settingsBlock,#settings .navSettings{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(247,251,255,.96));border:1px solid rgba(80,135,190,.2);border-radius:13px;padding:11px 12px!important;box-shadow:0 8px 22px rgba(24,65,110,.06)}
+#settings .settingsSectionCard{margin-top:10px!important;border-top:1px solid rgba(80,135,190,.2)!important}
+#settings .settingsSectionHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:7px}
+#settings .settingsSectionHead p{margin:1px 0 0!important}
+#settings .settingsCoreGrid{grid-template-columns:minmax(270px,2.2fr) repeat(3,minmax(125px,1fr))!important}
+#settings .homeAddressField{grid-column:span 2!important}
+#settings .addressStatus{flex:none;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;background:#eef2f6;color:#596879;border:1px solid #dbe3eb;white-space:nowrap}
+#settings .addressStatus[data-state="busy"]{background:#eaf4ff;color:#1167b1;border-color:#b8dcff}
+#settings .addressStatus[data-state="ok"]{background:#e9f8ef;color:#167143;border-color:#bce8cd}
+#settings .addressStatus[data-state="error"]{background:#fff0f0;color:#b42318;border-color:#ffc9c7}
+#settings .themeChoiceGrid{grid-template-columns:repeat(5,minmax(90px,1fr))!important;gap:6px!important}
+#settings .themeChoice{padding:6px 8px!important;min-height:32px!important}
+#settings .parttimeGrid{grid-template-columns:repeat(4,minmax(130px,1fr))!important}
+#settings .parttimeDay{background:#fff!important}
+#settings #btnSaveSettings{position:sticky;bottom:10px;z-index:5;box-shadow:0 8px 24px rgba(0,70,160,.25)}
+@media(max-width:1000px){#settings .settingsCoreGrid{grid-template-columns:repeat(2,1fr)!important}#settings .homeAddressField{grid-column:1/-1!important}#settings .v102SettingsGrid{grid-template-columns:1fr!important}}
+@media(max-width:650px){#settings .settingsCoreGrid,#settings .parttimeGrid,#settings .themeChoiceGrid{grid-template-columns:1fr!important}#settings .settingsSectionHead{display:grid}.addressStatus{justify-self:start}}
