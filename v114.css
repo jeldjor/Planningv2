@@ -1,0 +1,11 @@
+/* Dag uit planning + onverplaatsbare uitgevoerde opdrachten. */
+.v114DayActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.v114RemoveDay{background:#fff!important;color:#b42318!important;border:1px solid #f3b6b2!important;box-shadow:none!important}
+.v114RemoveDay:hover{background:#fff1f0!important;color:#8f1710!important}
+.v114RemoveDay:disabled{opacity:.55;cursor:wait}
+.v114LockedBadge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;background:#eef2f6;color:#344054;font-size:12px;font-weight:900}
+.customer.v114LockedVisit{border-left:4px solid #98a2b3}
+.customer.v114LockedVisit .pin,.customer.v114LockedVisit .timeBtn{display:none!important}
+.visitCard.v114LockedVisit .moveUp,.visitCard.v114LockedVisit .moveDown,.visitCard.v114LockedVisit .removePlan,.visitCard.v114LockedVisit .eyeBtn{display:none!important}
+#v114MobileRemoveDay{width:100%;margin-top:6px;min-height:38px}
+@media(max-width:760px){.v114DayActions{width:100%;justify-content:stretch}.v114DayActions button{flex:1 1 auto}}
