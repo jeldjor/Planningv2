@@ -163,3 +163,82 @@ button:not(.secondary):not(.danger):not(.editBtn):not(.pdfBtn){border-color:rgba
 #settings #btnSaveSettings{position:sticky;bottom:10px;z-index:5;box-shadow:0 8px 24px rgba(0,70,160,.25)}
 @media(max-width:1000px){#settings .settingsCoreGrid{grid-template-columns:repeat(2,1fr)!important}#settings .homeAddressField{grid-column:1/-1!important}#settings .v102SettingsGrid{grid-template-columns:1fr!important}}
 @media(max-width:650px){#settings .settingsCoreGrid,#settings .parttimeGrid,#settings .themeChoiceGrid{grid-template-columns:1fr!important}#settings .settingsSectionHead{display:grid}.addressStatus{justify-self:start}}
+
+/* v11.3.11 — definitieve Dark Pro styling en professionele merkbalk */
+:root{
+  --bg:#020b18!important;
+  --panel:#07162a!important;
+  --text:#eef6ff!important;
+  --muted:#91a6bd!important;
+  --line:rgba(69,139,214,.25)!important;
+  --nav:#031021!important;
+  --nav2:#061a31!important;
+  --blue:#087cff!important;
+  --blue2:#0568d8!important;
+  --shadow:0 16px 42px rgba(0,5,16,.34)!important;
+}
+html,body{background:#020b18!important;color:var(--text)!important}
+body{background:radial-gradient(circle at 76% 5%,#0a2749 0,#031326 38%,#020b18 100%)!important;padding-bottom:68px!important}
+.sidebar{background:linear-gradient(180deg,#041326,#020b18)!important;border-right:1px solid rgba(62,137,218,.22)!important}
+.main{background:transparent!important;padding-bottom:68px!important}
+.top{background:rgba(4,17,35,.94)!important;border-bottom-color:var(--line)!important;backdrop-filter:blur(12px)}
+.top h1,.sectionHead h2,.routeHead h2,h1,h2,h3,strong{color:#f3f8ff}
+.top p,.smallText,.routeHead p,.empty,.rowSub{color:var(--muted)!important}
+.panel,.card,.routePanel,.calendarPanel,.v102Card,.settingsSectionCard,.settingsBlock,.navSettings,
+dialog,.dialog,.tableWrap,.metric,.customer,.weekCol,.dayCell,.proposalPreview{
+  background:linear-gradient(180deg,rgba(8,27,52,.96),rgba(4,18,37,.98))!important;
+  border-color:var(--line)!important;
+  color:var(--text)!important;
+  box-shadow:var(--shadow)!important;
+}
+input,select,textarea{background:#031328!important;color:#f4f8ff!important;border-color:rgba(78,145,213,.34)!important}
+input:focus,select:focus,textarea:focus{border-color:#118cff!important;box-shadow:0 0 0 3px rgba(17,140,255,.14)!important;outline:none}
+label,th{color:#d8e7f8!important}
+th{background:#071b34!important}.tableWrap td{border-bottom-color:var(--line)!important}
+.detail,.routeStart,.routeHome,.travel,.routeSummary div,.proposalPreview,.daySummary .pill{background:#061a33!important;border-color:var(--line)!important}
+.customer summary,.weekItem{background:rgba(8,29,56,.86)!important}.weekCustomer,.custName{color:#f1f7ff!important}
+.nav{color:#dce9f8!important}.nav.active,.nav:hover{background:linear-gradient(90deg,#0759c9,#087cff)!important;color:#fff!important;box-shadow:0 10px 24px rgba(0,102,255,.22)}
+button:not(.secondary):not(.danger):not(.editBtn):not(.pdfBtn){background:linear-gradient(90deg,#075fdc,#0789ff)!important;color:#fff!important}
+button.secondary,.miniBtn,.orderBtns button,.iconBtn{background:#0a2442!important;color:#d8eaff!important;border:1px solid rgba(81,151,223,.28)!important}
+
+/* De merkbalk staat compact onder de app en overlapt nooit de inhoud. */
+.productBrand.dualBrandFooter{
+  position:fixed!important;
+  left:246px!important;
+  right:0!important;
+  bottom:0!important;
+  z-index:45!important;
+  height:68px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:18px!important;
+  padding:7px 20px!important;
+  margin:0!important;
+  border-top:1px solid rgba(56,137,226,.28)!important;
+  background:linear-gradient(180deg,rgba(4,18,38,.97),rgba(1,8,18,.99))!important;
+  box-shadow:0 -10px 32px rgba(0,5,15,.28)!important;
+}
+.productBrand.dualBrandFooter .footerBrand{position:relative!important;display:block!important;overflow:hidden!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;height:52px!important;width:auto!important}
+.productBrand.dualBrandFooter .footerBrandPlanyx{width:180px!important}
+.productBrand.dualBrandFooter .footerBrandGJ{width:190px!important}
+.productBrand.dualBrandFooter .footerBrand img{position:static!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;filter:none!important}
+.productBrand.dualBrandFooter .footerPowered{font-size:9px!important;line-height:1!important;letter-spacing:.22em!important;color:#9bb0c8!important;font-weight:850!important;white-space:nowrap!important}
+.productBrand.dualBrandFooter .sidebarLang{position:absolute!important;right:18px!important;display:flex!important;align-items:center!important;gap:5px!important;margin:0!important}
+.productBrand.dualBrandFooter .sidebarLang button{padding:4px 6px!important;font-size:10px!important;min-width:0!important}
+.bottomDivider{display:none!important}
+
+@media(max-width:1050px){
+  body,.main{padding-bottom:72px!important}
+  .productBrand.dualBrandFooter{left:0!important;height:62px!important;gap:10px!important;padding:6px 110px 6px 12px!important}
+  .productBrand.dualBrandFooter .footerBrandPlanyx{width:132px!important}
+  .productBrand.dualBrandFooter .footerBrandGJ{width:142px!important}
+  .productBrand.dualBrandFooter .footerBrand{height:44px!important}
+  .productBrand.dualBrandFooter .sidebarLang{right:10px!important}
+}
+@media(max-width:620px){
+  .productBrand.dualBrandFooter{justify-content:flex-start!important;gap:7px!important;padding-right:95px!important}
+  .productBrand.dualBrandFooter .footerBrandPlanyx{width:105px!important}
+  .productBrand.dualBrandFooter .footerBrandGJ{width:112px!important}
+  .productBrand.dualBrandFooter .footerPowered{font-size:7px!important;letter-spacing:.12em!important}
+}
