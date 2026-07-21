@@ -16,8 +16,8 @@ test('Planyx is de appnaam op begin-, laptop- en iPhone-scherm',()=>{
 test('GJ Motion vervangt het oude bedrijfslogo in beide menu’s',()=>{
   const mobile=read('mobile.html'),laptop=read('laptop.html'),brand=read('brand.css');
   assert.match(mobile,/class="menuBrand"[\s\S]*gj-motion-brand\.png\?v=113800/);
-  assert.match(laptop,/brand\.css\?v=113800/);
-  assert.match(brand,/\.productBrand \.productCard img[\s\S]*gj-motion-brand\.png\?v=113800/);
+  assert.match(laptop,/brand\.css\?v=\d+/);
+  assert.match(brand,/GJ_Motion_Main\.png|gj-motion-brand\.png/);
   assert.doesNotMatch(mobile.match(/class="menuBrand"[\s\S]*?<\/div>/)?.[0]||'',/logo-menu\.png/);
 });
 

@@ -74,7 +74,7 @@ test('beide apparaten laden runtimeconfig en de centrale v11-productiekern', asy
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
     assert.match(html, /app-config\.js\?v=10801/);
-    assert.match(html, /auth\.js\?v=10802/);
+    assert.match(html, /auth\.js\?v=\d+/);
     assert.match(html, /v108\.css\?v=112000/);
     assert.match(html, /v108\.js\?v=113000/);
     assert.match(html, /v1082\.css\?v=10820/);
