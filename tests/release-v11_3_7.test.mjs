@@ -12,15 +12,15 @@ test('Planyx heeft een geldig standalone PWA-manifest',()=>{
   assert.equal(manifest.short_name,'Planyx');
   assert.equal(manifest.display,'standalone');
   assert.equal(manifest.scope,'./');
-  assert.match(manifest.start_url,/index\.html\?v=113700/);
+  assert.match(manifest.start_url,/index\.html\?v=113800/);
   assert.deepEqual(manifest.icons.map(icon=>icon.sizes),['192x192','512x512']);
 });
 
 test('alle app-ingangen bieden PWA- en iPhone-metadata aan',()=>{
   for(const file of ['index.html','mobile.html','laptop.html']){
     const html=read(file);
-    assert.match(html,/rel="manifest" href="manifest\.webmanifest\?v=113700"/);
-    assert.match(html,/rel="apple-touch-icon" sizes="180x180" href="assets\/icons\/apple-touch-icon\.png\?v=113700"/);
+    assert.match(html,/rel="manifest" href="manifest\.webmanifest\?v=113800"/);
+    assert.match(html,/rel="apple-touch-icon" sizes="180x180" href="assets\/icons\/apple-touch-icon\.png\?v=113800"/);
     assert.match(html,/name="theme-color" content="#03152c"/);
   }
   assert.match(read('mobile.html'),/name="apple-mobile-web-app-capable" content="yes"/);
@@ -35,7 +35,7 @@ test('PWA-iconen worden gebouwd en door de service worker gecachet',()=>{
     assert.ok(build.includes(file),file);
     assert.ok(worker.includes('./'+file),file);
   }
-  assert.match(worker,/planyx-shell-v11\.3\.7-r1/);
+  assert.match(worker,/planyx-shell-v11\.3\.8-r1/);
   assert.match(read('v11.js'),/updateViaCache:'none'/);
 });
 

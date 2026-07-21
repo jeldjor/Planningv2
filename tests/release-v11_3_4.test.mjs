@@ -28,10 +28,10 @@ test("PDF-foto's blijven binnen hun kader en raken tekst niet",()=>{
   assert.match(pdf,/if\(y\+blockHeight>274\)y=addPage/);
 });
 
-test('v11.3.7 bouwt en cachet beide bannerbronnen',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.7');
+test('v11.3.8 bouwt en cachet beide bannerbronnen',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
   assert.match(build,/'assets\/chain-banners-core\.png'/);
-  assert.match(worker,/planyx-shell-v11\.3\.7-r1/);
+  assert.match(worker,/planyx-shell-v11\.3\.8-r1/);
   assert.match(worker,/\.\/assets\/chain-banners-core\.png/);
   for(const html of ['laptop.html','mobile.html']){
     assert.match(read(html),/visit-pdf\.js\?v=113500/);

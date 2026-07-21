@@ -103,7 +103,7 @@ test('planning gebruikt uitsluitend de aangemelde werkruimteclient', async () =>
 test('iPhone splash gebruikt het Planyx-logo en profielinstellingen openen de ronde cropper', async () => {
   const mobile = await read('mobile.html');
   const laptop = await read('laptop.html');
-  assert.match(mobile, /id="splash"[\s\S]*planyx-brand\.jpeg\?v=113700/);
+  assert.match(mobile, /id="splash"[\s\S]*planyx-brand\.jpeg\?v=113800/);
   assert.doesNotMatch(mobile.match(/id="splash"[\s\S]*?<\/div><\/div>/)?.[0]||'', /Powered by/);
   for (const html of [mobile,laptop]) {
     assert.match(html, /settingsButton\?\.addEventListener\('click'/);

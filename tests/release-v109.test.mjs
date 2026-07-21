@@ -17,7 +17,7 @@ test('v10.9 regressiebestanden en alle inline scripts zijn syntactisch geldig',(
     const blocks=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).filter(x=>x.trim());
     blocks.forEach((code,index)=>new vm.Script(code,{filename:`${name}-inline-${index}.js`}));
   }
-  assert.equal(JSON.parse(pkg).version,'11.3.7');
+  assert.equal(JSON.parse(pkg).version,'11.3.8');
 });
 
 test('TomTom wordt centraal gecontroleerd en live routestatus is leidend',()=>{

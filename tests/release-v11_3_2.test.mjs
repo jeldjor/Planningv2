@@ -19,8 +19,8 @@ function storedZipEntries(bytes){
   return entries;
 }
 
-test('v11.3.7 laadt de gedeelde foto-ZIP module op laptop en iPhone',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.7');
+test('v11.3.8 laadt de gedeelde foto-ZIP module op laptop en iPhone',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
   for(const file of ['laptop.html','mobile.html']){
     const html=read(file);assert.match(html,/photo-zip\.js\?v=113500/);assert.match(html,/planning-core\.js\?v=113500/);
   }

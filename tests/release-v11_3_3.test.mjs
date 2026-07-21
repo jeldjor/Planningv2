@@ -20,8 +20,8 @@ test('iPhone Historie toont een PDF-knop op de kaart en in het detailvenster',()
   assert.match(read('mobile.html'),/v110\.js\?v=113500/);
 });
 
-test('v11.3.7 vernieuwt de iPhone-cache',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.7');
-  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.7-r1/);
-  assert.match(read('mobile.html'),/window\.__GJ_APP_VERSION__='11\.3\.7'/);
+test('v11.3.8 vernieuwt de iPhone-cache',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
+  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.8-r1/);
+  assert.match(read('mobile.html'),/window\.__GJ_APP_VERSION__='11\.3\.8'/);
 });
