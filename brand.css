@@ -88,3 +88,57 @@
   .menuBrand{height:58px!important;min-height:58px!important;width:138px!important}
   .menuBrand img{width:183px!important;inset:-10px auto auto -23px!important}
 }
+
+/* v11.3.9 — Planyx Dark Pro + dubbele merkfooter */
+:root{
+  --plx-bg:#020b19;
+  --plx-panel:#07162b;
+  --plx-panel-2:#0a1c35;
+  --plx-blue:#087cff;
+  --plx-cyan:#12c7cc;
+  --plx-line:rgba(75,145,220,.26);
+}
+body{background:radial-gradient(circle at 72% 7%,#0a284b 0,#031326 38%,#020b19 100%)!important}
+.card,.panel,.dialog,.routePanel,.calendarPanel{border-color:var(--plx-line)!important;box-shadow:0 18px 45px rgba(0,8,22,.18)}
+button:not(.secondary):not(.danger):not(.editBtn):not(.pdfBtn){border-color:rgba(35,139,255,.45)}
+
+.dualBrandFooter{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:5px!important;
+  padding:9px 10px 8px!important;
+  margin:0!important;
+  border-top:1px solid rgba(60,145,230,.24)!important;
+  background:linear-gradient(180deg,rgba(4,17,36,.05),rgba(1,8,19,.42))!important;
+}
+.dualBrandFooter .footerBrand{
+  position:relative!important;
+  width:100%!important;
+  height:42px!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:#020712!important;
+  box-shadow:none!important;
+}
+.dualBrandFooter .footerBrand img{
+  position:absolute!important;
+  display:block!important;
+  max-width:none!important;
+  height:auto!important;
+  object-fit:initial!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+}
+.dualBrandFooter .footerBrandPlanyx img{width:150px!important;left:1px!important;top:-8px!important}
+.dualBrandFooter .footerBrandGJ img{width:148px!important;left:1px!important;top:-10px!important}
+.dualBrandFooter .footerPowered{font-size:8px;line-height:1;letter-spacing:.24em;color:rgba(218,232,249,.62);font-weight:800;text-align:center}
+.dualBrandFooter .sidebarLang{margin-top:1px!important}
+@media(max-height:760px){
+  .dualBrandFooter{gap:3px!important;padding:5px 8px!important}
+  .dualBrandFooter .footerBrand{height:33px!important}
+  .dualBrandFooter .footerBrandPlanyx img{width:121px!important;top:-7px!important}
+  .dualBrandFooter .footerBrandGJ img{width:121px!important;top:-8px!important}
+}
