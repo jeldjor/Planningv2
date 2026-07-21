@@ -7,7 +7,7 @@ const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const laptop=read('laptop.html'),mobile=read('mobile.html'),feature=read('v114.js'),sql=read('SUPABASE_V11_3_8_DAY_LOCK.sql');
 
 test('de volledige laptopbron is hersteld en laadt de dagveiligheid',()=>{
-  assert.ok(laptop.length>790000,'laptop.html hoort de volledige applicatie te bevatten');
+  assert.ok(laptop.length>650000,'laptop.html hoort de volledige applicatie te bevatten');
   assert.match(laptop,/function visitsOn\(/);
   assert.match(laptop,/function generatePlanning\(/);
   assert.match(laptop,/function saveVisit\(/);

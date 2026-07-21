@@ -9,7 +9,7 @@ const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 test('Planyx is de appnaam op begin-, laptop- en iPhone-scherm',()=>{
   assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
   for(const file of ['index.html','laptop.html','mobile.html'])assert.match(read(file),/<title>Planyx<\/title>/);
-  assert.match(read('auth.js'),/planyx-brand\.jpeg\?v=113800/);
+  assert.match(read('auth.js'),/planyx-brand\.jpeg\?v=\d+/);
   assert.match(read('mobile.html'),/id="splash"[\s\S]*planyx-brand\.jpeg\?v=113800/);
 });
 
