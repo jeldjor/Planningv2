@@ -1,4 +1,4 @@
-# Planyx v11.3.7
+# Planyx v11.3.8
 
 Planyx is de nieuwe naam van de planningsapp. Deze productierelease behoudt de stabiele route-, database-, historie- en PDF-laag van v11.3.5 en voegt uitsluitend de nieuwe Planyx- en GJ Motion-huisstijl toe.
 
@@ -153,9 +153,9 @@ De geautomatiseerde suite controleert code, simulaties, beveiligingscontracten, 
 - `INSTALLATIE_V11.3.md` – stappen voor de huidige GitHub- en Supabase-omgeving
 - `INSTALLATIE_V11.3.5.md` – installatie van deze complete v11.3.5-release
 - `INSTALLATIE_V11.3.6.md` – installatie van de Planyx/GJ Motion-merkrelease
-- `CHANGELOG_V11.3.7.md` – wijzigingen voor de installeerbare Planyx-PWA
-- `TESTCONTROLE_V11.3.7.md` – controles van manifest, iconen en standalone weergave
-- `INSTALLATIE_V11.3.7.md` – Planyx toevoegen aan het iPhone-beginscherm
+- `CHANGELOG_V11.3.8.md` – wijzigingen voor de installeerbare Planyx-PWA
+- `tests/release-day-lock.test.mjs` – controles van dagvergrendeling, PWA-bestanden en Planyx-iconen
+- `INSTALLATIE_DAY_LOCK.md` – installatie van de dagactie en Supabase-vergrendeling
 - `SUPABASE_V10_7_DEV_BASELINE.sql` – complete baseline voor een nieuw leeg project
 - `supabase/functions/README.md` – deploy-informatie voor de Edge Functions
 
