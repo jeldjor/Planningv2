@@ -7,13 +7,13 @@ const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const laptop=read('laptop.html'),mobile=read('mobile.html'),feature=read('v114.js'),sql=read('SUPABASE_V11_3_8_DAY_LOCK.sql');
 
 test('de volledige laptopbron is hersteld en laadt de dagveiligheid',()=>{
-  assert.ok(laptop.length>650000,'laptop.html hoort de volledige applicatie te bevatten');
+  assert.ok(laptop.length>790000,'laptop.html hoort de volledige applicatie te bevatten');
   assert.match(laptop,/function visitsOn\(/);
   assert.match(laptop,/function generatePlanning\(/);
   assert.match(laptop,/function saveVisit\(/);
   for(const html of [laptop,mobile]){
     assert.match(html,/v114\.css\?v=11400/);
-    assert.match(html,/v114\.js\?v=11400/);
+    assert.match(html,/v114\.js\?v=11401/);
   }
 });
 
@@ -25,7 +25,9 @@ test('dagactie en alle bekende verplaatsingsroutes hebben een terminale statusbl
   assert.match(feature,/uitgevoerd','niet uitgevoerd','bezocht/);
 });
 
-test('de mobiele interface verwijdert planningsknoppen van een afgeronde opdracht',()=>{
+test('de mobiele interface toont de vaste dagknop en verwijdert planningsknoppen van een afgeronde opdracht',()=>{
+  assert.match(read('mobile.html'),/id="v114MobileRemoveDay"[^>]*>Hele dag uit planning halen<\/button>/);
+  assert.match(read('mobile.html'),/v114\.js\?v=11401/);
   const dom=new JSDOM('<!doctype html><body data-gj-device-location="enabled"><section id="today"><div class="smallBtns"></div><div id="todayRoute"><div class="visitCard"><button class="eyeBtn" data-id="done-1">tijd</button><div class="smallBtns"><button class="moveUp" data-id="done-1">omhoog</button><button class="removePlan" data-id="done-1">uit planning</button></div></div></div></section></body>',{runScripts:'outside-only'});
   dom.window.alert=()=>{};dom.window.confirm=()=>true;
   dom.window.GJ_MOBILE={state:()=>({visits:[{id:'done-1',status:'Uitgevoerd'}]}),removeFromPlanning:async()=>{},persist:()=>{},sync:async()=>{},render:()=>{}};

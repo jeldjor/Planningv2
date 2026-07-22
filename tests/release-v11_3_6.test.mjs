@@ -13,14 +13,16 @@ test('Planyx staat compact boven Welkom op het inlogscherm',()=>{
   assert.match(auth,/assets\/icons\/icon-512\.png\?v=113800-login/);
   assert.match(auth,/nl:\['Welkom'/);
   assert.doesNotMatch(auth,/Welkom terug/);
+  assert.match(auth,/\.gjLogo\{[^}]*width:min\(152px,38vw\)/);
   assert.match(read('mobile.html'),/id="splash"[\s\S]*POWERED BY[\s\S]*gj-motion-brand\.png\?v=113800-login/);
 });
 
 test('GJ Motion vervangt het oude bedrijfslogo in beide menu’s',()=>{
   const mobile=read('mobile.html'),laptop=read('laptop.html'),brand=read('brand.css');
   assert.match(mobile,/class="menuBrand"[\s\S]*gj-motion-brand\.png\?v=113800/);
-  assert.match(laptop,/brand\.css\?v=113800-ui2/);
+  assert.match(laptop,/brand\.css\?v=113800-ui3/);
   assert.match(brand,/\.productBrand \.productCard img[\s\S]*gj-motion-brand\.png\?v=113800/);
+  assert.match(brand,/\.splash\{[\s\S]*radial-gradient\(circle at 50% 12%,#0a315a 0%,#03152c 46%,#020a18 100%\)/);
   assert.doesNotMatch(mobile.match(/class="menuBrand"[\s\S]*?<\/div>/)?.[0]||'',/logo-menu\.png/);
 });
 
