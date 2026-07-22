@@ -183,3 +183,20 @@ button[onclick*="moveOut('"]:hover{
   background:#741616!important;
   color:#d9e0e8!important;
 }
+
+/* De volledige dagactie blijft op iedere iPhone zichtbaar en aanraakbaar. */
+#today #v114MobileRemoveDay{
+  display:flex!important;
+  visibility:visible!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-height:44px!important;
+  margin:10px 0 2px!important;
+  padding:10px 12px!important;
+  border-radius:11px!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  line-height:1.2!important;
+  opacity:1!important;
+}
