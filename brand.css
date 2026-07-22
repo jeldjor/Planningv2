@@ -1,21 +1,31 @@
 /* Planyx / GJ Motion branding — v11.3.8 */
 
-/* Planyx is the product identity shown while the app starts. */
+/* Het tussenscherm toont alleen de maker van Planyx. */
 .splash > .logoBox{
-  width:min(360px,84vw)!important;
-  max-width:360px!important;
+  width:min(220px,64vw)!important;
+  max-width:220px!important;
   padding:0!important;
   background:transparent!important;
+  display:grid!important;
+  place-items:center!important;
+  gap:12px!important;
 }
 .splash > .logoBox img{
-  content:url('planyx-brand.jpeg?v=113800')!important;
+  content:url('gj-motion-brand.png?v=113800-login')!important;
   display:block!important;
   width:100%!important;
   height:auto!important;
   max-height:none!important;
-  border-radius:22px!important;
+  border-radius:0!important;
   object-fit:contain!important;
-  filter:drop-shadow(0 18px 34px rgba(0,0,0,.42))!important;
+  filter:drop-shadow(0 12px 24px rgba(0,0,0,.34))!important;
+}
+.splash > .logoBox small{
+  margin:0!important;
+  color:rgba(255,255,255,.82)!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  letter-spacing:.22em!important;
 }
 
 /* Vrijstaand GJ Motion-logo: geen kaart, vlak of uitsnede eromheen. */
