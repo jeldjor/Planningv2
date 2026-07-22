@@ -10,7 +10,7 @@ test('Planyx staat compact boven Welkom op het inlogscherm',()=>{
   assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
   for(const file of ['index.html','laptop.html','mobile.html'])assert.match(read(file),/<title>Planyx<\/title>/);
   const auth=read('auth.js');
-  assert.match(auth,/assets\/icons\/icon-512\.png\?v=113800-login2/);
+  assert.match(auth,/planyx-login-transparent\.png\?v=113800-login3/);
   assert.match(auth,/nl:\['Welkom'/);
   assert.doesNotMatch(auth,/Welkom terug/);
   assert.match(auth,/\.gjLogo\{[^}]*width:min\(288px,74vw\)[^}]*max-height:30vh/);
@@ -20,7 +20,7 @@ test('Planyx staat compact boven Welkom op het inlogscherm',()=>{
 test('GJ Motion vervangt het oude bedrijfslogo in beide menu’s',()=>{
   const mobile=read('mobile.html'),laptop=read('laptop.html'),brand=read('brand.css');
   assert.match(mobile,/class="menuBrand"[\s\S]*gj-motion-brand\.png\?v=113800/);
-  assert.match(laptop,/brand\.css\?v=113800-ui3/);
+  assert.match(laptop,/brand\.css\?v=113800(?:-ui[234])?/);
   assert.match(brand,/\.productBrand \.productCard img[\s\S]*gj-motion-brand\.png\?v=113800/);
   assert.match(brand,/\.splash\{[\s\S]*radial-gradient\(circle at 50% 12%,#0a315a 0%,#03152c 46%,#020a18 100%\)/);
   assert.doesNotMatch(mobile.match(/class="menuBrand"[\s\S]*?<\/div>/)?.[0]||'',/logo-menu\.png/);
@@ -35,7 +35,7 @@ test('inloggen en menu gebruiken de rustige vormgeving zonder losse witte of uit
 
 test('nieuwe merkbestanden worden gebouwd en veilig opnieuw gecachet',()=>{
   const build=read('scripts/prepare-dist.mjs'),worker=read('service-worker.js');
-  for(const asset of ['brand.css','planyx-brand.jpeg','gj-motion-brand.png']){
+  for(const asset of ['brand.css','planyx-brand.jpeg','planyx-login-transparent.png','gj-motion-brand.png']){
     assert.ok(fs.existsSync(path.join(root,asset)));
     assert.match(build,new RegExp(asset.replace('.','\\.')));
     assert.match(worker,new RegExp(asset.replace('.','\\.')));

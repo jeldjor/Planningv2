@@ -12,34 +12,33 @@ test('de volledige laptopbron is hersteld en laadt de dagveiligheid',()=>{
   assert.match(laptop,/function generatePlanning\(/);
   assert.match(laptop,/function saveVisit\(/);
   for(const html of [laptop,mobile])assert.match(html,/v114\.css\?v=11400/);
-  assert.match(laptop,/v114\.js\?v=11401/);
+  assert.match(laptop,/v114\.js\?v=1140[01]/);
   assert.match(mobile,/v114\.js\?v=11402/);
 });
 
-test('dagactie en alle bekende verplaatsingsroutes hebben een terminale statusblokkade',()=>{
-  assert.match(feature,/Hele dag uit planning/);
+test('alle bekende verplaatsingsroutes hebben een terminale statusblokkade',()=>{
   assert.match(feature,/remove_planning_day/);
   assert.match(feature,/move_planning_day/);
   for(const action of ['openMoveDialogForVisit','moveOut','startDragVisit','editVisitTime','saveMoveDialog','generatePlanning','dropVisitOnDate'])assert.match(feature,new RegExp(action));
   assert.match(feature,/uitgevoerd','niet uitgevoerd','bezocht/);
 });
 
-test('de mobiele interface toont de vaste dagknop en verwijdert planningsknoppen van een afgeronde opdracht',()=>{
-  assert.match(read('mobile.html'),/id="v114MobileRemoveDay"[^>]*>Hele dag uit planning halen<\/button>/);
+test('de mobiele interface toont geen hele-dagknop en verwijdert planningsknoppen van een afgeronde opdracht',()=>{
+  assert.doesNotMatch(read('mobile.html'),/v114MobileRemoveDay|Hele dag uit planning halen/);
   assert.match(read('mobile.html'),/v114\.js\?v=11402/);
-  assert.match(read('brand.css'),/#today #v114MobileRemoveDay\{[\s\S]*display:flex!important;[\s\S]*visibility:visible!important;[\s\S]*width:100%!important;/);
+  assert.doesNotMatch(read('brand.css'),/v114MobileRemoveDay|v114RemoveDay/);
   const dom=new JSDOM('<!doctype html><body data-gj-device-location="enabled"><section id="today"><div class="smallBtns"></div><div id="todayRoute"><div class="visitCard"><button class="eyeBtn" data-id="done-1">tijd</button><div class="smallBtns"><button class="moveUp" data-id="done-1">omhoog</button><button class="removePlan" data-id="done-1">uit planning</button></div></div></div></section></body>',{runScripts:'outside-only'});
   dom.window.alert=()=>{};dom.window.confirm=()=>true;
   dom.window.GJ_MOBILE={state:()=>({visits:[{id:'done-1',status:'Uitgevoerd'}]}),removeFromPlanning:async()=>{},persist:()=>{},sync:async()=>{},render:()=>{}};
   dom.window.eval(feature);
-  assert.ok(dom.window.document.getElementById('v114MobileRemoveDay'));
+  assert.equal(dom.window.document.getElementById('v114MobileRemoveDay'),null);
   assert.ok(dom.window.document.querySelector('.visitCard').classList.contains('v114LockedVisit'));
   assert.equal(dom.window.document.querySelector('.removePlan'),null);
   assert.equal(dom.window.document.querySelector('.moveUp'),null);
   assert.equal(dom.window.GJ_DAY_LOCK.isTerminal({status:'Niet uitgevoerd'}),true);
 });
 
-test('de laptop toont de dagknop en maakt een afgeronde opdracht niet sleepbaar of herplanbaar',()=>{
+test('de laptop toont geen hele-dagknop en maakt een afgeronde opdracht niet sleepbaar of herplanbaar',()=>{
   const dom=new JSDOM('<!doctype html><body data-gj-device-location="disabled"><div class="routeHead"><button id="btnOptimize">Route</button></div><dialog id="moveDialog"></dialog></body>',{runScripts:'outside-only'});
   const w=dom.window;w.alert=()=>{};w.confirm=()=>false;
   w.db={visits:[{id:'done-1',status:'Uitgevoerd'}],unplanned:[],fixed:[],routeStats:{}};w.state={selected:'2026-07-21'};
@@ -47,7 +46,7 @@ test('de laptop toont de dagknop en maakt een afgeronde opdracht niet sleepbaar 
   w.openMoveDialogForVisit=()=>{};w.moveOut=()=>{};w.startDragVisit=()=>{};w.editVisitTime=()=>{};w.saveMoveDialog=()=>{};w.generatePlanning=async()=>{};w.dropVisitOnDate=()=>{};w.visitsOn=()=>w.db.visits;
   w.eval(feature);
   const html=w.customerRow(w.db.visits[0]);
-  assert.ok(w.document.getElementById('v114RemoveDay'));
+  assert.equal(w.document.getElementById('v114RemoveDay'),null);
   assert.match(html,/Datum vergrendeld/);
   assert.doesNotMatch(html,/Herplan|Uit planning|draggable="true"/);
 });
