@@ -10,10 +10,10 @@ test('Planyx staat compact boven Welkom op het inlogscherm',()=>{
   assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
   for(const file of ['index.html','laptop.html','mobile.html'])assert.match(read(file),/<title>Planyx<\/title>/);
   const auth=read('auth.js');
-  assert.match(auth,/assets\/icons\/icon-512\.png\?v=113800-login/);
+  assert.match(auth,/assets\/icons\/icon-512\.png\?v=113800-login2/);
   assert.match(auth,/nl:\['Welkom'/);
   assert.doesNotMatch(auth,/Welkom terug/);
-  assert.match(auth,/\.gjLogo\{[^}]*width:min\(152px,38vw\)/);
+  assert.match(auth,/\.gjLogo\{[^}]*width:min\(288px,74vw\)[^}]*max-height:30vh/);
   assert.match(read('mobile.html'),/id="splash"[\s\S]*POWERED BY[\s\S]*gj-motion-brand\.png\?v=113800-login/);
 });
 
