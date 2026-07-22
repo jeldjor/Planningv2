@@ -148,8 +148,33 @@
 .menuPanel button[data-screen].active .navIcon{color:#91c3f2!important}
 .menuPanel .menuLogout{
   margin-top:2px!important;
-  background:rgba(255,255,255,.055)!important;
-  border-color:rgba(180,198,220,.24)!important;
+  background:transparent!important;
+  border-color:transparent!important;
 }
 .menuPanel .menuLogout .navIcon{color:#b8c7d8!important}
 .menuSpacer{min-height:8px!important}
+
+/* Uitloggen is een rustige menuregel, gelijk aan de andere modules. */
+.menuPanel .menuLogout:hover,
+.menuPanel .menuLogout:focus-visible{
+  background:rgba(65,126,190,.16)!important;
+  border-color:rgba(130,177,224,.2)!important;
+}
+
+/* Uit planning halen is altijd herkenbaar als waarschuwingsactie. */
+button.removePlan,
+button.outAct,
+button[onclick^="moveOut("],
+button[onclick*="moveOut('"]{
+  background:#8f1d1d!important;
+  color:#d9e0e8!important;
+  border:1px solid #b94a4a!important;
+  box-shadow:none!important;
+}
+button.removePlan:hover,
+button.outAct:hover,
+button[onclick^="moveOut("]:hover,
+button[onclick*="moveOut('"]:hover{
+  background:#741616!important;
+  color:#d9e0e8!important;
+}
