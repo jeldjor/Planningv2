@@ -139,8 +139,12 @@
     const lockCards=()=>document.querySelectorAll('.visitCard').forEach(card=>{const action=card.querySelector('[data-id]'),visit=action?findVisit(action.dataset.id):null;if(!isTerminal(visit))return;card.classList.add('v114LockedVisit');card.querySelectorAll('.moveUp,.moveDown,.removePlan,.eyeBtn,.saveTimeBtn').forEach(button=>button.remove());if(!card.querySelector('.v114LockedBadge'))card.querySelector('.smallBtns')?.insertAdjacentHTML('beforebegin','<span class="v114LockedBadge">🔒 Datum vergrendeld</span>');});
     new MutationObserver(lockCards).observe(document.getElementById('todayRoute')||document.body,{childList:true,subtree:true});lockCards();
     const smallButtons=document.querySelector('#today .smallBtns');
-    if(smallButtons&&!document.getElementById('v114MobileRemoveDay')){
-      const button=document.createElement('button');button.id='v114MobileRemoveDay';button.type='button';button.className='v114RemoveDay';button.textContent='Hele dag uit planning halen';smallButtons.insertAdjacentElement('afterend',button);
+    let button=document.getElementById('v114MobileRemoveDay');
+    if(!button&&smallButtons){
+      button=document.createElement('button');button.id='v114MobileRemoveDay';button.type='button';button.className='v114RemoveDay';button.textContent='Hele dag uit planning halen';smallButtons.insertAdjacentElement('afterend',button);
+    }
+    if(button&&button.dataset.gjDayRemovalBound!=='true'){
+      button.dataset.gjDayRemovalBound='true';
       button.addEventListener('click',async()=>{button.disabled=true;try{const now=new Date(),date=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;await removeDay(date,(state().visits||[]).filter(visit=>visit.date===date),async()=>{window.GJ_MOBILE.persist?.();await window.GJ_MOBILE.sync?.(false);window.GJ_MOBILE.render?.();});}catch(error){console.error(error);alert('Dag uit planning halen mislukt: '+rpcMessage(error));}finally{button.disabled=false;}});
     }
   }

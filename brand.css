@@ -1,6 +1,9 @@
 /* Planyx / GJ Motion branding — v11.3.8 */
 
 /* Het tussenscherm toont alleen de maker van Planyx. */
+.splash{
+  background:radial-gradient(circle at 50% 12%,#0a315a 0%,#03152c 46%,#020a18 100%)!important;
+}
 .splash > .logoBox{
   width:min(220px,64vw)!important;
   max-width:220px!important;
@@ -164,6 +167,7 @@
 /* Uit planning halen is altijd herkenbaar als waarschuwingsactie. */
 button.removePlan,
 button.outAct,
+button.v114RemoveDay,
 button[onclick^="moveOut("],
 button[onclick*="moveOut('"]{
   background:#8f1d1d!important;
@@ -173,6 +177,7 @@ button[onclick*="moveOut('"]{
 }
 button.removePlan:hover,
 button.outAct:hover,
+button.v114RemoveDay:hover,
 button[onclick^="moveOut("]:hover,
 button[onclick*="moveOut('"]:hover{
   background:#741616!important;
