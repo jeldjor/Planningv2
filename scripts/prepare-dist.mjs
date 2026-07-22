@@ -8,7 +8,7 @@ const files = [
   'vendor/jspdf.umd.min.js', 'vendor/jspdf-LICENSE.txt', 'assets/chain-banners.png', 'assets/chain-banners-core.png',
   'logo.png', 'logo-dark.png', 'logo-dark-menu.png', 'logo-header.png',
   'logo-light.png', 'logo-login.png', 'logo-menu.png',
-  'brand.css', 'planyx-brand.jpeg', 'gj-motion-brand.png',
+  'brand.css', 'planyx-brand.jpeg', 'planyx-login-transparent.png', 'gj-motion-brand.png',
   'assets/icons/apple-touch-icon.png', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png'
 ];
 const dist = resolve('dist');
