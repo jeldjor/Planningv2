@@ -74,7 +74,7 @@ test('beide apparaten laden runtimeconfig en de centrale v11-productiekern', asy
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
     assert.match(html, /app-config\.js\?v=10801/);
-    assert.match(html, /auth\.js\?v=\d+/);
+    assert.match(html, /auth\.js\?v=10802/);
     assert.match(html, /v108\.css\?v=112000/);
     assert.match(html, /v108\.js\?v=113000/);
     assert.match(html, /v1082\.css\?v=10820/);
@@ -100,11 +100,13 @@ test('planning gebruikt uitsluitend de aangemelde werkruimteclient', async () =>
   assert.doesNotMatch(html.match(/function initSupabaseClient\(\)\{[\s\S]*?\n\}/)?.[0]||'', /createSupabaseClient\(\)/);
 });
 
-test('iPhone splash gebruikt het Planyx-logo en profielinstellingen openen de ronde cropper', async () => {
+test('iPhone splash toont Powered by GJ Motion en profielinstellingen openen de ronde cropper', async () => {
   const mobile = await read('mobile.html');
   const laptop = await read('laptop.html');
-  assert.match(mobile, /id="splash"[\s\S]*planyx-brand\.jpeg\?v=113800/);
-  assert.doesNotMatch(mobile.match(/id="splash"[\s\S]*?<\/div><\/div>/)?.[0]||'', /Powered by/);
+  const splash=mobile.match(/id="splash"[\s\S]*?<\/div><\/div>/)?.[0]||'';
+  assert.match(splash, /POWERED BY/);
+  assert.match(splash, /gj-motion-brand\.png/);
+  assert.doesNotMatch(splash, /planyx-brand\.jpeg/);
   for (const html of [mobile,laptop]) {
     assert.match(html, /settingsButton\?\.addEventListener\('click'/);
     assert.match(html, /settingsFile\?\.addEventListener\('change'/);
