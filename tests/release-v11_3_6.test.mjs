@@ -19,9 +19,16 @@ test('Planyx staat compact boven Welkom op het inlogscherm',()=>{
 test('GJ Motion vervangt het oude bedrijfslogo in beide menu’s',()=>{
   const mobile=read('mobile.html'),laptop=read('laptop.html'),brand=read('brand.css');
   assert.match(mobile,/class="menuBrand"[\s\S]*gj-motion-brand\.png\?v=113800/);
-  assert.match(laptop,/brand\.css\?v=113800-login/);
+  assert.match(laptop,/brand\.css\?v=113800-ui2/);
   assert.match(brand,/\.productBrand \.productCard img[\s\S]*gj-motion-brand\.png\?v=113800/);
   assert.doesNotMatch(mobile.match(/class="menuBrand"[\s\S]*?<\/div>/)?.[0]||'',/logo-menu\.png/);
+});
+
+test('inloggen en menu gebruiken de rustige vormgeving zonder losse witte of uitlogkaart',()=>{
+  const auth=read('auth.js'),brand=read('brand.css');
+  assert.match(auth,/#gjAuthCard\{[^}]*background:transparent[^}]*box-shadow:none/);
+  assert.match(brand,/\.menuPanel \.menuLogout\{[^}]*background:transparent!important;[^}]*border-color:transparent!important;/s);
+  assert.match(brand,/button\.removePlan,[\s\S]*background:#8f1d1d!important;[\s\S]*color:#d9e0e8!important;/);
 });
 
 test('nieuwe merkbestanden worden gebouwd en veilig opnieuw gecachet',()=>{
