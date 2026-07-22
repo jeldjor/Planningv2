@@ -123,13 +123,6 @@
       window.startDragDay=function(event,date){if((window.visitsOn?.(date)||[]).every(isTerminal)){event.preventDefault();alert('Deze dag bevat alleen uitgevoerde opdrachten en kan niet worden verplaatst.');return;}return original.apply(this,arguments);};
     }
 
-    const routeHead=document.querySelector('.routeHead');
-    if(routeHead&&!document.getElementById('v114RemoveDay')){
-      const optimize=document.getElementById('btnOptimize'),actions=document.createElement('div');actions.className='v114DayActions';
-      optimize?.parentNode?.insertBefore(actions,optimize);if(optimize)actions.appendChild(optimize);
-      const button=document.createElement('button');button.id='v114RemoveDay';button.type='button';button.className='v114RemoveDay';button.textContent='Hele dag uit planning';actions.appendChild(button);
-      button.addEventListener('click',async()=>{button.disabled=true;try{const date=desktopState()?.selected;await removeDay(date,(data()?.visits||[]).filter(visit=>visit.date===date),async({open})=>{if(data()?.unplanned)open.forEach(visit=>data().unplanned.push({id:window.uuid?.()||crypto.randomUUID(),customerId:visit.customerId,customerName:window.getC?.(visit.customerId)?.Winkel,oldDate:date,reason:'Hele dag uit planning gehaald'}));if(data()?.fixed)data().fixed=data().fixed.filter(fixed=>!open.some(visit=>String(visit.id)===String(fixed.visitId)));if(data()?.routeStats)delete data().routeStats[date];window.save?.();window.render?.();await window.loadPlanningFromSupabase?.();});}catch(error){console.error(error);alert('Dag uit planning halen mislukt: '+rpcMessage(error));}finally{button.disabled=false;}});
-    }
   }
 
   function installMobile(){
@@ -138,15 +131,6 @@
     document.addEventListener('click',event=>{const action=event.target.closest('.removePlan,.moveUp,.moveDown,.eyeBtn,.saveTimeBtn');if(!action||!isTerminal(findVisit(action.dataset.id)))return;event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();alert('Deze opdracht is uitgevoerd en blijft op de oorspronkelijke datum staan.');},true);
     const lockCards=()=>document.querySelectorAll('.visitCard').forEach(card=>{const action=card.querySelector('[data-id]'),visit=action?findVisit(action.dataset.id):null;if(!isTerminal(visit))return;card.classList.add('v114LockedVisit');card.querySelectorAll('.moveUp,.moveDown,.removePlan,.eyeBtn,.saveTimeBtn').forEach(button=>button.remove());if(!card.querySelector('.v114LockedBadge'))card.querySelector('.smallBtns')?.insertAdjacentHTML('beforebegin','<span class="v114LockedBadge">🔒 Datum vergrendeld</span>');});
     new MutationObserver(lockCards).observe(document.getElementById('todayRoute')||document.body,{childList:true,subtree:true});lockCards();
-    const smallButtons=document.querySelector('#today .smallBtns');
-    let button=document.getElementById('v114MobileRemoveDay');
-    if(!button&&smallButtons){
-      button=document.createElement('button');button.id='v114MobileRemoveDay';button.type='button';button.className='v114RemoveDay';button.textContent='Hele dag uit planning halen';smallButtons.insertAdjacentElement('afterend',button);
-    }
-    if(button&&button.dataset.gjDayRemovalBound!=='true'){
-      button.dataset.gjDayRemovalBound='true';
-      button.addEventListener('click',async()=>{button.disabled=true;try{const now=new Date(),date=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;await removeDay(date,(state().visits||[]).filter(visit=>visit.date===date),async()=>{window.GJ_MOBILE.persist?.();await window.GJ_MOBILE.sync?.(false);window.GJ_MOBILE.render?.();});}catch(error){console.error(error);alert('Dag uit planning halen mislukt: '+rpcMessage(error));}finally{button.disabled=false;}});
-    }
   }
 
   window.GJ_DAY_LOCK={isTerminal,removeDay};
