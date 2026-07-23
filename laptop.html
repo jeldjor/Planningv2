@@ -1520,21 +1520,21 @@ button{background:var(--primary)}button:hover{background:var(--primary-dark)}but
 /* v7.5: beheerfuncties uitsluitend binnen de module Beheer */
 body .adminTabs:not(#admin .adminTabs),
 body .adminPane:not(#admin .adminPane),
-body .beheerGrid:not(#admin .beheerGrid),
+body .beheerGrid:not(#admin .beheerGrid):not(#settings .beheerGrid),
 body [id^="adminPane"]:not(#admin [id^="adminPane"]),
 body [id^="btnAdmin"]:not(#admin [id^="btnAdmin"]),
 body #saveTomTomSecure:not(#admin #saveTomTomSecure),
 body #disableTomTomSecure:not(#admin #disableTomTomSecure),
 body #tomtomSecureStatus:not(#admin #tomtomSecureStatus),
-body #btnClearPlanning:not(#admin #btnClearPlanning),
-body #btnClearFixed:not(#admin #btnClearFixed),
-body #btnClearUnplanned:not(#admin #btnClearUnplanned),
-body #btnClearHistory:not(#admin #btnClearHistory),
-body #btnClearRoutes:not(#admin #btnClearRoutes),
-body #btnClearDatabase:not(#admin #btnClearDatabase),
-body #btnResetAll:not(#admin #btnResetAll),
-body #btnBackup:not(#admin #btnBackup),
-body #btnRestore:not(#admin #btnRestore){
+body #btnClearPlanning:not(#admin #btnClearPlanning):not(#settings #btnClearPlanning),
+body #btnClearFixed:not(#admin #btnClearFixed):not(#settings #btnClearFixed),
+body #btnClearUnplanned:not(#admin #btnClearUnplanned):not(#settings #btnClearUnplanned),
+body #btnClearHistory:not(#admin #btnClearHistory):not(#settings #btnClearHistory),
+body #btnClearRoutes:not(#admin #btnClearRoutes):not(#settings #btnClearRoutes),
+body #btnClearDatabase:not(#admin #btnClearDatabase):not(#settings #btnClearDatabase),
+body #btnResetAll:not(#admin #btnResetAll):not(#settings #btnResetAll),
+body #btnBackup:not(#admin #btnBackup):not(#settings #btnBackup),
+body #btnRestore:not(#admin #btnRestore):not(#settings #btnRestore){
   display:none!important;
 }
 
@@ -1625,7 +1625,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v11.css?v=112000">
 <link rel="stylesheet" href="v113.css?v=113001">
 <link rel="stylesheet" href="brand.css?v=113800-ui3">
-<link rel="stylesheet" href="v114.css?v=11400">
+<link rel="stylesheet" href="v114.css?v=11402">
 </head>
 <body data-gj-device-location="disabled">
 <aside class="sidebar">
@@ -1834,18 +1834,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 
     <div class="adminPane" id="adminPaneSystem" hidden>
       <h3>Systeembeheer</h3>
-      <p class="muted">Definitieve acties. Voor verwijderen is altijd BEVESTIG nodig.</p>
-      <div class="beheerGrid">
-        <button id="btnClearPlanning" class="secondary">Planning leegmaken</button>
-        <button id="btnClearFixed" class="secondary">Vaste bezoeken leegmaken</button>
-        <button id="btnClearUnplanned" class="secondary">Niet ingepland leegmaken</button>
-        <button id="btnClearHistory" class="secondary">Historie leegmaken</button>
-        <button id="btnClearRoutes" class="secondary">Routecache leegmaken</button>
-        <button id="btnBackup" class="secondary">Back-up downloaden</button>
-        <button id="btnRestore" class="secondary">Back-up herstellen</button><input id="restoreFile" type="file" accept="application/json" hidden>
-        <button id="btnClearDatabase" class="danger">Database helemaal leegmaken</button>
-        <button id="btnResetAll" class="danger">Alles resetten</button>
-      </div>
+      <p class="muted">Back-ups en de gegevens van de huidige werkruimte beheren kan voor iedere gebruiker via Instellingen → Gegevens beheren.</p>
     </div>
   </div>
 </section>
@@ -1922,6 +1911,21 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
     <label class="checkLine"><input id="setNavAsk" type="checkbox" checked> Altijd eerst vragen</label>
   </div>
 </div>
+  <div class="settingsBlock" id="dataManagement">
+    <h3>Gegevens beheren</h3>
+    <p class="muted">Deze acties gelden alleen voor de huidige gebruikerswerkruimte. Voor verwijderen moet altijd exact BEVESTIG worden ingevuld.</p>
+    <div class="beheerGrid">
+      <div class="beheerItem"><button id="btnClearPlanning" type="button" class="secondary">Planning leegmaken</button><small>Verwijdert alle geplande en vaste bezoeken. Klanten en historie blijven bewaard.</small></div>
+      <div class="beheerItem"><button id="btnClearFixed" type="button" class="secondary">Vaste bezoeken leegmaken</button><small>Verwijdert uitsluitend de vaste afspraken en vaste planningregels.</small></div>
+      <div class="beheerItem"><button id="btnClearUnplanned" type="button" class="secondary">Niet ingeplande bezoeken verwijderen</button><small>Verwijdert uitsluitend bezoeken die uit de planning zijn gehaald. Andere bezoeken van dezelfde klant blijven staan.</small></div>
+      <div class="beheerItem"><button id="btnClearHistory" type="button" class="secondary">Historie leegmaken</button><small>Verwijdert de bezoekhistorie en bijbehorende fotoverwijzingen.</small></div>
+      <div class="beheerItem"><button id="btnClearRoutes" type="button" class="secondary">Routecache leegmaken</button><small>Verwijdert alleen opgeslagen routeberekeningen en dagstatistieken.</small></div>
+      <div class="beheerItem"><button id="btnBackup" type="button" class="secondary">Back-up downloaden</button><small>Downloadt een back-up van de huidige werkruimte.</small></div>
+      <div class="beheerItem"><button id="btnRestore" type="button" class="secondary">Back-up herstellen</button><input id="restoreFile" type="file" accept="application/json" hidden><small>Zet een eerder gedownloade back-up terug.</small></div>
+      <div class="beheerItem"><button id="btnClearDatabase" type="button" class="danger">Database helemaal leegmaken</button><small>Verwijdert klanten, planning en historie uit de huidige werkruimte.</small></div>
+      <div class="beheerItem"><button id="btnResetAll" type="button" class="danger">Alles resetten</button><small>Verwijdert alle centrale en lokale gegevens van de huidige werkruimte.</small></div>
+    </div>
+  </div>
 </section>
 </main>
 
@@ -5529,7 +5533,10 @@ async function drawVisitPdfLayout(doc,visit){
       db.visits=[]; db.fixed=[]; db.unplanned=[]; db.routeCache={}; db.routeStats={};
     }else if(action==='fixed'){
       db.visits=(db.visits||[]).filter(v=>v.status!=='Vast'); db.fixed=[]; db.routeCache={}; db.routeStats={};
-    }else if(action==='unplanned') db.unplanned=[];
+    }else if(action==='unplanned'){
+      db.unplanned=[];
+      db.visits=(db.visits||[]).filter(v=>!['Uit planning','Niet ingepland'].includes(String(v.status||'')));
+    }
     else if(action==='history') db.history=[];
     else if(action==='routes'){db.routeCache={};db.routeStats={};}
     else if(action==='database' || action==='all'){
@@ -5556,6 +5563,8 @@ async function drawVisitPdfLayout(doc,visit){
       const r=await all(c.from('planning').delete()); if(r.error) throw r.error;
     }else if(action==='fixed'){
       const r=await c.from('planning').delete().eq('vast',true); if(r.error) throw r.error;
+    }else if(action==='unplanned'){
+      const r=await c.from('planning').delete().in('status',['Uit planning','Niet ingepland']); if(r.error) throw r.error;
     }else if(action==='history'){
       let r=await all(c.from('visit_photos').delete()); if(r.error) throw r.error;
       r=await all(c.from('visit_history').delete()); if(r.error) throw r.error;
@@ -5567,7 +5576,7 @@ async function drawVisitPdfLayout(doc,visit){
     return {fallback:true};
   }
   async function remoteClear(action){
-    if(action==='unplanned'||action==='routes') return {local_only:true};
+    if(action==='routes') return {local_only:true};
     const c=client();
     if(['history','database','all'].includes(action))await removeVisitStorageFiles();
     const {data,error}=await c.rpc('gj_clear_data',{p_action:action});
@@ -5578,7 +5587,7 @@ async function drawVisitPdfLayout(doc,visit){
   const cfg={
     btnClearPlanning:['planning','Planning helemaal leegmaken','Alle geplande én vaste bezoeken worden verwijderd uit Supabase en van dit apparaat.'],
     btnClearFixed:['fixed','Vaste bezoeken leegmaken','Alle vaste bezoeken worden verwijderd.'],
-    btnClearUnplanned:['unplanned','Niet ingepland leegmaken','De lokale lijst met niet-ingeplande regels wordt verwijderd.'],
+    btnClearUnplanned:['unplanned','Niet ingeplande bezoeken verwijderen','Alleen bezoeken met de status Uit planning of Niet ingepland worden centraal en lokaal verwijderd. Ingeplande bezoeken, historie en klanten blijven staan.'],
     btnClearHistory:['history','Historie leegmaken','Alle bezoekhistorie en fotoverwijzingen worden verwijderd.'],
     btnClearRoutes:['routes','Routecache leegmaken','Alle opgeslagen routeberekeningen worden verwijderd.'],
     btnClearDatabase:['database','Database helemaal leegmaken','Alle klanten, planning, historie en fotoverwijzingen worden verwijderd.'],

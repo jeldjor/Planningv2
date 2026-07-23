@@ -11,7 +11,8 @@ test('de volledige laptopbron is hersteld en laadt de dagveiligheid',()=>{
   assert.match(laptop,/function visitsOn\(/);
   assert.match(laptop,/function generatePlanning\(/);
   assert.match(laptop,/function saveVisit\(/);
-  for(const html of [laptop,mobile])assert.match(html,/v114\.css\?v=11400/);
+  assert.match(laptop,/v114\.css\?v=11402/);
+  assert.match(mobile,/v114\.css\?v=11400/);
   assert.match(laptop,/v114\.js\?v=1140[01]/);
   assert.match(mobile,/v114\.js\?v=11402/);
 });

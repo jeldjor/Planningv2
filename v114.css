@@ -9,3 +9,60 @@
 .visitCard.v114LockedVisit .moveUp,.visitCard.v114LockedVisit .moveDown,.visitCard.v114LockedVisit .removePlan,.visitCard.v114LockedVisit .eyeBtn{display:none!important}
 #v114MobileRemoveDay{width:100%;margin-top:6px;min-height:38px}
 @media(max-width:760px){.v114DayActions{width:100%;justify-content:stretch}.v114DayActions button{flex:1 1 auto}}
+
+/* Compact GJ Motion-blok onderaan de desktopzijbalk. */
+.productBrand{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:5px!important;
+  padding:0 8px 2px!important;
+}
+.productBrand .productCard{
+  width:116px!important;
+  max-width:116px!important;
+  height:58px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.productBrand .productCard img{
+  content:url('gj-motion-brand.png?v=11402')!important;
+  display:block!important;
+  width:112px!important;
+  max-width:112px!important;
+  height:auto!important;
+  max-height:56px!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.22))!important;
+}
+.productBrand .sidebarLang{
+  display:flex!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0 auto!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+  white-space:nowrap!important;
+  line-height:1!important;
+}
+.productBrand .sidebarLang button,
+.productBrand .sidebarLang span{
+  flex:0 0 auto!important;
+}
+.productBrand .sidebarLang button{
+  min-width:0!important;
+  min-height:0!important;
+  padding:3px 4px!important;
+  font-size:11px!important;
+  line-height:1!important;
+}
