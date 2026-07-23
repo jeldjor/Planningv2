@@ -22,5 +22,5 @@ test('GJ Motion staat compact boven talen op één regel',()=>{
   assert.match(css,/content:url\('gj-motion-brand\.png\?v=11402'\)/);
   assert.match(css,/\.productBrand \.sidebarLang\{[\s\S]*flex-wrap:nowrap!important;[\s\S]*white-space:nowrap!important;/);
   assert.match(laptop,/class="productCard"[\s\S]*class="sidebarLang"/);
-  assert.match(worker,/planyx-shell-v11\.3\.8-r1-settings-menu2/);
+  assert.match(worker,/planyx-shell-v11\.3\.8-r2-unplanned-date-persistence/);
 });

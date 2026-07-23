@@ -3593,19 +3593,64 @@ function renderRoutePreview(date,visits){
   html+=`<div class="previewStart"><strong>🏠 Thuis</strong><span>± ${m2t(cur+45)}</span></div>`;
   return html;
 }
-function approveSelectedProposals(){
+function visitFromUnplanned(uid,date,time="",duration=60){
+  const u=db.unplanned.find(x=>x.id===uid);
+  if(!u)return null;
+  const sourceId=u.sourceVisitId||u.planningId||"";
+  let visit=sourceId?db.visits.find(v=>String(v.id)===String(sourceId)):null;
+  if(!visit){
+    visit=db.visits.find(v=>
+      String(v.customerId)===String(u.customerId) &&
+      v.status==="Uit planning" &&
+      !v.date
+    )||null;
+  }
+  if(!visit){
+    visit={
+      id:sourceId||uuid(),
+      customerId:u.customerId
+    };
+    db.visits.push(visit);
+  }
+  Object.assign(visit,{
+    customerId:u.customerId,
+    date,
+    time,
+    status:"Gepland",
+    duration,
+    order:999,
+    unplannedSourceId:sourceId||visit.id||null
+  });
+  db.unplanned=db.unplanned.filter(x=>x.id!==uid);
+  return {visit,unplanned:u};
+}
+async function syncReplannedUnplanned(result,newDate){
+  if(!result?.visit)return false;
+  if(window.gjSyncUnplannedVisitToSupabase){
+    return window.gjSyncUnplannedVisitToSupabase(result.visit,result.unplanned,newDate);
+  }
+  if(window.gjSyncMovedVisitToSupabase){
+    return window.gjSyncMovedVisitToSupabase(result.visit,result.unplanned?.oldDate||"",newDate);
+  }
+  return false;
+}
+async function approveSelectedProposals(){
   const selected=[...document.querySelectorAll(".proposalCheck:checked")].map(x=>state.proposals[num(x.dataset.i)]);
   if(!selected.length)return alert("Selecteer minimaal één voorstel.");
   const changed=[];
+  const replanned=[];
   selected.forEach(p=>{
     if(!p||!p.ok)return;
     const c=getC(p.customerId)||{};
-    db.visits.push({id:uuid(),customerId:p.customerId,date:p.date,status:"Gepland",duration:c.Bezoektijd||60,order:999});
-    db.unplanned=db.unplanned.filter(x=>x.id!==p.uid);
-    changed.push(p.date);
+    const result=visitFromUnplanned(p.uid,p.date,"",c.Bezoektijd||60);
+    if(result){
+      replanned.push({result,date:p.date});
+      changed.push(p.date);
+    }
   });
   save();
   $("proposalDialog").close();
+  for(const item of replanned)await syncReplannedUnplanned(item.result,item.date);
   refreshChangedDays(changed);
 }
 function smartReplan(uid){openProposalDialog([uid])}
@@ -3767,13 +3812,14 @@ function openMoveDialogForUnplanned(uid){
   $("moveDuration").value=c.Bezoektijd||60;
   $("moveDialog").showModal();
 }
-function saveMoveDialog(){
+async function saveMoveDialog(){
   const newDate=parseDisplayDate($("moveDate").value);
   if(!newDate)return alert("Vul datum in als dd-mm-jjjj.");
   const time=$("moveTime").value||"";
   const duration=$("moveDuration").value||60;
   let oldDate="";
   let movedVisit=null;
+  let replannedUnplanned=null;
 
   if(state.moveMode==="visit"){
     const v=db.visits.find(x=>x.id===state.moveVisitId);
@@ -3791,16 +3837,18 @@ function saveMoveDialog(){
   }
 
   if(state.moveMode==="unplanned"){
-    db.visits.push({id:uuid(),customerId:state.moveCustomerId,date:newDate,time,status:"Gepland",duration,order:999});
-    db.unplanned=db.unplanned.filter(x=>x.id!==state.moveUnplannedId);
+    replannedUnplanned=visitFromUnplanned(state.moveUnplannedId,newDate,time,duration);
+    movedVisit=replannedUnplanned?.visit||null;
   }
 
   save();
   $("moveDialog").close();
-  refreshChangedDays([oldDate,newDate]);
-  if(movedVisit && window.gjSyncMovedVisitToSupabase){
-    window.gjSyncMovedVisitToSupabase(movedVisit, oldDate, newDate);
+  if(replannedUnplanned){
+    await syncReplannedUnplanned(replannedUnplanned,newDate);
+  }else if(movedVisit && window.gjSyncMovedVisitToSupabase){
+    await window.gjSyncMovedVisitToSupabase(movedVisit, oldDate, newDate);
   }
+  refreshChangedDays([oldDate,newDate]);
 }
 
 
@@ -4085,7 +4133,7 @@ function moveOut(id){
   const v=db.visits.find(x=>x.id===id);
   if(!v)return;
   const old=v.date;
-  db.unplanned.push({id:uuid(),customerId:v.customerId,customerName:getC(v.customerId)?.Winkel,oldDate:v.date,reason:"Handmatig verwijderd"});
+  db.unplanned.push({id:uuid(),sourceVisitId:v.id,customerId:v.customerId,customerName:getC(v.customerId)?.Winkel,oldDate:v.date,reason:"Handmatig verwijderd"});
   v.status="Uit planning";
   v.date="";
   save();
@@ -5214,6 +5262,57 @@ async function drawVisitPdfLayout(doc,visit){
       console.error('gjSyncMovedVisitToSupabase fout',e);
       if(typeof setSyncStatus==='function') setSyncStatus('Supabase sync fout: '+e.message,'err');
       alert('Supabase datum opslaan mislukt: '+e.message);
+      return false;
+    }
+  };
+  window.gjSyncUnplannedVisitToSupabase = async function(v,unplanned,newDate){
+    try{
+      const c=client();
+      if(!c) throw new Error('Supabase client niet geladen');
+      if(!v || !v.customerId) return false;
+      const cid=await customerUuid(v.customerId);
+      if(!cid) throw new Error('Klant niet gevonden in Supabase: '+v.customerId);
+      const patch=rowFromVisit(v,newDate);
+      const sourceId=unplanned?.sourceVisitId||unplanned?.planningId||v.unplannedSourceId||"";
+      let targetId=isUuid(sourceId)?sourceId:"";
+
+      if(!targetId && isUuid(v.id)){
+        const current=await c.from('planning').select('id,status,datum').eq('id',v.id).limit(1);
+        if(current.error)throw current.error;
+        if(current.data?.length)targetId=current.data[0].id;
+      }
+
+      if(!targetId){
+        const candidate=await c.from('planning')
+          .select('id')
+          .eq('customer_id',cid)
+          .in('status',['Uit planning','Niet ingepland'])
+          .is('datum',null)
+          .order('updated_at',{ascending:false})
+          .limit(1);
+        if(candidate.error)throw candidate.error;
+        if(candidate.data?.length)targetId=candidate.data[0].id;
+      }
+
+      let result;
+      if(targetId){
+        result=await c.from('planning').update(patch).eq('id',targetId).select('id').single();
+      }else{
+        result=await c.from('planning').insert(Object.assign({customer_id:cid},patch)).select('id').single();
+      }
+      if(result.error)throw result.error;
+      if(result.data?.id){
+        v.id=result.data.id;
+        v.supabase=true;
+        delete v.unplannedSourceId;
+        if(typeof save==='function')save();
+      }
+      if(typeof setSyncStatus==='function')setSyncStatus('Supabase: niet ingepland bezoek opnieuw ingepland','ok');
+      return true;
+    }catch(e){
+      console.error('gjSyncUnplannedVisitToSupabase fout',e);
+      if(typeof setSyncStatus==='function')setSyncStatus('Supabase sync fout: '+e.message,'err');
+      alert('Nieuwe datum opslaan mislukt: '+e.message);
       return false;
     }
   };

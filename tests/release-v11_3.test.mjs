@@ -49,7 +49,7 @@ test('datumvelden blijven compact naast elkaar en release-assets worden gedeploy
   assert.match(v113,/v113CompactDates/);assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
   assert.match(laptop,/v113\.css\?v=113001/);assert.match(laptop,/v113\.js\?v=113500/);
   assert.match(mobile,/v113\.js\?v=113500/);assert.match(build,/'v113\.js', 'v113\.css'/);
-  assert.match(worker,/planyx-shell-v11\.3\.8-r1/);
+  assert.match(worker,/planyx-shell-v11\.3\.8-r2/);
 });
 
 test('grote bezoekfoto’s worden vóór laptop- en iPhone-upload veilig verkleind',async()=>{

@@ -45,7 +45,7 @@ test('footer herhaalt de bezoekdatum niet als generatiedatum',()=>{
 
 test('v11.3.8 vernieuwt PDF-code en app-cache op laptop en iPhone',()=>{
   assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
-  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.8-r1/);
+  assert.match(read('service-worker.js'),/planyx-shell-v11\.3\.8-r2/);
   for(const html of ['laptop.html','mobile.html']){
     assert.match(read(html),/visit-pdf\.js\?v=113500/);
     assert.match(read(html),/planning-core\.js\?v=113500/);

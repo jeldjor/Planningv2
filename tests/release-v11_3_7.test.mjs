@@ -35,7 +35,6 @@ test('PWA-iconen worden gebouwd en door de service worker gecachet',()=>{
     assert.ok(build.includes(file),file);
     assert.ok(worker.includes('./'+file),file);
   }
-  assert.match(worker,/planyx-shell-v11\.3\.8-r1/);
+  assert.match(worker,/planyx-shell-v11\.3\.8-r2/);
   assert.match(read('v11.js'),/updateViaCache:'none'/);
 });
-
