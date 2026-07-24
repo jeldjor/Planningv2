@@ -21,5 +21,26 @@ test('Supabase werkt de uit-planningregel bij voordat een nieuwe regel wordt toe
   assert.match(laptop,/window\.gjSyncUnplannedVisitToSupabase = async function/);
   assert.match(laptop,/\.in\('status',\['Uit planning','Niet ingepland'\]\)\s*\.is\('datum',null\)/);
   assert.match(laptop,/from\('planning'\)\.update\(patch\)\.eq\('id',targetId\)/);
-  assert.match(worker,/planyx-shell-v11\.3\.8-r2-unplanned-date-persistence/);
+});
+
+test('niet ingepland verdwijnt pas na bevestigde centrale opslag',()=>{
+  assert.match(laptop,/if\(synced\)finishReplannedUnplanned\(result\)/);
+  assert.match(laptop,/else rollbackReplannedUnplanned\(result\)/);
+  assert.doesNotMatch(laptop,/db\.unplanned=db\.unplanned\.filter\(x=>x\.id!==uid\)/);
+});
+
+test('een UUID-bron wordt centraal gecontroleerd voordat deze wordt bijgewerkt',()=>{
+  assert.match(laptop,/if\(targetId\)\{\s*const current=await c\.from\('planning'\)\.select\('id,customer_id,status,datum'\)/);
+  assert.match(laptop,/targetId=current\.data\?\.length\?current\.data\[0\]\.id:""/);
+  assert.match(laptop,/if\(!savedRow\?\.id\)throw new Error\('De centrale planning heeft de nieuwe datum niet bevestigd\.'\)/);
+});
+
+test('eerder verdwenen centrale taken worden teruggezet in Niet ingepland',()=>{
+  assert.match(laptop,/const remoteUnplanned=loaded\.filter\(v=>/);
+  assert.match(laptop,/\['Uit planning','Niet ingepland','Niet gepland'\]\.includes/);
+  assert.match(laptop,/id:'supa-unplanned-'\+String\(v\.id\),\s*sourceVisitId:v\.id/);
+});
+
+test('service worker cache bevat ook de latere iPhone-safe-area-update',()=>{
+  assert.match(worker,/planyx-shell-v11\.3\.8-r5-iphone-safe-area-settings/);
 });
