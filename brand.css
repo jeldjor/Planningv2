@@ -106,8 +106,9 @@
 /* Menu-update: rustig, strak mobiel menu zonder felle kleurblokken. */
 .menuPanel{
   right:8px!important;
-  top:72px!important;
+  top:calc(72px + env(safe-area-inset-top))!important;
   width:min(244px,calc(100vw - 16px))!important;
+  max-height:calc(100dvh - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
   padding:10px!important;
   gap:3px!important;
   background:linear-gradient(180deg,#132b4a 0%,#0b1f38 100%)!important;

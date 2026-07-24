@@ -1858,8 +1858,6 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 
   <div class="formGrid settings">
     <label class="wide">Startlocatie<input id="setStart" placeholder="Vul je start- en eindadres in"><span class="settingHelp">Adres waar de route standaard begint en eindigt.</span></label>
-    <label>Breedtegraad<input id="setStartLat" type="number" step="any"><span class="settingHelp">Wordt bij opslaan automatisch uit het adres bepaald.</span></label>
-    <label>Lengtegraad<input id="setStartLng" type="number" step="any"><span class="settingHelp">Wordt bij opslaan automatisch uit het adres bepaald.</span></label>
     <label>Vertrek<input id="setDepart" type="time" value="08:30"><span class="settingHelp">Standaard vertrektijd van de dag.</span></label>
     <label>Uiterlijk thuis<input id="setHome" type="time" value="18:00"><span class="settingHelp">De planning probeert voor deze tijd klaar te zijn.</span></label>
     <label>Max klanten/dag<input id="setMax" type="number" value="4"><span class="settingHelp">Normaal maximum aantal klanten per dag.</span></label>
@@ -3605,12 +3603,15 @@ function visitFromUnplanned(uid,date,time="",duration=60){
       !v.date
     )||null;
   }
+  const previousVisit=visit?Object.assign({},visit):null;
+  let createdVisit=false;
   if(!visit){
     visit={
       id:sourceId||uuid(),
       customerId:u.customerId
     };
     db.visits.push(visit);
+    createdVisit=true;
   }
   Object.assign(visit,{
     customerId:u.customerId,
@@ -3621,18 +3622,35 @@ function visitFromUnplanned(uid,date,time="",duration=60){
     order:999,
     unplannedSourceId:sourceId||visit.id||null
   });
-  db.unplanned=db.unplanned.filter(x=>x.id!==uid);
-  return {visit,unplanned:u};
+  return {visit,unplanned:u,previousVisit,createdVisit};
+}
+function finishReplannedUnplanned(result){
+  if(!result?.unplanned)return;
+  db.unplanned=db.unplanned.filter(x=>x.id!==result.unplanned.id);
+  if(result.visit)delete result.visit.unplannedSourceId;
+}
+function rollbackReplannedUnplanned(result){
+  if(!result?.visit)return;
+  if(result.createdVisit){
+    db.visits=db.visits.filter(v=>v!==result.visit);
+  }else if(result.previousVisit){
+    Object.keys(result.visit).forEach(key=>delete result.visit[key]);
+    Object.assign(result.visit,result.previousVisit);
+  }
 }
 async function syncReplannedUnplanned(result,newDate){
   if(!result?.visit)return false;
+  let synced=false;
   if(window.gjSyncUnplannedVisitToSupabase){
-    return window.gjSyncUnplannedVisitToSupabase(result.visit,result.unplanned,newDate);
+    synced=await window.gjSyncUnplannedVisitToSupabase(result.visit,result.unplanned,newDate);
+  }else if(window.gjSyncMovedVisitToSupabase){
+    synced=await window.gjSyncMovedVisitToSupabase(result.visit,result.unplanned?.oldDate||"",newDate);
   }
-  if(window.gjSyncMovedVisitToSupabase){
-    return window.gjSyncMovedVisitToSupabase(result.visit,result.unplanned?.oldDate||"",newDate);
-  }
-  return false;
+  if(synced)finishReplannedUnplanned(result);
+  else rollbackReplannedUnplanned(result);
+  save();
+  render();
+  return synced;
 }
 async function approveSelectedProposals(){
   const selected=[...document.querySelectorAll(".proposalCheck:checked")].map(x=>state.proposals[num(x.dataset.i)]);
@@ -3760,10 +3778,10 @@ async function delBlock(id){
 function addFixed(){const val=$("fixedCustomer").value,id=val.split(" - ")[0].trim(),c=getC(id)||db.customers.find(x=>low(x.Winkel)===low(val));if(!c||!$("fixedDate").value)return alert("Kies klant en datum.");const vid=uuid(),f={id:uuid(),visitId:vid,customerId:c.ID,date:$("fixedDate").value,time:$("fixedTime").value,duration:$("fixedDuration").value,note:$("fixedNote").value};db.fixed.push(f);db.visits.push({id:vid,customerId:c.ID,date:f.date,time:f.time,status:"Vast",duration:f.duration});save();refreshDayRoute(f.date)} function unfixFixedAppointment(id){const f=db.fixed.find(x=>x.id===id);if(!f)return;const v=db.visits.find(x=>x.id===f.visitId);if(v){v.status="Gepland";v.time="";}db.fixed=db.fixed.filter(x=>x.id!==id);db.routeStats={};save();refreshDayRoute(f.date);alert("Vaste afspraak losgemaakt. Dit bezoek is nu weer herplanbaar.")}
 function readParttimeSettings(){const out={};[0,1,2,3,4,5,6].forEach(d=>{const even=$("pt"+d+"even")?.checked||false,odd=$("pt"+d+"odd")?.checked||false;if(even||odd)out[d]={even,odd}});return out}
 async function saveSettings(){
-  const address=$("setStart").value.trim();let lat=parseFloat($("setStartLat")?.value),lng=parseFloat($("setStartLng")?.value);
+  const previousAddress=String(db.settings?.start||'').trim(),address=$("setStart").value.trim();let lat=Number(db.settings?.startLat),lng=Number(db.settings?.startLng);
   try{
     if(!address)throw new Error('Vul eerst een start- en eindadres in.');
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)){const geo=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:address}}),point=geo.data?.results?.[0]?.position;if(geo.error||geo.data?.error||!point)throw new Error(geo.data?.error||geo.error?.message||'Startadres kon niet worden gevonden.');lat=Number(point.lat);lng=Number(point.lon)}
+    if(address!==previousAddress||!Number.isFinite(lat)||!Number.isFinite(lng)){const geo=await GJ_AUTH.sb.functions.invoke('tomtom-proxy',{body:{action:'geocode',query:address}}),point=geo.data?.results?.[0]?.position;if(geo.error||geo.data?.error||!point)throw new Error(geo.data?.error||geo.error?.message||'Startadres kon niet worden gevonden.');lat=Number(point.lat);lng=Number(point.lon)}
     db.settings={start:address,startLat:lat,startLng:lng,depart:$("setDepart").value,home:$("setHome").value,max:num($("setMax").value,4),maxWorkday:num($("setMaxWorkday").value,8.5),theme:"blue",parking:num($("setParking").value,15),break:num($("setBreak").value,30),walk:num($("setWalk").value,300),tomtom:"",homeDayEnabled:$("setHomeDayEnabled").checked,homeDay:num($("setHomeDay").value,5),parttimeDays:readParttimeSettings(),nlHoliday:$("setNLHoliday").checked,beHoliday:$("setBEHoliday").checked,language:localStorage.getItem('gj_app_language')||'nl'};db.navPrefs={app:$("setNavApp").value,ask:$("setNavAsk").checked};db.routeStats={};save();
     if(window.GJPlanningCore&&window.GJ_AUTH?.sb)await GJPlanningCore.saveUserSettings(GJ_AUTH.sb,db.settings,GJ_AUTH.workspaceUserId);render();
   }catch(error){alert('Instellingen centraal opslaan mislukt: '+error.message)}
@@ -5015,6 +5033,27 @@ async function drawVisitPdfLayout(doc,visit){
         rescheduledFromHistoryId:r.rescheduled_from_history_id||null,
         supabase:true
       }));
+      // Herstel centrale regels die eerder al uit de lokale lijst verdwenen,
+      // maar in Supabase nog wel als niet ingepland bestaan.
+      const remoteUnplanned=loaded.filter(v=>
+        !v.date && ['Uit planning','Niet ingepland','Niet gepland'].includes(String(v.status||''))
+      );
+      db.unplanned=db.unplanned||[];
+      remoteUnplanned.forEach(v=>{
+        const alreadyPresent=db.unplanned.some(u=>
+          String(u.sourceVisitId||u.planningId||'')===String(v.id)
+        );
+        if(!alreadyPresent){
+          db.unplanned.push({
+            id:'supa-unplanned-'+String(v.id),
+            sourceVisitId:v.id,
+            customerId:v.customerId,
+            customerName:(getC(v.customerId)||{}).Winkel||'Klant',
+            oldDate:'',
+            reason:'Uit planning'
+          });
+        }
+      });
       const previous=db.visits||[];
       if(from||to){
         db.visits=previous.filter(v=>(from&&v.date<from)||(to&&v.date>to)).concat(loaded);
@@ -5276,8 +5315,16 @@ async function drawVisitPdfLayout(doc,visit){
       const sourceId=unplanned?.sourceVisitId||unplanned?.planningId||v.unplannedSourceId||"";
       let targetId=isUuid(sourceId)?sourceId:"";
 
+      // Een lokaal UUID kan op een planning-id lijken zonder dat die centrale rij bestaat.
+      // Controleer het bron-id daarom altijd voordat we het bezoek bijwerken.
+      if(targetId){
+        const current=await c.from('planning').select('id,customer_id,status,datum').eq('id',targetId).eq('customer_id',cid).limit(1);
+        if(current.error)throw current.error;
+        targetId=current.data?.length?current.data[0].id:"";
+      }
+
       if(!targetId && isUuid(v.id)){
-        const current=await c.from('planning').select('id,status,datum').eq('id',v.id).limit(1);
+        const current=await c.from('planning').select('id,customer_id,status,datum').eq('id',v.id).eq('customer_id',cid).limit(1);
         if(current.error)throw current.error;
         if(current.data?.length)targetId=current.data[0].id;
       }
@@ -5296,15 +5343,16 @@ async function drawVisitPdfLayout(doc,visit){
 
       let result;
       if(targetId){
-        result=await c.from('planning').update(patch).eq('id',targetId).select('id').single();
+        result=await c.from('planning').update(patch).eq('id',targetId).eq('customer_id',cid).select('id');
       }else{
-        result=await c.from('planning').insert(Object.assign({customer_id:cid},patch)).select('id').single();
+        result=await c.from('planning').insert(Object.assign({customer_id:cid},patch)).select('id');
       }
       if(result.error)throw result.error;
-      if(result.data?.id){
-        v.id=result.data.id;
+      const savedRow=Array.isArray(result.data)?result.data[0]:result.data;
+      if(!savedRow?.id)throw new Error('De centrale planning heeft de nieuwe datum niet bevestigd.');
+      if(savedRow.id){
+        v.id=savedRow.id;
         v.supabase=true;
-        delete v.unplannedSourceId;
         if(typeof save==='function')save();
       }
       if(typeof setSyncStatus==='function')setSyncStatus('Supabase: niet ingepland bezoek opnieuw ingepland','ok');
@@ -5785,7 +5833,7 @@ async function drawVisitPdfLayout(doc,visit){
 })();
 </script>
 
-<script src="auth.js?v=10802-ui2"></script>
+<script src="auth.js?v=10802-ui3"></script>
 <script>
 (function(){
   function $(id){return document.getElementById(id)}
