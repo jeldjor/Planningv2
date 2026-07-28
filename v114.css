@@ -66,3 +66,25 @@
   font-size:11px!important;
   line-height:1!important;
 }
+
+/* Daggebonden routepunten en één verplicht eerste bezoek. */
+.dayRouteHeadActions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.routeHead>.dayRouteHeadActions{margin-left:auto}
+.dayRouteEditor{margin:10px 0;padding:12px;border:1px solid #cbd7e5;border-radius:12px;background:#f7faff;box-shadow:0 5px 16px rgba(18,59,115,.08)}
+.dayRouteEditor[hidden]{display:none!important}
+.dayRouteEditorGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.dayRouteEditorGrid label{display:grid;gap:5px;font-size:12px;font-weight:900;color:#344054}
+.dayRouteEditorGrid input,.dayRouteEditorGrid select{width:100%;min-height:38px}
+.dayRouteEditorActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.dayRouteEditorActions button{min-height:38px}
+.dayRouteEditor .muted{margin:8px 0 0;font-size:11px}
+.dayRouteEditorToggle{width:100%;margin:7px 0 0;min-height:38px}
+.firstVisitBadge{display:inline-flex;align-items:center;border:1px solid #ef7d00;border-radius:999px;background:#fff5e9;color:#994b00;padding:3px 7px;font-size:10px;font-weight:950;white-space:nowrap}
+.firstVisitBtn{background:#2363a5!important;color:#fff!important;border-color:#2363a5!important}
+.firstVisitBtn.active{background:#ef7d00!important;border-color:#ef7d00!important;color:#fff!important}
+@media(max-width:760px){
+  .dayRouteEditorGrid{grid-template-columns:1fr}
+  .dayRouteEditor{padding:10px}
+  .dayRouteEditorActions{display:grid;grid-template-columns:1fr}
+  .visitCard .firstVisitBtn{grid-column:1/-1;min-height:38px}
+}

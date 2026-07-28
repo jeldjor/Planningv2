@@ -145,16 +145,22 @@
   }
   const visitName=visit=>String(visit?.customer?.name||visit?.customer?.Winkel||visit?.name||visit?.winkel||'Klant');
 
-  function routeCost(order,home){
+  function routeCost(order,start,end=start){
     if(!order.length)return 0;
-    let total=0,previous=home;
+    let total=0,previous=start;
     for(const visit of order){const point=visitPoint(visit);total+=haversineKm(previous,point);previous=point;}
-    return total+haversineKm(previous,home);
+    return total+haversineKm(previous,end);
   }
 
-  function optimizeVisits(visits,home){
+  function optimizeVisits(visits,start,end=start,firstVisitId=null){
     const remaining=(visits||[]).slice(),ordered=[];
-    let previous=home;
+    const pinnedIndex=firstVisitId===null||firstVisitId===undefined?-1:remaining.findIndex(visit=>String(visit.planningId||visit.id)===String(firstVisitId));
+    let previous=start;
+    if(pinnedIndex>=0){
+      const [pinned]=remaining.splice(pinnedIndex,1);
+      ordered.push(pinned);
+      previous=visitPoint(pinned);
+    }
     while(remaining.length){
       let best=0,bestDistance=Infinity;
       for(let i=0;i<remaining.length;i++){
@@ -164,20 +170,22 @@
       const [next]=remaining.splice(best,1);ordered.push(next);previous=visitPoint(next);
     }
     let improved=true;
-    while(improved&&ordered.length>3){
+    const firstMovable=pinnedIndex>=0?1:0;
+    while(improved&&ordered.length-firstMovable>3){
       improved=false;
-      const currentCost=routeCost(ordered,home);
-      for(let i=0;i<ordered.length-1&&!improved;i++)for(let j=i+1;j<ordered.length&&!improved;j++){
+      const currentCost=routeCost(ordered,start,end);
+      for(let i=firstMovable;i<ordered.length-1&&!improved;i++)for(let j=i+1;j<ordered.length&&!improved;j++){
         const candidate=ordered.slice();candidate.splice(i,j-i+1,...candidate.slice(i,j+1).reverse());
-        if(routeCost(candidate,home)+0.001<currentCost){ordered.splice(0,ordered.length,...candidate);improved=true;}
+        if(routeCost(candidate,start,end)+0.001<currentCost){ordered.splice(0,ordered.length,...candidate);improved=true;}
       }
     }
     return ordered;
   }
 
-  function createLegRequests(visits,home,walkThresholdMeters=300){
+  function createLegRequests(visits,start,end=start,walkThresholdMeters=300){
+    if(typeof end==='number'){walkThresholdMeters=end;end=start}
     const requests=[];
-    let previous=home;
+    let previous=start;
     for(let index=0;index<visits.length;index++){
       const to=visitPoint(visits[index]);
       if(!hasPoint(previous)||!hasPoint(to))throw new Error('Een klant of startlocatie heeft geen geldige coördinaten.');
@@ -187,8 +195,8 @@
       previous=to;
     }
     if(visits.length){
-      if(!hasPoint(previous)||!hasPoint(home))throw new Error('De terugroute kan niet worden berekend.');
-      requests.push({from:previous,to:home,mode:'car',return:true});
+      if(!hasPoint(previous)||!hasPoint(end))throw new Error('De route naar het eindadres kan niet worden berekend.');
+      requests.push({from:previous,to:end,mode:'car',return:true});
     }
     return requests;
   }
@@ -312,7 +320,7 @@
     return (hash>>>0).toString(16);
   }
 
-  function routeInputHash({date,departure,visits=[],absences=[],home,parkingMinutes=15,walkThresholdMeters=300,pauseEnabled=true}){
+  function routeInputHash({date,departure,visits=[],absences=[],home,start=home,end=home,firstVisitId=null,parkingMinutes=15,walkThresholdMeters=300,pauseEnabled=true}){
     const normalizedVisits=(visits||[]).slice().sort((a,b)=>number(a.order,999)-number(b.order,999)).map((visit,index)=>({
       id:String(visit.planningId||visit.id||index),order:index+1,
       lat:number(visit.customer?.lat??visit.customer?.latitude),lng:number(visit.customer?.lng??visit.customer?.longitude),
@@ -320,7 +328,7 @@
       opening:visitOpeningWindow(visit,date)
     }));
     const normalizedAbsences=absenceWindows(absences,date).map(window=>({from:window.from,to:window.to}));
-    return stableHash({date,departure,home:{lat:number(home?.lat),lng:number(home?.lng)},visits:normalizedVisits,absences:normalizedAbsences,parkingMinutes:number(parkingMinutes,15),walkThresholdMeters:number(walkThresholdMeters,300),pauseEnabled:pauseEnabled!==false});
+    return stableHash({date,departure,start:{lat:number(start?.lat),lng:number(start?.lng)},end:{lat:number(end?.lat),lng:number(end?.lng)},firstVisitId:firstVisitId===null?null:String(firstVisitId),visits:normalizedVisits,absences:normalizedAbsences,parkingMinutes:number(parkingMinutes,15),walkThresholdMeters:number(walkThresholdMeters,300),pauseEnabled:pauseEnabled!==false});
   }
 
   function canReuseDayRoute(summary,inputHash){
@@ -329,7 +337,7 @@
 
   async function persistDay(sb,{workspaceId,date,departure,result,pauseEnabled=true,inputHash=null}){
     const visitWaits=Object.fromEntries(result.rows.map(row=>[String(row.id),Math.max(0,Math.round(number(row.waitingMin)))]));
-    const summary={...result.totals,end:result.end,live:result.live,includesReturn:!!result.returnLeg,returnLeg:result.returnLeg,visitWaits,calculatedAt:result.calculatedAt,inputHash:inputHash||null,hash:stableHash({date,departure,rows:result.rows})};
+    const summary={...result.totals,end:result.end,live:result.live,includesReturn:!!result.returnLeg,returnLeg:result.returnLeg,visitWaits,routeContext:result.routeContext||null,calculatedAt:result.calculatedAt,inputHash:inputHash||null,hash:stableHash({date,departure,rows:result.rows})};
     const rows=result.rows.map(row=>({id:row.id,route_volgorde:row.order,starttijd:row.start,eindtijd:row.end,reistijd_min:row.travelMin,parking_min:row.parkingMin,afstand_km:row.distanceKm,route_mode:row.routeMode,route_live:row.routeLive}));
     let timer;
     const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Het opslaan van de dagroute duurde te lang.')),15000)});
@@ -343,14 +351,17 @@
     throw rpc.error;
   }
 
-  async function calculateDay({sb,workspaceId,date,departure,visits,absences,home,parkingMinutes=15,walkThresholdMeters=300,optimize=false,pauseEnabled=true}){
+  async function calculateDay({sb,workspaceId,date,departure,visits,absences,home,start=home,end=home,firstVisitId=null,routeContext=null,parkingMinutes=15,walkThresholdMeters=300,optimize=false,pauseEnabled=true}){
     if(!sb)throw new Error('Supabase-verbinding ontbreekt.');
-    if(!hasPoint(home))throw new Error('Stel eerst een geldige centrale startlocatie in.');
-    const selected=optimize?optimizeVisits(visits,home):(visits||[]).slice().sort((a,b)=>number(a.order,999)-number(b.order,999));
-    const requests=createLegRequests(selected,home,walkThresholdMeters);
+    if(!hasPoint(start))throw new Error('Stel eerst een geldig startadres voor deze dag in.');
+    if(!hasPoint(end))throw new Error('Stel eerst een geldig eindadres voor deze dag in.');
+    const selected=optimize?optimizeVisits(visits,start,end,firstVisitId):(visits||[]).slice().sort((a,b)=>number(a.order,999)-number(b.order,999));
+    const requests=createLegRequests(selected,start,end,walkThresholdMeters);
     const legs=await requestRouteBatch(sb,requests);
     const result=buildDay({date,departure,visits:selected,absences,legs,parkingMinutes,pauseEnabled});
-    result.inputHash=routeInputHash({date,departure,visits:selected,absences,home,parkingMinutes,walkThresholdMeters,pauseEnabled});
+    result.routeContext=routeContext||null;
+    const hashedVisits=selected.map((visit,index)=>({...visit,order:index+1}));
+    result.inputHash=routeInputHash({date,departure,visits:hashedVisits,absences,start,end,firstVisitId,parkingMinutes,walkThresholdMeters,pauseEnabled});
     await persistDay(sb,{workspaceId,date,departure,result,pauseEnabled,inputHash:result.inputHash});
     return {visits:selected,result};
   }

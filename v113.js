@@ -125,9 +125,9 @@
       let query=GJ_AUTH.sb.from('app_day_settings').select('datum,vertrektijd,settings,updated_at');
       const workspace=GJ_AUTH.workspaceUserId||GJ_AUTH.profile?.id;if(workspace)query=query.eq('user_id',workspace);
       const response=await query;if(response.error)throw response.error;
-      db.routeStats=db.routeStats||{};db.dayDepartures=db.dayDepartures||{};
+      db.routeStats=db.routeStats||{};db.dayDepartures=db.dayDepartures||{};db.dayRouteContexts=db.dayRouteContexts||{};
       const remoteDates=new Set();
-      for(const row of response.data||[]){if(!row.datum)continue;remoteDates.add(row.datum);if(row.vertrektijd)db.dayDepartures[row.datum]=String(row.vertrektijd).slice(0,5);const stats=mapDayRoute(row);if(stats)db.routeStats[row.datum]=stats}
+      for(const row of response.data||[]){if(!row.datum)continue;remoteDates.add(row.datum);if(row.vertrektijd)db.dayDepartures[row.datum]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route?.routeContext)db.dayRouteContexts[row.datum]=route.routeContext;const stats=mapDayRoute(row);if(stats)db.routeStats[row.datum]=stats}
       for(const date of Object.keys(db.routeStats))if(visitsOn(date).length&&!remoteDates.has(date))delete db.routeStats[date];
       save();render();return true;
     }catch(error){console.warn('Dagstatussen laden mislukt',error);return false}finally{loadingDays=false}

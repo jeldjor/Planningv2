@@ -25,9 +25,9 @@ test('v11-productiebestanden zijn syntactisch geldig en op beide apparaten gelad
   new vm.Script(app,{filename:'v11.js'});
   assert.equal(JSON.parse(pkg).version,'11.3.8');
   for(const html of [mobile,laptop]){
-    assert.match(html,/planning-core\.js\?v=113500/);
+    assert.match(html,/planning-core\.js\?v=113900/);
     assert.match(html,/v11\.css\?v=112000/);
-    assert.match(html,/v11\.js\?v=113500/);
+    assert.match(html,/v11\.js\?v=113900/);
   }
 });
 

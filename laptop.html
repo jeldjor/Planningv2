@@ -15,7 +15,7 @@
 <script src="vendor/jspdf.umd.min.js?v=251"></script>
 <script src="photo-zip.js?v=113500"></script>
 <script src="visit-pdf.js?v=113500"></script>
-<script src="planning-core.js?v=113500"></script>
+<script src="planning-core.js?v=113900"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -1625,7 +1625,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v11.css?v=112000">
 <link rel="stylesheet" href="v113.css?v=113001">
 <link rel="stylesheet" href="brand.css?v=113800-ui3">
-<link rel="stylesheet" href="v114.css?v=11402">
+<link rel="stylesheet" href="v114.css?v=11403">
 </head>
 <body data-gj-device-location="disabled">
 <aside class="sidebar">
@@ -2238,8 +2238,8 @@ async function importCustomersToSupabase(customers, showAlert=true){
 const THEMES={blue:{nav:"#17253b",nav2:"#233b5c",blue:"#315f9f",blue2:"#254b7e",soft:"#eef4fb"},green:{nav:"#123524",nav2:"#1f5a3b",blue:"#208250",blue2:"#16633d",soft:"#eaf7ef"},purple:{nav:"#24183f",nav2:"#3d276f",blue:"#6d3bc2",blue2:"#512c91",soft:"#f0ebfb"},orange:{nav:"#3b2415",nav2:"#7a3d12",blue:"#f97316",blue2:"#c95c0b",soft:"#fff0e6"},red:{nav:"#3a1518",nav2:"#6f232a",blue:"#c03434",blue2:"#922529",soft:"#fdecec"}};
 function applyTheme(mode){const t=THEMES.blue;const r=document.documentElement;r.style.setProperty('--nav','#063477');r.style.setProperty('--nav2','#031d46');r.style.setProperty('--blue','#0a4ca8');r.style.setProperty('--blue2','#063477');r.style.setProperty('--primary','#0a4ca8');r.style.setProperty('--primary-dark','#063477');r.style.setProperty('--primary-soft','#eef4ff')}
 function selectedTheme(){return 'blue'}
-const DEFAULT={customers:[],visits:[],blocks:[],fixed:[],history:[],unplanned:[],dayDepartures:{},routeCache:{},routeStats:{},disabledBreaks:{},routeTimeEdits:{},navPrefs:{app:"google",ask:true},settings:{start:"",startLat:null,startLng:null,depart:"08:30",home:"18:00",max:4,maxWorkday:8.5,theme:"blue",parking:15,break:30,walk:300,tomtom:"",homeDayEnabled:true,homeDay:5,parttimeDays:{},nlHoliday:true,beHoliday:true}};
-let db=load(); if(db.settings&&!db.settings.theme)db.settings.theme="blue"; applyTheme(db.settings?.theme||"blue"); if(!db.dayDepartures)db.dayDepartures={}; if(!db.routeCache)db.routeCache={}; if(!db.routeStats)db.routeStats={}; if(!db.disabledBreaks)db.disabledBreaks={}; if(!db.routeTimeEdits)db.routeTimeEdits={}; if(!db.navPrefs)db.navPrefs={app:"google",ask:true};
+const DEFAULT={customers:[],visits:[],blocks:[],fixed:[],history:[],unplanned:[],dayDepartures:{},dayRouteContexts:{},routeCache:{},routeStats:{},disabledBreaks:{},routeTimeEdits:{},navPrefs:{app:"google",ask:true},settings:{start:"",startLat:null,startLng:null,depart:"08:30",home:"18:00",max:4,maxWorkday:8.5,theme:"blue",parking:15,break:30,walk:300,tomtom:"",homeDayEnabled:true,homeDay:5,parttimeDays:{},nlHoliday:true,beHoliday:true}};
+ let db=load(); if(db.settings&&!db.settings.theme)db.settings.theme="blue"; applyTheme(db.settings?.theme||"blue"); if(!db.dayDepartures)db.dayDepartures={}; if(!db.dayRouteContexts)db.dayRouteContexts={}; if(!db.routeCache)db.routeCache={}; if(!db.routeStats)db.routeStats={}; if(!db.disabledBreaks)db.disabledBreaks={}; if(!db.routeTimeEdits)db.routeTimeEdits={}; if(!db.navPrefs)db.navPrefs={app:"google",ask:true};
 function normalizeSettings(){
   if(!db.settings)db.settings=structuredClone(DEFAULT.settings);
   const s=db.settings;
@@ -2312,7 +2312,7 @@ function driveMin(a,b){const d=km(a,b);return d===null?30:Math.max(8,Math.round(
 
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c?.Postcode||""} ${c?.Plaats||""} ${c?.Land||""}`)}`;
 }
-function startPoint(){return {Latitude:db.settings?.startLat??"",Longitude:db.settings?.startLng??"",Plaats:db.settings?.start||"Startlocatie",Winkel:"Thuis"}} function hasCoords(c){return c&&Number.isFinite(num(c.Latitude,NaN))&&Number.isFinite(num(c.Longitude,NaN))} function routeKey(a,b,mode){return `${mode}:${num(a.Latitude).toFixed(5)},${num(a.Longitude).toFixed(5)}>${num(b.Latitude).toFixed(5)},${num(b.Longitude).toFixed(5)}`}
+function startPoint(){return {Latitude:db.settings?.startLat??"",Longitude:db.settings?.startLng??"",Plaats:db.settings?.start||"Startlocatie",Winkel:"Thuis"}} function routeContextForDay(date){return window.GJ_ROUTE_CONTEXT?.forDay(date)||{startMode:"default",endMode:"home"}} function startPointForDay(date){const context=routeContextForDay(date);return context.startMode==="custom"&&context.start?{Latitude:context.start.lat,Longitude:context.start.lng,Plaats:context.start.address,Winkel:"Dagstart"}:startPoint()} function endPointForDay(date){const context=routeContextForDay(date);if(context.endMode==="start")return startPointForDay(date);if(context.endMode==="custom"&&context.end)return{Latitude:context.end.lat,Longitude:context.end.lng,Plaats:context.end.address,Winkel:"Dageinde"};return startPoint()} function hasCoords(c){return c&&Number.isFinite(num(c.Latitude,NaN))&&Number.isFinite(num(c.Longitude,NaN))} function routeKey(a,b,mode){return `${mode}:${num(a.Latitude).toFixed(5)},${num(a.Longitude).toFixed(5)}>${num(b.Latitude).toFixed(5)},${num(b.Longitude).toFixed(5)}`}
 async function tomtomRoute(a,b,mode="car"){
  if(!hasCoords(a)||!hasCoords(b)||!window.GJ_TOMTOM_ENABLED)return null;
  const key=routeKey(a,b,mode);if(db.routeCache?.[key])return db.routeCache[key];
@@ -2382,7 +2382,7 @@ function googleSingleUrl(c){
 }
 function googleFullRouteUrl(date){
   const vs=visitsOn(date);
-  const pts=[startPoint(),...vs.map(v=>getC(v.customerId)).filter(Boolean),startPoint()];
+  const pts=[startPointForDay(date),...vs.map(v=>getC(v.customerId)).filter(Boolean),endPointForDay(date)];
   const origin=customerCoordOrAddress(pts[0]);
   const destination=customerCoordOrAddress(pts[pts.length-1]);
   const waypoints=pts.slice(1,-1).map(customerCoordOrAddress).join("|");
@@ -2760,7 +2760,7 @@ function chooseBestDayDeparture(date,visits){
   const ow=getOpeningWindow(first,date);
   if(!ow.open)return m2t(base);
 
-  const from=startPoint(), to=first;
+  const from=startPointForDay(date), to=first;
   const r=(hasCoords(from)&&hasCoords(to)&&db.routeCache?.[routeKey(from,to,"car")])||fallbackRoute(from,to,"car");
   const park=num(db.settings.parking,15);
   const latest=t2m(ow.open)-r.min-park;
@@ -2780,13 +2780,14 @@ function renderRoute(date,target){
     if(cur>=bs&&cur<be)cur=be;
   }
   const dep=chooseBestDayDeparture(date,vs);
-  let html=`<div class="routeStart"><strong>🏠 Vertrek thuis</strong><span><input class="departInput" type="time" value="${dep}" onchange="setDayDeparture('${date}',this.value)"><button class="miniBtn routeIconBtn" title="Complete dagroute openen" onclick="requestNav('full','${date}')">🚗</button><button class="miniBtn breakToggle ${breakEnabled(date)?"breakOn":"breakOff"}" title="Pauze aan/uit" onclick="toggleBreakForDay('${date}')">${breakEnabled(date)?"☕":"🚫☕"}</button><button class="miniBtn orderToggle" onclick="toggleOrderEdit('${date}')">${state.editingOrder?"Opslaan":"Volgorde wijzigen"}</button></span></div>`+absenceHtml;
+  const startLabel=window.GJ_ROUTE_CONTEXT?.label(date,"start")||"Vast startadres",endLabel=window.GJ_ROUTE_CONTEXT?.label(date,"end")||"Naar huis";
+  let html=`<div class="routeStart"><strong>📍 Vertrek: ${esc(startLabel)}</strong><span><input class="departInput" type="time" value="${dep}" onchange="setDayDeparture('${date}',this.value)"><button class="miniBtn routeIconBtn" title="Complete dagroute openen" onclick="requestNav('full','${date}')">🚗</button><button class="miniBtn breakToggle ${breakEnabled(date)?"breakOn":"breakOff"}" title="Pauze aan/uit" onclick="toggleBreakForDay('${date}')">${breakEnabled(date)?"☕":"🚫☕"}</button><button class="miniBtn orderToggle" onclick="toggleOrderEdit('${date}')">${state.editingOrder?"Opslaan":"Volgorde wijzigen"}</button></span></div>`+absenceHtml;
 
   vs.forEach((v,i)=>{
     const c=getC(v.customerId)||{},prev=i?getC(vs[i-1].customerId):null;
     let travel=0,line="";
     if(i===0){
-      const from=startPoint(),to=c,park=storedParkingMinutes(v);
+      const from=startPointForDay(date),to=c,park=storedParkingMinutes(v);
       const cached=hasCoords(to)?db.routeCache?.[routeKey(from,to,"car")]:null;
       const r=storedVisitRoute(v,cached||fallbackRoute(from,to,"car"));
       travel=r.min+park;totalDrive+=r.min;totalKm+=r.km||0;
@@ -2839,12 +2840,12 @@ function renderRoute(date,target){
     html+=`<div class="break">☕ Pauze 12:00 - ${m2t(720+num(db.settings.break,30))} (${db.settings.break} min)</div>`;
     cur=Math.max(cur,720+num(db.settings.break,30));
   }
-  const lastC=getC(vs[vs.length-1].customerId),home=startPoint();
+  const lastC=getC(vs[vs.length-1].customerId),home=endPointForDay(date);
   const cached=hasCoords(lastC)?db.routeCache?.[routeKey(lastC,home,"car")]:null;
   const r=storedReturnRoute(date,cached||fallbackRoute(lastC,home,"car"));
   cur+=r.min;totalDrive+=r.min;totalKm+=r.km||0;
-  html+=`<div class="travel">🚗 Terug naar huis • ${minTxt(r.min)} • ${r.km} km${routeQualityDotObj(r)}</div><div class="routeHome"><strong>🏠 Thuis</strong><span>${m2t(cur)}</span></div>`;
-  el.innerHTML=`<div class="routeSummary"><div><strong>${vs.length}</strong><span>klanten</span></div><div><strong>${Math.round(totalKm)}</strong><span>km</span></div><div><strong>${minTxt(totalDrive)}</strong><span>rijtijd</span></div><div><strong class="${cur>t2m(db.settings.home)?"warn":"ok"}">${m2t(cur)}</strong><span>thuis</span></div></div>`+html;
+  html+=`<div class="travel">🚗 ${esc(endLabel)} • ${minTxt(r.min)} • ${r.km} km${routeQualityDotObj(r)}</div><div class="routeHome"><strong>🏁 ${esc(endLabel)}</strong><span>${m2t(cur)}</span></div>`;
+  el.innerHTML=`<div class="routeSummary"><div><strong>${vs.length}</strong><span>klanten</span></div><div><strong>${Math.round(totalKm)}</strong><span>km</span></div><div><strong>${minTxt(totalDrive)}</strong><span>rijtijd</span></div><div><strong class="${cur>t2m(db.settings.home)?"warn":"ok"}">${m2t(cur)}</strong><span>einde</span></div></div>`+html;
 }
 function routeOpeningTime(c,date){
   const openingWindow=window.GJPlanningCore?.openingWindowForDate(c?.Openingstijden,date);
@@ -2854,6 +2855,7 @@ function routeOpeningTime(c,date){
 }
 function customerRow(v,c,start,end,date){
   const fixed=v.status==="Vast";
+  const firstVisit=window.GJ_ROUTE_CONTEXT?.isFirst(date,v.id);
   const orderControls=state.editingOrder?`<div class="orderBtns"><button onclick="event.preventDefault();event.stopPropagation();moveVisitOrder('${v.id}',-1)">↑</button><button onclick="event.preventDefault();event.stopPropagation();moveVisitOrder('${v.id}',1)">↓</button></div>`:"";
   const editingTime=state.timeEditVisitId===v.id;
   const timeHtml=editingTime
@@ -2861,13 +2863,13 @@ function customerRow(v,c,start,end,date){
     : `<span class="routeTimes">${m2t(start)} - ${m2t(end)} <button class="timeBtn" title="Tijd aanpassen" onclick="event.preventDefault();event.stopPropagation();editVisitTime('${v.id}','${date}')">🕒</button></span>`;
   return `<details class="customer ${fixed?"fixed":""}" ${fixed?"":`draggable="true" ondragstart="startDragVisit(event,'${v.id}')" ondragend="endDragVisit()"`}>
     <summary>
-      <div class="rowMain"><button class="pin ${fixed?"pinned":""}" onclick="event.preventDefault();event.stopPropagation();toggleFixed('${v.id}')">📌</button><span class="custName">🏪 ${esc(c?.Winkel||"Klant")}</span>${timeHtml}</div>
+      <div class="rowMain"><button class="pin ${fixed?"pinned":""}" onclick="event.preventDefault();event.stopPropagation();toggleFixed('${v.id}')">📌</button><span class="custName">🏪 ${esc(c?.Winkel||"Klant")}</span>${firstVisit?'<span class="firstVisitBadge">1e bezoek</span>':""}${timeHtml}</div>
       <div class="rowSub">${fixed?"":`<span class="status ${String(v.status).replace(/\s/g,'-')}">${v.status}</span>`}<span>${esc(c?.Plaats||"")}</span>${orderControls}</div>
     </summary>
     <div class="detail">
       <div>${esc(c?.Straat)} ${esc(c?.Huisnr)}<br>${esc(c?.Postcode)} ${esc(c?.Plaats)} <span class="routeOpeningTime">${esc(routeOpeningTime(c,date))}</span><br>${esc(c?.Land)}</div>
       ${phone(c)?`<div class="phone">📞 ${esc(phone(c))}</div>`:""}
-      <div class="actions">${["Uitgevoerd","Niet uitgevoerd"].includes(v.status)?`<button class="${v.status==="Uitgevoerd"?"doneBtn":"notDoneBtn"}" onclick="openVisit('${v.id}')">${v.status}</button>`:`<button onclick="openVisit('${v.id}')">Afronden</button>`}<button class="secondary" onclick="openMoveDialogForVisit('${v.id}')">Herplan</button><button class="secondary" onclick="moveOut('${v.id}')">Uit planning</button><a class="btnlink iconOnly" title="Locatie bekijken" href="${maps(c)}" target="_blank">📍</a><button class="secondary iconOnly" title="Navigeer vanaf huidige locatie" onclick="requestNav('single','${v.customerId}')">🚗</button></div>
+      <div class="actions">${["Uitgevoerd","Niet uitgevoerd"].includes(v.status)?`<button class="${v.status==="Uitgevoerd"?"doneBtn":"notDoneBtn"}" onclick="openVisit('${v.id}')">${v.status}</button>`:`<button onclick="openVisit('${v.id}')">Afronden</button>`}<button class="firstVisitBtn ${firstVisit?"active":""}" data-first-visit="${v.id}" data-date="${date}">${firstVisit?"Eerste bezoek losmaken":"Als eerste bezoeken"}</button><button class="secondary" onclick="openMoveDialogForVisit('${v.id}')">Herplan</button><button class="secondary" onclick="moveOut('${v.id}')">Uit planning</button><a class="btnlink iconOnly" title="Locatie bekijken" href="${maps(c)}" target="_blank">📍</a><button class="secondary iconOnly" title="Navigeer vanaf huidige locatie" onclick="requestNav('single','${v.customerId}')">🚗</button></div>
     </div>
   </details>`
 }
@@ -2962,11 +2964,12 @@ function fixSelectedWeek(){fixWeek(true);closeActionMenus()}
 function unfixSelectedWeek(){fixWeek(false);closeActionMenus()}
 async function optimizeSelectedDay(){
   closeActionMenus();
-  optimizeDayOrder(state.selected);
-  save();
-  if(window.GJ_TOMTOM_ENABLED===true){
-    await calculateDayRoutes(state.selected,true);
+  if(window.GJ_OPTIMIZE_DAY){
+    await window.GJ_OPTIMIZE_DAY(state.selected,true);
+  }else if(window.GJ_TOMTOM_ENABLED===true){
+    optimizeDayOrder(state.selected);save();await calculateDayRoutes(state.selected,true);
   }else{
+    optimizeDayOrder(state.selected);save();
     invalidateDayStats(state.selected);
     render();
   }
@@ -2975,17 +2978,19 @@ async function optimizeSelectedWeek(){
   closeActionMenus();
   const r=weekRange();
   const days=allDatesBetween(dateObj(r.start),dateObj(r.end)).map(iso);
-  days.forEach(d=>optimizeDayOrder(d));
-  save();
-  if(window.GJ_TOMTOM_ENABLED===true){
-    await calculateRoutesForDates(days,true);
+  if(window.GJ_OPTIMIZE_DAY){
+    for(const day of days)if(visitsOn(day).length)await window.GJ_OPTIMIZE_DAY(day,false);
+    render();
+  }else if(window.GJ_TOMTOM_ENABLED===true){
+    days.forEach(d=>optimizeDayOrder(d));save();await calculateRoutesForDates(days,true);
   }else{
+    days.forEach(d=>optimizeDayOrder(d));save();
     days.forEach(invalidateDayStats);
     render();
   }
 }
 function weekRange(){const d=dateObj(state.selected),s=new Date(d);s.setDate(d.getDate()-((d.getDay()+6)%7));const e=new Date(s);e.setDate(s.getDate()+6);return{start:iso(s),end:iso(e)}} function fixDay(fix){visitsOn(state.selected).forEach(v=>setFixed(v,fix));save();render()} function fixWeek(fix){const r=weekRange();db.visits.filter(v=>v.date>=r.start&&v.date<=r.end&&v.status!=="Uit planning").forEach(v=>setFixed(v,fix));save();render()}
-function renderToday(){const today=iso(new Date());renderRoute(today,"todayRoute");const vs=visitsOn(today),stats=db.routeStats?.[today];$("todayStats").innerHTML=`<div class="metric"><strong>${vs.length}</strong><span>klanten</span></div><div class="metric"><strong>${stats?.km??"–"} km</strong><span>route thuis–thuis</span></div><div class="metric"><strong>${stats?minTxt(stats.driveMin):"–"}</strong><span>reistijd thuis–thuis</span></div><div class="metric"><strong>${vs.filter(v=>v.status==="Uitgevoerd"||v.status==="Niet uitgevoerd"||v.status==="Bezocht").length}/${vs.length}</strong><span>afgerond</span></div>`}
+function renderToday(){const today=iso(new Date());renderRoute(today,"todayRoute");const vs=visitsOn(today),stats=db.routeStats?.[today];$("todayStats").innerHTML=`<div class="metric"><strong>${vs.length}</strong><span>klanten</span></div><div class="metric"><strong>${stats?.km??"–"} km</strong><span>volledige dagroute</span></div><div class="metric"><strong>${stats?minTxt(stats.driveMin):"–"}</strong><span>totale reistijd</span></div><div class="metric"><strong>${vs.filter(v=>v.status==="Uitgevoerd"||v.status==="Niet uitgevoerd"||v.status==="Bezocht").length}/${vs.length}</strong><span>afgerond</span></div>`}
 function plannedDates(id){return db.visits.filter(v=>v.customerId===id&&v.status!=="Uit planning"&&v.date).map(v=>displayDate(v.date)).join(", ")} function renderUnplanned(){const q=low($("unplannedSearch").value);const rows=db.unplanned.filter(u=>!q||JSON.stringify(u).toLowerCase().includes(q)).map(u=>{const c=getC(u.customerId)||{};return{Select:`<input type="checkbox" class="upCheck" data-id="${u.id}">`,Klant:c.Winkel||u.customerName,Datum:displayDate(u.oldDate)||"",Reden:u.reason||"",Andere:`<div class="smallText">${plannedDates(u.customerId)||"Geen andere bezoeken gepland"}</div>`,Actie:`<button onclick="smartReplan('${u.id}')">Slim plannen</button> <button class="secondary" onclick="openMoveDialogForUnplanned('${u.id}')">Zelf datum</button>`}});table("unplannedTable",rows,["Select","Klant","Datum","Reden","Andere","Actie"],true)}
 
 function liveVisitTime(v){
@@ -5532,9 +5537,9 @@ async function drawVisitPdfLayout(doc,visit){
   }
 
   function applyDaySettingRealtime(payload){
-    const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,date=row?.datum;if(!date)return;db.dayDepartures=db.dayDepartures||{};db.routeStats=db.routeStats||{};
-    if(payload.eventType==='DELETE'){delete db.dayDepartures[date];delete db.routeStats[date]}
-    else{if(row.vertrektijd)db.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route)db.routeStats[date]={km:Number(route.km||0),driveMin:Number(route.travelMin||0),totalMin:Number(route.dayMin||0),start:db.dayDepartures[date],end:route.end||'',calculated:route.live===true,live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null}}
+    const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old,date=row?.datum;if(!date)return;db.dayDepartures=db.dayDepartures||{};db.dayRouteContexts=db.dayRouteContexts||{};db.routeStats=db.routeStats||{};
+    if(payload.eventType==='DELETE'){delete db.dayDepartures[date];delete db.dayRouteContexts[date];delete db.routeStats[date]}
+    else{if(row.vertrektijd)db.dayDepartures[date]=String(row.vertrektijd).slice(0,5);const route=row.settings?.day_route;if(route?.routeContext)db.dayRouteContexts[date]=route.routeContext;if(route)db.routeStats[date]={km:Number(route.km||0),driveMin:Number(route.travelMin||0),totalMin:Number(route.dayMin||0),start:db.dayDepartures[date],end:route.end||'',calculated:route.live===true,live:route.live===true,includesReturn:route.includesReturn===true,returnLeg:route.returnLeg||null,inputHash:route.inputHash||null,hash:route.hash||null}}
     save();render();
   }
 
@@ -6007,7 +6012,7 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v108.js?v=113000"></script>
 <script src="v109.js?v=112000"></script>
 <script src="v110.js?v=113500"></script>
-<script src="v11.js?v=113500"></script>
+<script src="v11.js?v=113900"></script>
 <script src="v113.js?v=113500"></script>
 <script src="v114.js?v=11401"></script>
 </body>
