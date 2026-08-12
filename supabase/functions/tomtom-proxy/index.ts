@@ -107,6 +107,46 @@ async function calculateBatch(apiKey: string, legs: Record<string, unknown>[]) {
   return results;
 }
 
+async function optimizeWaypoints(apiKey: string, body: Record<string, unknown>) {
+  const point = (value: unknown, label: string) => {
+    const item = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+    const lat = coordinate(item.lat, -90, 90), lon = coordinate(item.lng, -180, 180);
+    if (lat === null || lon === null) throw new RouteError('INVALID_COORDINATES', `${label} heeft ongeldige coördinaten.`);
+    return { lat, lon };
+  };
+  const start = point(body.start, 'Het startadres'), end = point(body.end, 'Het eindadres');
+  const rawStops = Array.isArray(body.stops) ? body.stops : [];
+  if (!rawStops.length || rawStops.length > 150) throw new RouteError('INVALID_WAYPOINTS', 'TomTom kan 1 tot en met 150 bezorgadressen tegelijk optimaliseren.');
+  const stops = rawStops.map((item, index) => point(item, `Bezorgadres ${index + 1}`));
+  if (stops.length === 1) return { order: [0] };
+  const locations = [start, ...stops, end].map((item) => `${item.lat},${item.lon}`).join(':');
+  const endpoint = new URL(`https://api.tomtom.com/routing/1/calculateRoute/${locations}/json`);
+  endpoint.searchParams.set('key', apiKey);
+  endpoint.searchParams.set('travelMode', 'car');
+  endpoint.searchParams.set('traffic', 'true');
+  endpoint.searchParams.set('routeType', 'shortest');
+  endpoint.searchParams.set('computeBestOrder', 'true');
+  endpoint.searchParams.set('routeRepresentation', 'none');
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const { response, body: result } = await fetchJson(endpoint, 30000);
+      const optimized = result?.optimizedWaypoints;
+      if (response.ok && Array.isArray(optimized) && optimized.length === stops.length) {
+        const order = optimized.slice().sort((a: Record<string, unknown>, b: Record<string, unknown>) => Number(a.optimizedIndex) - Number(b.optimizedIndex)).map((item: Record<string, unknown>) => Number(item.providedIndex));
+        if (order.every((index: number) => Number.isInteger(index) && index >= 0 && index < stops.length) && new Set(order).size === stops.length) return { order };
+      }
+      const message = result?.error?.description || result?.detailedError?.message || result?.errorText || 'routevolgorde niet beschikbaar';
+      if ((response.status === 429 || response.status >= 500) && attempt === 0) { await pause(750); continue; }
+      throw new RouteError(response.status === 429 ? 'TOMTOM_RATE_LIMIT' : 'OPTIMIZE_FAILED', `TomTom kon de route niet optimaliseren: ${message}`, response.status === 429 || response.status >= 500);
+    } catch (error) {
+      const value = info(error);
+      if (value.retryable && attempt === 0) { await pause(750); continue; }
+      throw error;
+    }
+  }
+  throw new RouteError('OPTIMIZE_FAILED', 'TomTom kon geen volledige routevolgorde bepalen.', true);
+}
+
 async function geocode(apiKey: string, query: string, country: string) {
   const endpoint = new URL(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(query)}.json`);
   endpoint.searchParams.set('key', apiKey);
@@ -157,6 +197,10 @@ Deno.serve(async (request) => {
       const legs = Array.isArray(body.legs) ? body.legs as Record<string, unknown>[] : [];
       if (!legs.length || legs.length > 30) return applicationError(new RouteError('INVALID_BATCH', 'Een dagroute moet 1 tot en met 30 trajecten bevatten.'), requestId);
       try { return json({ ok: true, legs: await calculateBatch(settings.tomtom_api_key, legs), requestId }, 200, requestId); }
+      catch (error) { return applicationError(error, requestId); }
+    }
+    if (body.action === 'optimize-waypoints') {
+      try { return json({ ok: true, ...(await optimizeWaypoints(settings.tomtom_api_key, body)), requestId }, 200, requestId); }
       catch (error) { return applicationError(error, requestId); }
     }
     if (body.action === 'geocode') {

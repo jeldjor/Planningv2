@@ -10,10 +10,17 @@ alter table public.profiles drop constraint if exists profiles_app_mode_check;
 alter table public.profiles add constraint profiles_app_mode_check
   check (app_mode in ('field_service','courier'));
 
--- Alleen dit vooraf aangemaakte account krijgt de compacte koeriersweergave.
+-- Alleen dit vooraf aangemaakte RouteRunner-account krijgt de compacte koeriersweergave.
+-- Zet het beheeraccount expliciet terug op de normale Planyx-werkruimte wanneer een
+-- eerdere conceptversie van deze migratie al is uitgevoerd.
+update public.profiles
+set app_mode='field_service',updated_at=now()
+where id='7b870312-0fd3-4d7c-add6-5bb25588f2de'::uuid;
+
 update public.profiles
 set app_mode='courier',updated_at=now()
-where id='7b870312-0fd3-4d7c-add6-5bb25588f2de'::uuid;
+where id='28ccccdc-b7ef-4397-a01f-f1218f5303b7'::uuid
+  and lower(email)='info@routerunner-direct.com';
 
 create or replace function public.protect_profile_security_fields()
 returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
@@ -60,6 +67,7 @@ create table if not exists public.courier_orders (
     check (delivery_status in ('pending','delivered','excluded')),
   delivered_at timestamptz,
   route_order integer,
+  route_lock text check (route_lock is null or route_lock in ('first','last')),
   arrival_label text,
   departure_label text,
   travel_minutes integer,
@@ -69,6 +77,16 @@ create table if not exists public.courier_orders (
   updated_at timestamptz not null default now(),
   unique(user_id,external_id)
 );
+
+alter table public.courier_orders
+  add column if not exists route_lock text;
+alter table public.courier_orders drop constraint if exists courier_orders_route_lock_check;
+alter table public.courier_orders add constraint courier_orders_route_lock_check
+  check (route_lock is null or route_lock in ('first','last'));
+
+create unique index if not exists courier_orders_one_route_lock_idx
+  on public.courier_orders(user_id,delivery_date,route_lock)
+  where route_lock is not null and delivery_status='pending';
 
 create index if not exists courier_orders_user_date_idx
   on public.courier_orders(user_id,delivery_date,delivery_status,route_order);
@@ -182,4 +200,3 @@ do $$ begin
 end $$;
 
 commit;
-

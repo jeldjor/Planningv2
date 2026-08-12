@@ -8,5 +8,11 @@
 6. Wacht tot GitHub Actions/de deployment groen is en open Planyx één keer opnieuw.
 7. Log in als de koerier, stel onder **Instellingen** het startadres in en importeer daarna het Excelbestand.
 
-De TomTom API-key blijft uitsluitend in app_server_settings/de serverfunctie. Zet nooit een service-role-key of TomTom-key in browserbestanden.
+## Aanvullende correctie R2
 
+1. Voer eenmalig `SUPABASE_V11_4_6_COURIER_PATCH_R2.sql` uit in de SQL Editor.
+2. Open in Supabase **Edge Functions → tomtom-proxy → Code**.
+3. Vervang de code door de volledige inhoud van `supabase/functions/tomtom-proxy/index.ts` en kies **Deploy function**.
+4. Upload de R2-frontendbestanden naar GitHub en wacht tot de deployment groen is.
+
+De TomTom API-key blijft uitsluitend in app_server_settings/de serverfunctie. Zet nooit een service-role-key of TomTom-key in browserbestanden.

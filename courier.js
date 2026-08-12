@@ -3,7 +3,7 @@
   if(window.__GJ_COURIER_V1146__)return;
   window.__GJ_COURIER_V1146__=true;
 
-  var state={orders:[],settings:{},courier:{},date:"",summary:null,review:null,busy:false,channel:null};
+  var state={orders:[],settings:{},courier:{},date:"",summary:null,review:null,busy:false,channel:null,map:null,mapLayer:null};
   var byId=function(id){return document.getElementById(id)};
   var esc=function(value){return String(value==null?"":value).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
   var delay=function(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})};
@@ -37,6 +37,7 @@
         "<div id='courierProgress' class='courierProgress'></div>",
         "<section id='courierStats' class='courierStats'></section>",
         "<section id='courierSummary' class='courierSummary'></section>",
+        "<section id='courierMapPanel' class='courierMapPanel'><div class='courierSectionHead'><h2>Volledige route</h2><button id='courierFitRoute' class='courierButton secondary' type='button'>Alles in beeld</button></div><div id='courierMap' class='courierMap'></div></section>",
         "<section id='courierInvalidSection' class='courierSection'><div class='courierSectionHead'><h2>Adres controleren</h2><span id='courierInvalidCount' class='courierBadge'></span></div><div id='courierInvalidList' class='courierList'></div></section>",
         "<section class='courierSection'><div class='courierSectionHead'><h2>Bezorgroute</h2><span id='courierOpenCount' class='courierBadge'></span></div><div id='courierRouteList' class='courierList'></div></section>",
         "<section id='courierExcludedSection' class='courierSection'><div class='courierSectionHead'><h2>Uit route</h2><span id='courierExcludedCount' class='courierBadge'></span></div><div id='courierExcludedList' class='courierList'></div></section>",
@@ -239,11 +240,12 @@
     if(order.distance_km!=null)meta.push(Number(order.distance_km).toFixed(1)+" km");
     if(phone)meta.push("<a href='tel:"+esc(href)+"'>"+esc(phone)+"</a>");
     var actions="";
-    if(kind==="open")actions="<button class='courierButton' data-action='navigate' data-id='"+esc(order.id)+"'>Navigeren</button><button class='courierButton success' data-action='delivered' data-id='"+esc(order.id)+"'>Bezorgd</button><button class='courierButton danger' data-action='exclude' data-id='"+esc(order.id)+"'>Uit route</button>";
+    if(kind==="open")actions="<button class='courierButton courierPin "+(order.route_lock==="first"?"active":"")+"' data-action='pin-first' data-id='"+esc(order.id)+"'>Eerste vast</button><button class='courierButton courierPin "+(order.route_lock==="last"?"active":"")+"' data-action='pin-last' data-id='"+esc(order.id)+"'>Laatste vast</button><button class='courierButton' data-action='navigate' data-id='"+esc(order.id)+"'>Navigeren</button><button class='courierButton success' data-action='delivered' data-id='"+esc(order.id)+"'>Bezorgd</button><button class='courierButton danger' data-action='exclude' data-id='"+esc(order.id)+"'>Uit route</button>";
     if(kind==="invalid")actions="<button class='courierButton' data-action='review' data-id='"+esc(order.id)+"'>Adres aanpassen</button><button class='courierButton danger' data-action='exclude' data-id='"+esc(order.id)+"'>Niet meenemen</button>";
     if(kind==="excluded"||kind==="delivered")actions="<button class='courierButton secondary' data-action='restore' data-id='"+esc(order.id)+"'>Terugzetten</button>";
     var badge=order.route_order||index+1;
-    return "<article class='courierCard "+(kind==="invalid"?"invalid ":"")+(kind==="delivered"?"delivered ":"")+(kind==="open"&&index===0?"next":"")+"'><div class='courierOrder'>"+esc(badge)+"</div><div class='courierInfo'><h3>"+esc(name)+"</h3>"+(company?"<div class='courierCompany'>"+esc(company)+"</div>":"")+"<div class='courierAddress'>"+esc(address)+"</div><div class='courierMeta'>"+meta.map(function(x){return "<span>"+x+"</span>"}).join("")+"</div></div><div class='courierActions'>"+actions+"</div></article>";
+    var lock=order.route_lock==="first"?" · eerste vast":order.route_lock==="last"?" · laatste vast":"";
+    return "<article data-order-id='"+esc(order.id)+"' data-route-lock='"+esc(order.route_lock||"")+"' class='courierCard "+(kind==="invalid"?"invalid ":"")+(kind==="delivered"?"delivered ":"")+(kind==="open"&&index===0?"next ":"")+(order.route_lock?"locked ":"")+"'>"+(kind==="open"?"<button type='button' class='courierDragHandle' aria-label='Vasthouden en verslepen'>☰</button>":"")+"<div class='courierOrder'>"+esc(badge)+"</div><div class='courierInfo'><h3>"+esc(name)+"</h3>"+(company?"<div class='courierCompany'>"+esc(company)+"</div>":"")+"<div class='courierAddress'>"+esc(address)+"</div><div class='courierMeta'>"+meta.map(function(x){return "<span>"+x+"</span>"}).join("")+lock+"</div></div><div class='courierActions'>"+actions+"</div></article>";
   }
 
   function render(){
@@ -263,6 +265,7 @@
     byId("courierExcludedList").innerHTML=excluded.map(function(x,i){return card(x,i,"excluded")}).join("");
     byId("courierDeliveredList").innerHTML=delivered.map(function(x,i){return card(x,i,"delivered")}).join("");
     renderSummary();
+    renderMap(open);
   }
 
   function renderSummary(){
@@ -273,6 +276,24 @@
       ["Adressen",s.count],["Afstand",number(s.km).toFixed(1)+" km"],["Rijtijd",formatDuration(s.travelMin)],
       ["Stoptijd",formatDuration(s.stopMin)],["Verwacht klaar",s.end||"–"]
     ].map(function(item){return "<div><strong>"+esc(item[1])+"</strong><span>"+item[0]+"</span></div>"}).join("");
+  }
+
+  function renderMap(open){
+    var panel=byId("courierMapPanel"),container=byId("courierMap"),c=state.courier||{};
+    var start={lat:number(c.startLat,NaN),lng:number(c.startLng,NaN)},end=c.endSame!==false?start:{lat:number(c.endLat,NaN),lng:number(c.endLng,NaN)};
+    if(!panel||!container||!window.L||!GJPlanningCore.hasPoint(start)||!GJPlanningCore.hasPoint(end)||!open.length){if(panel)panel.style.display="none";return}
+    panel.style.display="block";
+    if(!state.map)state.map=L.map(container,{scrollWheelZoom:false});
+    if(state.mapLayer)state.mapLayer.remove();
+    state.mapLayer=L.layerGroup().addTo(state.map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(state.mapLayer);
+    var points=[[start.lat,start.lng]];
+    var marker=function(lat,lng,label,title,kind){return L.marker([lat,lng],{icon:L.divIcon({className:"courierMapMarker "+kind,html:"<span>"+esc(label)+"</span>",iconSize:[32,32],iconAnchor:[16,16]})}).bindTooltip(title).addTo(state.mapLayer)};
+    marker(start.lat,start.lng,"S",c.startAddress||"Start","start");
+    open.forEach(function(order,index){var lat=Number(order.latitude),lng=Number(order.longitude);if(Number.isFinite(lat)&&Number.isFinite(lng)){points.push([lat,lng]);marker(lat,lng,String(index+1),(order.recipient_name||"Klant")+" — "+(order.route_address||order.original_address),"stop")}});
+    points.push([end.lat,end.lng]);marker(end.lat,end.lng,c.endSame!==false?"E":"S",c.endSame!==false?(c.endAddress||"Eind"):"Terug bij start",c.endSame!==false?"end":"start");
+    L.polyline(points,{color:"#0a4ca8",weight:4,opacity:.8,dashArray:"8 6"}).addTo(state.mapLayer);
+    state.map.fitBounds(L.latLngBounds(points).pad(.08));setTimeout(function(){state.map.invalidateSize()},0);
   }
 
   function formatDuration(minutes){
@@ -299,14 +320,24 @@
   }
 
   function semanticMatch(order,result,query){
-    var address=result.address||{},input=normalize(query||order.original_address),postcode=normalize(order.postcode),foundPostcode=normalize(address.postalCode);
-    var street=normalize(address.streetName),house=normalize(address.streetNumber);
-    var beforePostcode=clean(query||order.original_address).split(/\b\d{4}\s?[A-Za-z]{2}\b/i)[0],houseParts=beforePostcode.match(/\b\d+\s*[A-Za-z]?(?:[-\/]\s*[A-Za-z0-9]+)?\b/g)||[];
-    var inputHouse=normalize(houseParts[houseParts.length-1]||"");
-    var postcodeOk=!postcode||!foundPostcode||postcode===foundPostcode;
-    var streetOk=!street||input.indexOf(street)>=0;
-    var houseOk=!!inputHouse&&inputHouse===house;
-    return !!foundPostcode&&!!street&&!!house&&postcodeOk&&streetOk&&houseOk;
+    var address=result.address||{},inputText=clean(query||order.original_address),input=normalize(inputText);
+    var postcode=normalize(order.postcode||(inputText.match(/\b\d{4}\s?[A-Za-z]{2}\b/i)||[])[0]),foundPostcode=normalize(address.postalCode);
+    var street=normalize(address.streetName),freeform=clean(address.freeformAddress);
+    var beforePostcode=inputText.split(/\b\d{4}\s?[A-Za-z]{2}\b/i)[0],houseParts=beforePostcode.match(/\b\d+\s*[A-Za-z]?(?:[-\/]\s*[A-Za-z0-9]+)?\b/g)||[];
+    var foundParts=freeform.split(/\b\d{4}\s?[A-Za-z]{2}\b/i)[0].match(/\b\d+\s*[A-Za-z]?(?:[-\/]\s*[A-Za-z0-9]+)?\b/g)||[];
+    var inputHouse=normalize(houseParts[houseParts.length-1]||""),foundHouse=normalize(address.streetNumber||foundParts[foundParts.length-1]||"");
+    var postcodeOk=!!postcode&&!!foundPostcode&&postcode===foundPostcode,houseOk=!!inputHouse&&!!foundHouse&&inputHouse===foundHouse;
+    var streetOk=!!street&&input.indexOf(street)>=0;
+    return postcodeOk&&houseOk&&(streetOk||postcodeOk);
+  }
+
+  async function tomTomOrder(visits,start,end){
+    if(visits.length<2)return visits.slice();
+    var response=await GJ_AUTH.sb.functions.invoke("tomtom-proxy",{body:{action:"optimize-waypoints",start:start,end:end,stops:visits.map(function(visit){return {lat:Number(visit.customer.lat),lng:Number(visit.customer.lng)}})}});
+    if(response.error||response.data&&response.data.error)throw new Error(response.data&&response.data.error||response.error&&response.error.message||"TomTom kon de routevolgorde niet bepalen.");
+    var order=response.data&&response.data.order;
+    if(!Array.isArray(order)||order.length!==visits.length||new Set(order).size!==visits.length)throw new Error("TomTom gaf geen volledige routevolgorde terug.");
+    return order.map(function(index){return visits[index]});
   }
 
   async function saveValidated(order,routeAddress,result,remember){
@@ -423,18 +454,12 @@
     return clock+(days?" (+"+days+" dag)":"");
   }
 
-  async function optimizeRoute(){
-    var day=ordersForDate(),invalid=day.filter(invalidOrder);
-    if(invalid.length)return alert("Controleer of verwijder eerst alle ongeldige adressen.");
-    var active=day.filter(function(order){return order.delivery_status==="pending"&&order.validation_status==="valid"});
-    if(!active.length)return alert("Er zijn geen open bezorgadressen voor deze datum.");
+  async function calculateAndSave(selected,message){
     var c=state.courier,start={lat:number(c.startLat,NaN),lng:number(c.startLng,NaN)};
     var end=c.endSame!==false?start:{lat:number(c.endLat,NaN),lng:number(c.endLng,NaN)};
     if(!GJPlanningCore.hasPoint(start)||!GJPlanningCore.hasPoint(end)){openSettings();return alert("Stel eerst een geldig start- en eindadres in.");}
-    setBusy(true,"Logische volgorde bepalen...");
+    setBusy(true,message||"Route opnieuw berekenen...");
     try{
-      var visits=active.map(function(order){return {id:order.id,planningId:order.id,customer:{lat:Number(order.latitude),lng:Number(order.longitude),name:order.recipient_name}}});
-      var selected=GJPlanningCore.optimizeVisits(visits,start,end,null);
       setProgress("TomTom berekent "+selected.length+" adressen. Grote routes worden veilig in delen verwerkt...");
       var requests=GJPlanningCore.createLegRequests(selected,start,end,0);
       var legs=await GJPlanningCore.requestRouteBatch(GJ_AUTH.sb,requests),cursor=minutesOf(c.departure),rows=[],km=0,travel=0,stop=2;
@@ -447,13 +472,50 @@
       var summary={count:selected.length,km:Math.round(km*10)/10,travelMin:Math.round(travel),stopMin:selected.length*stop,departure:c.departure,end:clockLabel(cursor),includesReturn:!!returnLeg,live:legs.every(function(x){return x.live===true}),calculatedAt:new Date().toISOString()};
       var saved=await GJ_AUTH.sb.rpc("save_courier_route",{p_workspace_id:workspaceId(),p_date:state.date,p_rows:rows,p_summary:summary});
       if(saved.error)throw saved.error;
-      await loadOrders();setProgress("Route met "+selected.length+" adressen is geoptimaliseerd en opgeslagen.","success");
+      await loadOrders();setProgress("Route met "+selected.length+" adressen is berekend en opgeslagen.","success");
+    }catch(error){setProgress("Route berekenen mislukt: "+(error.message||error),"error");throw error}
+    finally{setBusy(false)}
+  }
+
+  async function optimizeRoute(){
+    var day=ordersForDate(),invalid=day.filter(invalidOrder);
+    if(invalid.length)return alert("Controleer of verwijder eerst alle ongeldige adressen.");
+    var active=day.filter(function(order){return order.delivery_status==="pending"&&order.validation_status==="valid"});
+    if(!active.length)return alert("Er zijn geen open bezorgadressen voor deze datum.");
+    var c=state.courier,start={lat:number(c.startLat,NaN),lng:number(c.startLng,NaN)};
+    var end=c.endSame!==false?start:{lat:number(c.endLat,NaN),lng:number(c.endLng,NaN)};
+    if(!GJPlanningCore.hasPoint(start)||!GJPlanningCore.hasPoint(end)){openSettings();return alert("Stel eerst een geldig start- en eindadres in.");}
+    setBusy(true,"TomTom bepaalt de beste routevolgorde...");
+    try{
+      var visits=active.map(function(order){return {id:order.id,planningId:order.id,routeLock:order.route_lock||null,customer:{lat:Number(order.latitude),lng:Number(order.longitude),name:order.recipient_name}}});
+      var first=visits.find(function(visit){return visit.routeLock==="first"})||null,last=visits.find(function(visit){return visit.routeLock==="last"})||null;
+      var middle=visits.filter(function(visit){return visit!==first&&visit!==last});
+      var optimizeStart=first?{lat:first.customer.lat,lng:first.customer.lng}:start,optimizeEnd=last?{lat:last.customer.lat,lng:last.customer.lng}:end;
+      var optimized=await tomTomOrder(middle,optimizeStart,optimizeEnd),selected=[];
+      if(first)selected.push(first);selected.push.apply(selected,optimized);if(last)selected.push(last);
+      setBusy(false);return await calculateAndSave(selected,"TomTom berekent de geoptimaliseerde route...");
     }catch(error){setProgress("Optimaliseren mislukt: "+(error.message||error),"error");throw error}
     finally{setBusy(false)}
   }
 
+  async function setRouteLock(order,lock){
+    var next=order.route_lock===lock?null:lock;
+    if(next){var cleared=await GJ_AUTH.sb.from("courier_orders").update({route_lock:null,updated_at:new Date().toISOString()}).eq("delivery_date",state.date).eq("route_lock",lock);if(cleared.error)throw cleared.error}
+    var updated=await GJ_AUTH.sb.from("courier_orders").update({route_lock:next,updated_at:new Date().toISOString()}).eq("id",order.id);if(updated.error)throw updated.error;
+    await loadOrders();await optimizeRoute();
+  }
+
+  async function saveManualOrder(){
+    var ids=Array.from(byId("courierRouteList").querySelectorAll(".courierCard[data-order-id]")).map(function(card){return card.dataset.orderId});
+    var active=ordersForDate().filter(function(order){return order.delivery_status==="pending"&&order.validation_status==="valid"}),byOrder=new Map(active.map(function(order){return [order.id,order]}));
+    var ordered=ids.map(function(id){return byOrder.get(id)}).filter(Boolean),first=ordered.find(function(order){return order.route_lock==="first"}),last=ordered.find(function(order){return order.route_lock==="last"});
+    ordered=ordered.filter(function(order){return order!==first&&order!==last});if(first)ordered.unshift(first);if(last)ordered.push(last);
+    var visits=ordered.map(function(order){return {id:order.id,planningId:order.id,customer:{lat:Number(order.latitude),lng:Number(order.longitude),name:order.recipient_name}}});
+    await calculateAndSave(visits,"Handmatige volgorde opnieuw berekenen...");
+  }
+
   async function setOrderStatus(id,status){
-    var payload={delivery_status:status,updated_at:new Date().toISOString()};
+    var payload={delivery_status:status,route_lock:null,updated_at:new Date().toISOString()};
     if(status==="delivered")payload.delivered_at=new Date().toISOString();
     if(status==="pending")payload.delivered_at=null;
     var result=await GJ_AUTH.sb.from("courier_orders").update(payload).eq("id",id);
@@ -515,11 +577,28 @@
     catch(error){return openReview(order,null,error.message||"Adres niet gevonden.")}
   }
 
+  function bindDragging(){
+    var list=byId("courierRouteList"),dragged=null,startY=0,moved=false;
+    list.addEventListener("pointerdown",function(event){
+      var handle=event.target.closest(".courierDragHandle");if(!handle||state.busy)return;
+      dragged=handle.closest(".courierCard");startY=event.clientY;moved=false;dragged.classList.add("dragging");handle.setPointerCapture&&handle.setPointerCapture(event.pointerId);event.preventDefault();
+    });
+    list.addEventListener("pointermove",function(event){
+      if(!dragged)return;if(Math.abs(event.clientY-startY)>5)moved=true;
+      var target=document.elementFromPoint(event.clientX,event.clientY);target=target&&target.closest(".courierCard[data-order-id]");
+      if(!target||target===dragged||target.parentElement!==list)return;
+      var rect=target.getBoundingClientRect();if(event.clientY<rect.top+rect.height/2)list.insertBefore(dragged,target);else list.insertBefore(dragged,target.nextSibling);event.preventDefault();
+    });
+    var finish=function(){if(!dragged)return;dragged.classList.remove("dragging");dragged=null;if(moved)saveManualOrder().catch(function(error){setProgress(error.message||String(error),"error");loadOrders()})};
+    list.addEventListener("pointerup",finish);list.addEventListener("pointercancel",finish);
+  }
+
   function bind(){
     byId("courierImportButton").onclick=function(){byId("courierFile").click()};
     byId("courierFile").onchange=function(event){var file=event.target.files&&event.target.files[0];if(file)importFile(file).catch(function(error){setProgress("Importeren mislukt: "+error.message,"error")})};
     byId("courierValidate").onclick=function(){validateAddresses(true).catch(function(error){setProgress(error.message,"error")})};
     byId("courierOptimize").onclick=function(){optimizeRoute().catch(function(){})};
+    byId("courierFitRoute").onclick=function(){var open=ordersForDate().filter(function(x){return x.delivery_status==="pending"&&x.validation_status==="valid"}).sort(function(a,b){return number(a.route_order,9999)-number(b.route_order,9999)});renderMap(open)};
     byId("courierDate").onchange=async function(event){state.date=event.target.value;await loadOrders()};
     byId("courierSettingsButton").onclick=openSettings;
     byId("courierEndSame").onchange=function(event){byId("courierEndAddress").disabled=event.target.checked};
@@ -537,9 +616,12 @@
         if(button.dataset.action==="delivered")await setOrderStatus(order.id,"delivered");
         if(button.dataset.action==="exclude")await setOrderStatus(order.id,"excluded");
         if(button.dataset.action==="restore")await setOrderStatus(order.id,"pending");
+        if(button.dataset.action==="pin-first")await setRouteLock(order,"first");
+        if(button.dataset.action==="pin-last")await setRouteLock(order,"last");
         if(button.dataset.action==="review"){await reviewOrder(order);await loadOrders()}
       }catch(error){setProgress(error.message||String(error),"error")}
     });
+    bindDragging();
   }
 
   async function init(detail){
@@ -558,6 +640,6 @@
   }
 
   window.addEventListener("gj-auth-ready",function(event){init(event.detail)});
-  window.GJCourier={VERSION:"11.4.6",mapExportRow:mapRow,combineDeliveryAddress:combinedAddress,normalizePhone:phoneValue,addressMatchesTomTom:semanticMatch};
+  window.GJCourier={VERSION:"11.4.6-r2",mapExportRow:mapRow,combineDeliveryAddress:combinedAddress,normalizePhone:phoneValue,addressMatchesTomTom:semanticMatch};
   if(window.GJ_AUTH&&GJ_AUTH.profile)setTimeout(function(){init({workspaceProfile:GJ_AUTH.workspaceProfile||GJ_AUTH.profile})},0);
 })();
