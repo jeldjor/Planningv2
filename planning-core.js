@@ -221,39 +221,41 @@
       else remoteIndexes.push(index);
     });
     if(!remoteIndexes.length)return results;
-    const payload=remoteIndexes.map(index=>({
-      ...requests[index],
-      fromLat:number(requests[index].from.lat),fromLon:number(requests[index].from.lng),
-      toLat:number(requests[index].to.lat),toLon:number(requests[index].to.lng),mode:requests[index].mode
-    })).map(({fromLat,fromLon,toLat,toLon,mode})=>({
-      fromLat,fromLon,toLat,toLon,mode
-    }));
-    let batch=null,received=null,lastReason='geen route ontvangen';
-    // Eén dag is altijd één batch. Zo ontstaan geen dubbele routecycli of een
-    // storm van losse Edge-aanroepen wanneer TomTom tijdelijk niet reageert.
-    for(let attempt=0;attempt<2&&!received;attempt++){
-      let timer;
-      const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('De live routeberekening duurde te lang.')),45000)});
-      try{batch=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),timeout])}
-      catch(error){batch={data:null,error}}
-      finally{clearTimeout(timer)}
-      if(!batch?.error&&!batch?.data?.error&&Array.isArray(batch?.data?.legs)&&batch.data.legs.length===remoteIndexes.length){received=batch.data.legs;break}
-      lastReason=await edgeFailureMessage(batch,lastReason);
-      const code=String(batch?.data?.code||'');
-      const retryable=batch?.data?.retryable===true||(!batch?.data&&!code);
-      if(code==='UNSUPPORTED_ACTION')throw new Error('De actieve TomTom Edge Function is verouderd. Publiceer de meegeleverde tomtom-proxy opnieuw.');
-      if(!retryable||attempt===1)break;
-      await new Promise(resolve=>setTimeout(resolve,700));
+
+    // De Edge Function accepteert bewust maximaal dertig trajecten per call.
+    // Grote koeriersdagen worden daarom sequentieel in veilige delen opgehaald.
+    // Er wordt pas iets teruggegeven (en dus opgeslagen) wanneer elk deel klopt.
+    const chunks=[];
+    for(let offset=0;offset<remoteIndexes.length;offset+=30)chunks.push(remoteIndexes.slice(offset,offset+30));
+    for(let chunkIndex=0;chunkIndex<chunks.length;chunkIndex++){
+      const indexes=chunks[chunkIndex];
+      const payload=indexes.map(index=>({
+        fromLat:number(requests[index].from.lat),fromLon:number(requests[index].from.lng),
+        toLat:number(requests[index].to.lat),toLon:number(requests[index].to.lng),mode:requests[index].mode
+      }));
+      let batch=null,received=null,lastReason='geen route ontvangen';
+      for(let attempt=0;attempt<2&&!received;attempt++){
+        let timer;
+        const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('De live routeberekening duurde te lang.')),45000)});
+        try{batch=await Promise.race([sb.functions.invoke('tomtom-proxy',{body:{action:'route-batch',legs:payload}}),timeout])}
+        catch(error){batch={data:null,error}}
+        finally{clearTimeout(timer)}
+        if(!batch?.error&&!batch?.data?.error&&Array.isArray(batch?.data?.legs)&&batch.data.legs.length===indexes.length){received=batch.data.legs;break}
+        lastReason=await edgeFailureMessage(batch,lastReason);
+        const code=String(batch?.data?.code||'');
+        const retryable=batch?.data?.retryable===true||(!batch?.data&&!code);
+        if(code==='UNSUPPORTED_ACTION')throw new Error('De actieve TomTom Edge Function is verouderd. Publiceer de meegeleverde tomtom-proxy opnieuw.');
+        if(!retryable||attempt===1)break;
+        await new Promise(resolve=>setTimeout(resolve,700));
+      }
+      if(!received)throw new Error(`TomTom-dagroute mislukt in deel ${chunkIndex+1} van ${chunks.length}: ${lastReason}`);
+      received.forEach((leg,position)=>{
+        const index=indexes[position],seconds=Number(leg?.travelTimeInSeconds),meters=Number(leg?.lengthInMeters);
+        if(!Number.isFinite(seconds)||seconds<=0||seconds>86400||!Number.isFinite(meters)||meters<0||meters>1000000)throw new Error(`TomTom gaf voor traject ${index+1} geen geldige afstand en reistijd terug.`);
+        results[index]={min:Math.max(1,Math.round(seconds/60)),km:Math.round(meters/100)/10,live:leg.live!==false,mode:requests[index].mode};
+      });
+      if(chunkIndex<chunks.length-1)await new Promise(resolve=>setTimeout(resolve,250));
     }
-    if(!received)throw new Error(`TomTom-dagroute mislukt: ${lastReason}`);
-    received.forEach((leg,remoteIndex)=>{
-      const index=remoteIndexes[remoteIndex];
-      const seconds=Number(leg?.travelTimeInSeconds),meters=Number(leg?.lengthInMeters);
-      if(!Number.isFinite(seconds)||seconds<=0||seconds>86400||!Number.isFinite(meters)||meters<0||meters>1000000)throw new Error(`TomTom gaf voor traject ${index+1} geen geldige afstand en reistijd terug.`);
-      // Een route-batch komt uitsluitend uit de live TomTom Edge Function.
-      // Oudere geldige deployments voegden nog geen expliciet live=true toe.
-      results[index]={min:Math.max(1,Math.round(seconds/60)),km:Math.round(meters/100)/10,live:leg.live!==false,mode:requests[index].mode};
-    });
     return results;
   }
 

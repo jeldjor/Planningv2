@@ -2,10 +2,10 @@
 if(window.__GJ_AUTH_V108_LOADED__)return;window.__GJ_AUTH_V108_LOADED__=true;
 let sb=null,configurationError=null;
 try{sb=window.GJ_CONFIG_API.createSupabaseClient()}catch(error){configurationError=error}
-window.GJ_AUTH={sb,identitySb:sb,profile:null,isAdmin:false,workspaceUserId:null,impersonating:false,realUserId:null};window.GJ_WORKSPACE_ID=()=>GJ_AUTH.workspaceUserId||GJ_AUTH.profile?.id||null;
+window.GJ_AUTH={sb,identitySb:sb,profile:null,workspaceProfile:null,isAdmin:false,workspaceUserId:null,impersonating:false,realUserId:null};window.GJ_WORKSPACE_ID=()=>GJ_AUTH.workspaceUserId||GJ_AUTH.profile?.id||null;
 const REMEMBER_KEY='gj_login_remember_v1',SESSION_KEY='gj_app_open_session';
 const saved=(()=>{try{return JSON.parse(localStorage.getItem(REMEMBER_KEY)||'null')}catch{return null}})();
-const WORKSPACE_TABLES=new Set(['customers','planning','app_day_settings','app_absences','fixed_appointments','visit_history','visit_photos']);
+const WORKSPACE_TABLES=new Set(['customers','planning','app_day_settings','app_absences','fixed_appointments','visit_history','visit_photos','courier_orders','courier_address_corrections','courier_route_days']);
 function workspaceClient(raw,owner){
  const wrap=(builder,table,needsFilter=true)=>new Proxy(builder,{get(target,prop){
   if(prop==='then'){const q=needsFilter?target.eq('user_id',owner):target;return q.then.bind(q)}
@@ -23,12 +23,13 @@ async function profileFor(user){let {data,error}=await sb.from('profiles').selec
 async function openApp(session){
  const p=await profileFor(session.user);if(p.is_active===false){await sb.auth.signOut();throw new Error('Dit account is uitgeschakeld.')}
  const roleCheck=await sb.rpc('is_app_admin');if(roleCheck.error)throw new Error('De centrale rolcontrole kon niet worden geladen. Voer eerst de v10.7 development-baseline en daarna de v10.8-DEV-SQL uit op het afzonderlijke testproject.');
- const isAdmin=roleCheck.data===true,requested=sessionStorage.getItem('gj_impersonate_user_v102');let wk=p.id,impersonating=false;
- if(isAdmin&&requested&&requested!==p.id){const target=await sb.from('profiles').select('id,is_active').eq('id',requested).maybeSingle();if(!target.error&&target.data&&target.data.is_active!==false){wk=target.data.id;impersonating=true}else sessionStorage.removeItem('gj_impersonate_user_v102')}
+ const isAdmin=roleCheck.data===true,requested=sessionStorage.getItem('gj_impersonate_user_v102');let wk=p.id,impersonating=false,workspaceProfile=p;
+ if(isAdmin&&requested&&requested!==p.id){const target=await sb.from('profiles').select('id,email,full_name,is_active,app_mode').eq('id',requested).maybeSingle();if(!target.error&&target.data&&target.data.is_active!==false){wk=target.data.id;workspaceProfile=target.data;impersonating=true}else sessionStorage.removeItem('gj_impersonate_user_v102')}
  if(!isAdmin&&requested)sessionStorage.removeItem('gj_impersonate_user_v102');
- sessionStorage.setItem('gj_authenticated_user_id',p.id);window.GJ_REAL_USER_ID=p.id;GJ_AUTH.profile=p;GJ_AUTH.isAdmin=isAdmin;GJ_AUTH.realUserId=p.id;GJ_AUTH.workspaceUserId=wk;GJ_AUTH.impersonating=impersonating;GJ_AUTH.identitySb=sb;
+ sessionStorage.setItem('gj_authenticated_user_id',p.id);window.GJ_REAL_USER_ID=p.id;GJ_AUTH.profile=p;GJ_AUTH.workspaceProfile=workspaceProfile;GJ_AUTH.isAdmin=isAdmin;GJ_AUTH.realUserId=p.id;GJ_AUTH.workspaceUserId=wk;GJ_AUTH.impersonating=impersonating;GJ_AUTH.identitySb=sb;
  const previousWorkspace=sessionStorage.getItem('gj_workspace_storage_id');GJ_AUTH.sb=workspaceClient(sb,wk);sessionStorage.setItem('gj_workspace_storage_id',wk);if(previousWorkspace!==wk){location.reload();return}
- document.body.classList.toggle('gj-admin',isAdmin);document.getElementById('gjAuthGate').style.display='none';window.dispatchEvent(new CustomEvent('gj-auth-ready',{detail:{profile:p,isAdmin,realUserId:p.id,workspaceUserId:wk,impersonating}}))
+ window.GJ_COURIER_MODE=workspaceProfile?.app_mode==='courier';document.body.classList.toggle('gj-courier-mode',window.GJ_COURIER_MODE);
+ document.body.classList.toggle('gj-admin',isAdmin);document.getElementById('gjAuthGate').style.display='none';window.dispatchEvent(new CustomEvent('gj-auth-ready',{detail:{profile:p,workspaceProfile,isAdmin,realUserId:p.id,workspaceUserId:wk,impersonating}}))
 }
 async function boot(){if(!sb){msg(configurationError?.message||'De developmentconfiguratie kon niet worden geladen.');return}const allowed=sessionStorage.getItem(SESSION_KEY)==='1',r=await sb.auth.getSession();if(allowed&&r.data.session){try{await openApp(r.data.session)}catch(e){msg(e.message)}}else if(r.data.session)await sb.auth.signOut()}
 document.getElementById('gjLogin').onclick=async()=>{try{if(!sb)throw configurationError||new Error('Developmentconfiguratie ontbreekt.');msg('Bezig met inloggen...');const email=emailEl.value.trim(),password=passwordEl.value,r=await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(rememberEl.checked)localStorage.setItem(REMEMBER_KEY,JSON.stringify({remember:true,email}));else localStorage.removeItem(REMEMBER_KEY);passwordEl.value='';sessionStorage.setItem(SESSION_KEY,'1');await openApp(r.data.session)}catch(e){msg(e.message)}};

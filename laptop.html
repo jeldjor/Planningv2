@@ -1626,6 +1626,7 @@ button:not(.secondary):not(.danger):not(.warningButton):not(.nav):not(.iconBtn) 
 <link rel="stylesheet" href="v113.css?v=113001">
 <link rel="stylesheet" href="brand.css?v=113800-ui3">
 <link rel="stylesheet" href="v114.css?v=11403">
+<link rel="stylesheet" href="courier.css?v=114600">
 </head>
 <body data-gj-device-location="disabled">
 <aside class="sidebar">
@@ -5873,6 +5874,7 @@ async function drawVisitPdfLayout(doc,visit){
     if($('tomtomSecureStatus')){$('tomtomSecureStatus').textContent=window.GJ_TOMTOM_ENABLED?'TomTom staat online voor alle gebruikers.':'TomTom staat uit.';$('tomtomSecureStatus').className='syncStatus '+(window.GJ_TOMTOM_ENABLED?'ok':'busy')}
   }
   window.addEventListener('gj-auth-ready',async ev=>{
+    if(window.GJ_COURIER_MODE)return;
     const p=ev.detail.profile;
     const name=p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')||p.email;
     if($('sidebarCurrentUser')) $('sidebarCurrentUser').textContent=name;
@@ -5950,7 +5952,7 @@ async function drawVisitPdfLayout(doc,visit){
  }
  async function send(){const st=document.getElementById('contactStatus'),msg=document.getElementById('contactMessage').value.trim();if(msg.length<3){st.textContent='Vul een duidelijke vraag in.';st.className='syncStatus err';return}st.textContent='Wordt verstuurd…';st.className='syncStatus busy';const {error}=await GJ_AUTH.sb.rpc('create_contact_thread',{p_subject:document.getElementById('contactSubject').value,p_message:msg});if(error){st.textContent=error.message;st.className='syncStatus err';return}document.getElementById('contactMessage').value='';st.textContent='Je bericht is verstuurd.';st.className='syncStatus ok';await mine()}
  document.addEventListener('click',async e=>{if(e.target.id==='contactSend')return send();if(e.target.id==='contactRefresh')return mine();if(e.target.id==='adminContactRefresh')return inbox();const b=e.target.closest('.contactAdminSave');if(!b)return;const c=b.closest('[data-thread-id]'),reply=c.querySelector('.contactAdminReply').value.trim(),status=c.querySelector('.contactAdminState').value;if(!reply&&status==='beantwoord')return alert('Typ eerst een antwoord.');b.disabled=true;try{if(reply){const r=await GJ_AUTH.sb.from('contact_messages').insert({thread_id:c.dataset.threadId,sender_id:GJ_AUTH.profile.id,sender_role:'admin',message:reply});if(r.error)throw r.error}const u=await GJ_AUTH.sb.from('contact_threads').update({status,updated_at:new Date().toISOString(),closed_at:status==='gesloten'?new Date().toISOString():null}).eq('id',c.dataset.threadId);if(u.error)throw u.error;await inbox();await mine()}catch(err){alert(err.message)}finally{b.disabled=false}});
- window.addEventListener('gj-auth-ready',async()=>{await mine();if(GJ_AUTH.isAdmin)await inbox();if(channel)GJ_AUTH.sb.removeChannel(channel);channel=GJ_AUTH.sb.channel('contact-threads-v102').on('postgres_changes',{event:'*',schema:'public',table:'contact_threads'},()=>{mine();if(GJ_AUTH.isAdmin)inbox()}).on('postgres_changes',{event:'*',schema:'public',table:'contact_messages'},()=>{mine();if(GJ_AUTH.isAdmin)inbox()}).subscribe()});
+ window.addEventListener('gj-auth-ready',async()=>{if(window.GJ_COURIER_MODE)return;await mine();if(GJ_AUTH.isAdmin)await inbox();if(channel)GJ_AUTH.sb.removeChannel(channel);channel=GJ_AUTH.sb.channel('contact-threads-v102').on('postgres_changes',{event:'*',schema:'public',table:'contact_threads'},()=>{mine();if(GJ_AUTH.isAdmin)inbox()}).on('postgres_changes',{event:'*',schema:'public',table:'contact_messages'},()=>{mine();if(GJ_AUTH.isAdmin)inbox()}).subscribe()});
 })();
 </script>
 
@@ -6015,5 +6017,6 @@ async function drawVisitPdfLayout(doc,visit){
 <script src="v11.js?v=113900"></script>
 <script src="v113.js?v=113500"></script>
 <script src="v114.js?v=11401"></script>
+<script src="courier.js?v=114600"></script>
 </body>
 </html>

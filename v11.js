@@ -394,5 +394,5 @@
   if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('App-cache kon niet worden gestart',error));
   if(mobile)setupMobile();
   if(laptop)setupLaptop();
-  window.addEventListener('gj-auth-ready',()=>setTimeout(async()=>{applyReleaseUi();if(mobile){populateMobileSettings();startMobileRealtime();window.renderOverview();loadMobileHistory()}if(laptop)await loadLaptopSettings()},900));
+  window.addEventListener('gj-auth-ready',()=>{if(window.GJ_COURIER_MODE)return;setTimeout(async()=>{applyReleaseUi();if(mobile){populateMobileSettings();startMobileRealtime();window.renderOverview();loadMobileHistory()}if(laptop)await loadLaptopSettings()},900)});
 })();

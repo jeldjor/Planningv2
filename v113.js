@@ -151,6 +151,6 @@
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
-  window.addEventListener('gj-auth-ready',()=>setTimeout(loadAuthoritativeDaySettings,1100));
+  window.addEventListener('gj-auth-ready',()=>{if(window.GJ_COURIER_MODE)return;setTimeout(loadAuthoritativeDaySettings,1100)});
   window.GJ_V113={locationState,loadAuthoritativeDaySettings,renderDatabase:renderDatabase113,validateCustomerLocations};
 })();

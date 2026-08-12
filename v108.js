@@ -756,10 +756,10 @@
     test: Object.freeze({ ageMinutes, ageLabel, locationStatus, permissionLabel, promptLabel, ALLOWED_INTERVALS })
   });
 
-  window.addEventListener('gj-auth-ready', () => manager.init().catch((error) => {
+  window.addEventListener('gj-auth-ready', () => {if(window.GJ_COURIER_MODE)return;manager.init().catch((error) => {
     console.error('Live Locaties initialiseren mislukt', error);
     const target = $('v108LocationList') || $('v108OwnMessage');
     if (target) target.innerHTML = `<div class="v108Error"><strong>Live Locaties konden niet starten.</strong><br>${esc(error.message)}<br>Controleer of SUPABASE_V11_1_RELEASE.sql is uitgevoerd.</div>`;
-  }));
-  if (window.GJ_AUTH?.profile && identityClient()) queueMicrotask(() => manager.init().catch(console.error));
+  })});
+  if (window.GJ_AUTH?.profile && identityClient() && !window.GJ_COURIER_MODE) queueMicrotask(() => manager.init().catch(console.error));
 })();
