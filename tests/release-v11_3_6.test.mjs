@@ -7,7 +7,7 @@ const root=path.resolve(import.meta.dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 
 test('Planyx staat compact boven Welkom op het inlogscherm',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'11.3.8');
+  assert.equal(JSON.parse(read('package.json')).version,'11.4.6');
   for(const file of ['index.html','laptop.html','mobile.html'])assert.match(read(file),/<title>Planyx<\/title>/);
   const auth=read('auth.js');
   assert.match(auth,/planyx-login-transparent\.png\?v=113800-login3/);
@@ -40,7 +40,7 @@ test('nieuwe merkbestanden worden gebouwd en veilig opnieuw gecachet',()=>{
     assert.match(build,new RegExp(asset.replace('.','\\.')));
     assert.match(worker,new RegExp(asset.replace('.','\\.')));
   }
-  assert.match(worker,/planyx-shell-v11\.3\.8-r7-day-route-points/);
+  assert.match(worker,/planyx-shell-v11.4.6-courier-r1/);
   assert.match(worker,/planning-gjsystems-shell-/);
 });
 

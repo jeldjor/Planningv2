@@ -74,9 +74,9 @@ test('beide apparaten laden runtimeconfig en de centrale v11-productiekern', asy
     const html = await read(name);
     assert.match(html, /runtime-config\.js/);
     assert.match(html, /app-config\.js\?v=10801/);
-    assert.match(html, /auth\.js\?v=10802/);
+    assert.match(html, /auth\.js\?v=114600/);
     assert.match(html, /v108\.css\?v=112000/);
-    assert.match(html, /v108\.js\?v=113000/);
+    assert.match(html, /v108\.js\?v=114600/);
     assert.match(html, /v1082\.css\?v=10820/);
     assert.match(html, /v1082\.js\?v=10820/);
     assert.match(html, /v109\.css\?v=10900/);
@@ -84,8 +84,8 @@ test('beide apparaten laden runtimeconfig en de centrale v11-productiekern', asy
     assert.match(html, /v110\.css\?v=112000/);
     assert.match(html, /v110\.js\?v=113500/);
     assert.match(html, /visit-pdf\.js\?v=113500/);
-    assert.match(html, /planning-core\.js\?v=113900/);
-    assert.match(html, /v11\.js\?v=113900/);
+    assert.match(html, /planning-core\.js\?v=114600/);
+    assert.match(html, /v11\.js\?v=114600/);
     assert.doesNotMatch(html, />v10\.\d+ DEV</);
   }
 });

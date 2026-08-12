@@ -42,5 +42,5 @@ test('eerder verdwenen centrale taken worden teruggezet in Niet ingepland',()=>{
 });
 
 test('service worker cache bevat ook de latere iPhone-safe-area-update',()=>{
-  assert.match(worker,/planyx-shell-v11\.3\.8-r7-day-route-points/);
+  assert.match(worker,/planyx-shell-v11.4.6-courier-r1/);
 });

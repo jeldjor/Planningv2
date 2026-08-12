@@ -19,7 +19,8 @@ test('koeriersmodule is syntactisch geldig en op laptop en iPhone geladen',()=>{
   assert.match(laptop,/courier\.css\?v=114600/);assert.match(laptop,/courier\.js\?v=114600/);
   assert.match(mobile,/courier\.css\?v=114600/);assert.match(mobile,/courier\.js\?v=114600/);
   assert.match(build,/'courier\.js', 'courier\.css'/);
-  assert.match(worker,/'\.\/courier\.js','\.\/courier\.css'/);
+  assert.match(worker,/'\.\/courier\.js'/);
+  assert.match(worker,/'\.\/courier\.css'/);
 });
 
 test('alleen het gekozen account krijgt de beveiligde koeriersmodus',()=>{

@@ -61,5 +61,5 @@ test('laptop en iPhone bieden dezelfde dagroutekeuzes en slaan ze centraal op',(
   assert.match(core.persistDay.toString(),/routeContext:result\.routeContext/);
   assert.match(css,/\.firstVisitBadge/);
   assert.match(css,/\.dayRouteEditorGrid/);
-  assert.match(worker,/planyx-shell-v11\.3\.8-r7-day-route-points/);
+  assert.match(worker,/planyx-shell-v11.4.6-courier-r1/);
 });

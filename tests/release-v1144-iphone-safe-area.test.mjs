@@ -34,8 +34,8 @@ test('mobiele bovenbalk en knoppen blijven duidelijk leesbaar',()=>{
 });
 
 test('gewijzigde iPhone-assets worden zonder oude PWA-cache geladen',()=>{
-  assert.match(mobile,/auth\.js\?v=10802-ui3/);
-  assert.match(worker,/planyx-shell-v11\.3\.8-r7-day-route-points/);
+  assert.match(mobile,/auth\.js\?v=114600/);
+  assert.match(worker,/planyx-shell-v11.4.6-courier-r1/);
 });
 
 test('technische startcoördinaten zijn weg en worden automatisch beheerd',()=>{
