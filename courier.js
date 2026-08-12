@@ -32,6 +32,7 @@
             "<input id='courierFile' class='courierFile' type='file' accept='.xlsx,.xls,.csv'>",
             "<button id='courierValidate' class='courierButton secondary' type='button'>Adressen controleren</button>",
             "<button id='courierOptimize' class='courierButton' type='button'>Optimaliseer route</button>",
+            "<button id='courierClearAll' class='courierButton danger' type='button'>Alles leegmaken</button>",
           "</div>",
         "</section>",
         "<div id='courierProgress' class='courierProgress'></div>",
@@ -577,6 +578,23 @@
     catch(error){return openReview(order,null,error.message||"Adres niet gevonden.")}
   }
 
+  async function clearAllOrders(){
+    if(!state.orders.length){setProgress("Er zijn geen bezorgopdrachten om te verwijderen.");return}
+    var count=state.orders.length;
+    if(!window.confirm("Weet je zeker dat je alle "+count+" bezorgopdrachten en opgeslagen routes wilt verwijderen? Dit kan niet ongedaan worden gemaakt."))return;
+    setBusy(true,"Alle bezorgopdrachten verwijderen...");
+    byId("courierClearAll").disabled=true;
+    try{
+      var routes=await GJ_AUTH.sb.from("courier_route_days").delete().gte("delivery_date","1900-01-01");
+      if(routes.error)throw routes.error;
+      var orders=await GJ_AUTH.sb.from("courier_orders").delete().neq("id","00000000-0000-0000-0000-000000000000");
+      if(orders.error)throw orders.error;
+      state.orders=[];state.summary=null;state.date=today();
+      await loadOrders();setProgress(count+" bezorgopdrachten zijn verwijderd. Je kunt nu een nieuw Excelbestand importeren.","success");
+    }catch(error){setProgress("Leegmaken mislukt: "+(error.message||error),"error");throw error}
+    finally{setBusy(false);byId("courierClearAll").disabled=false}
+  }
+
   function bindDragging(){
     var list=byId("courierRouteList"),dragged=null,startY=0,moved=false;
     list.addEventListener("pointerdown",function(event){
@@ -598,6 +616,7 @@
     byId("courierFile").onchange=function(event){var file=event.target.files&&event.target.files[0];if(file)importFile(file).catch(function(error){setProgress("Importeren mislukt: "+error.message,"error")})};
     byId("courierValidate").onclick=function(){validateAddresses(true).catch(function(error){setProgress(error.message,"error")})};
     byId("courierOptimize").onclick=function(){optimizeRoute().catch(function(){})};
+    byId("courierClearAll").onclick=function(){clearAllOrders().catch(function(){})};
     byId("courierFitRoute").onclick=function(){var open=ordersForDate().filter(function(x){return x.delivery_status==="pending"&&x.validation_status==="valid"}).sort(function(a,b){return number(a.route_order,9999)-number(b.route_order,9999)});renderMap(open)};
     byId("courierDate").onchange=async function(event){state.date=event.target.value;await loadOrders()};
     byId("courierSettingsButton").onclick=openSettings;
@@ -640,6 +659,6 @@
   }
 
   window.addEventListener("gj-auth-ready",function(event){init(event.detail)});
-  window.GJCourier={VERSION:"11.4.6-r2",mapExportRow:mapRow,combineDeliveryAddress:combinedAddress,normalizePhone:phoneValue,addressMatchesTomTom:semanticMatch};
+  window.GJCourier={VERSION:"11.4.6-r3",mapExportRow:mapRow,combineDeliveryAddress:combinedAddress,normalizePhone:phoneValue,addressMatchesTomTom:semanticMatch};
   if(window.GJ_AUTH&&GJ_AUTH.profile)setTimeout(function(){init({workspaceProfile:GJ_AUTH.workspaceProfile||GJ_AUTH.profile})},0);
 })();

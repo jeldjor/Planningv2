@@ -16,8 +16,8 @@ const [courier,css,auth,laptop,mobile,sql,build,worker,locations]=await Promise.
 
 test('koeriersmodule is syntactisch geldig en op laptop en iPhone geladen',()=>{
   new vm.Script(courier,{filename:'courier.js'});
-  assert.match(laptop,/courier\.css\?v=114601/);assert.match(laptop,/courier\.js\?v=114601/);
-  assert.match(mobile,/courier\.css\?v=114601/);assert.match(mobile,/courier\.js\?v=114601/);
+  assert.match(laptop,/courier\.css\?v=114602/);assert.match(laptop,/courier\.js\?v=114602/);
+  assert.match(mobile,/courier\.css\?v=114602/);assert.match(mobile,/courier\.js\?v=114602/);
   assert.match(build,/'courier\.js', 'courier\.css'/);
   assert.match(worker,/'\.\/courier\.js'/);
   assert.match(worker,/'\.\/courier\.css'/);
@@ -118,4 +118,13 @@ test('R2 accepteert inhoudelijk gelijke adressen en gebruikt TomTom voor de volg
   assert.match(courier,/courierDragHandle/);
   assert.match(courier,/renderMap\(open\)/);
   assert.match(sql,/route_lock text/);
+});
+
+test('R3 kan alle koeriersopdrachten veilig per werkruimte leegmaken',()=>{
+  assert.match(courier,/id='courierClearAll'/);
+  assert.match(courier,/Weet je zeker dat je alle/);
+  assert.match(courier,/from\("courier_route_days"\)\.delete\(\)/);
+  assert.match(courier,/from\("courier_orders"\)\.delete\(\)/);
+  assert.match(courier,/Je kunt nu een nieuw Excelbestand importeren/);
+  assert.match(courier,/VERSION:"11\.4\.6-r3"/);
 });

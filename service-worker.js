@@ -1,7 +1,7 @@
 /* Planyx v11.4.6 - veilige app-shellcache; Supabase-data wordt nooit gecachet. */
 'use strict';
-const CACHE='planyx-shell-v11.4.6-courier-r2';
-const SHELL=['./','./index.html','./laptop.html','./mobile.html','./manifest.webmanifest','./auth.js','./auth.js?v=114600','./app-config.js','./planning-core.js','./planning-core.js?v=114600','./courier.js','./courier.js?v=114601','./courier.css','./courier.css?v=114601','./visit-pdf.js','./photo-zip.js','./assets/chain-banners.png','./assets/chain-banners-core.png','./assets/icons/apple-touch-icon.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./v108.js?v=114600','./v11.js','./v11.js?v=114600','./v11.css','./v113.js','./v113.js?v=114600','./v113.css','./v114.js','./v114.css','./brand.css','./planyx-brand.jpeg','./planyx-login-transparent.png','./gj-motion-brand.png'];
+const CACHE='planyx-shell-v11.4.6-courier-r3';
+const SHELL=['./','./index.html','./laptop.html','./mobile.html','./manifest.webmanifest','./auth.js','./auth.js?v=114600','./app-config.js','./planning-core.js','./planning-core.js?v=114600','./courier.js','./courier.js?v=114602','./courier.css','./courier.css?v=114602','./visit-pdf.js','./photo-zip.js','./assets/chain-banners.png','./assets/chain-banners-core.png','./assets/icons/apple-touch-icon.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./v108.js?v=114600','./v11.js','./v11.js?v=114600','./v11.css','./v113.js','./v113.js?v=114600','./v113.css','./v114.js','./v114.css','./brand.css','./planyx-brand.jpeg','./planyx-login-transparent.png','./gj-motion-brand.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
