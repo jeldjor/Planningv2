@@ -6,18 +6,18 @@ import {createRequire} from 'node:module';
 import {JSDOM} from 'jsdom';
 
 const root=new URL('../',import.meta.url),require=createRequire(import.meta.url),core=require('../planning-core.js');
-const [courier,css,auth,laptop,mobile,sql,build,worker,locations]=await Promise.all([
+const [courier,css,auth,laptop,mobile,sql,build,worker,locations,edge]=await Promise.all([
   readFile(new URL('courier.js',root),'utf8'),readFile(new URL('courier.css',root),'utf8'),
   readFile(new URL('auth.js',root),'utf8'),readFile(new URL('laptop.html',root),'utf8'),
   readFile(new URL('mobile.html',root),'utf8'),readFile(new URL('SUPABASE_V11_4_6_COURIER.sql',root),'utf8'),
   readFile(new URL('scripts/prepare-dist.mjs',root),'utf8'),readFile(new URL('service-worker.js',root),'utf8'),
-  readFile(new URL('v108.js',root),'utf8')
+  readFile(new URL('v108.js',root),'utf8'),readFile(new URL('supabase/functions/tomtom-proxy/index.ts',root),'utf8')
 ]);
 
 test('koeriersmodule is syntactisch geldig en op laptop en iPhone geladen',()=>{
   new vm.Script(courier,{filename:'courier.js'});
-  assert.match(laptop,/courier\.css\?v=114602/);assert.match(laptop,/courier\.js\?v=114602/);
-  assert.match(mobile,/courier\.css\?v=114602/);assert.match(mobile,/courier\.js\?v=114602/);
+  assert.match(laptop,/courier\.css\?v=114603/);assert.match(laptop,/courier\.js\?v=114603/);
+  assert.match(mobile,/courier\.css\?v=114603/);assert.match(mobile,/courier\.js\?v=114603/);
   assert.match(build,/'courier\.js', 'courier\.css'/);
   assert.match(worker,/'\.\/courier\.js'/);
   assert.match(worker,/'\.\/courier\.css'/);
@@ -110,9 +110,8 @@ test('koeriersroute wordt pas als volledige dag atomair opgeslagen',()=>{
   assert.match(courier,/rpc\("save_courier_route"/);
 });
 
-test('R2 accepteert inhoudelijk gelijke adressen en gebruikt TomTom voor de volgorde',()=>{
+test('R2 accepteert inhoudelijk gelijke adressen en ondersteunt vaste routepunten',()=>{
   assert.match(courier,/postcodeOk&&houseOk/);
-  assert.match(courier,/action:"optimize-waypoints"/);
   assert.match(courier,/routeLock==="first"/);
   assert.match(courier,/routeLock==="last"/);
   assert.match(courier,/courierDragHandle/);
@@ -126,5 +125,15 @@ test('R3 kan alle koeriersopdrachten veilig per werkruimte leegmaken',()=>{
   assert.match(courier,/from\("courier_route_days"\)\.delete\(\)/);
   assert.match(courier,/from\("courier_orders"\)\.delete\(\)/);
   assert.match(courier,/Je kunt nu een nieuw Excelbestand importeren/);
-  assert.match(courier,/VERSION:"11\.4\.6-r3"/);
+  assert.match(courier,/VERSION:"11\.4\.6-r4"/);
+});
+
+test('R4 optimaliseert op echte TomTom-rijtijd inclusief start en terugrit',()=>{
+  assert.match(courier,/action:"travel-time-matrix"/);
+  assert.match(edge,/api\.tomtom\.com\/routing\/matrix\/2/);
+  assert.match(edge,/departAt: 'any', traffic: 'historical', routeType: 'fastest', travelMode: 'car'/);
+  const dom=new JSDOM('<!doctype html><body></body>',{runScripts:'outside-only',url:'https://example.test'});dom.window.eval(courier);
+  const matrix=Array.from({length:6},(_,i)=>Array.from({length:6},(_,j)=>i===j?0:1000));
+  matrix[0][3]=1;matrix[3][1]=1;matrix[1][4]=1;matrix[4][2]=1;matrix[2][5]=1;
+  assert.deepEqual(Array.from(dom.window.GJCourier.optimizeMatrixOrder(matrix,4)),[2,0,3,1]);
 });

@@ -147,6 +147,49 @@ async function optimizeWaypoints(apiKey: string, body: Record<string, unknown>) 
   throw new RouteError('OPTIMIZE_FAILED', 'TomTom kon geen volledige routevolgorde bepalen.', true);
 }
 
+async function travelTimeMatrix(apiKey: string, body: Record<string, unknown>) {
+  const rawPoints = Array.isArray(body.points) ? body.points : [];
+  if (rawPoints.length < 3 || rawPoints.length > 52) throw new RouteError('INVALID_MATRIX_POINTS', 'De rijtijdmatrix ondersteunt 1 tot en met 50 bezorgadressen plus start en eindpunt.');
+  const points = rawPoints.map((value, index) => {
+    const item = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+    const latitude = coordinate(item.lat, -90, 90), longitude = coordinate(item.lng, -180, 180);
+    if (latitude === null || longitude === null) throw new RouteError('INVALID_COORDINATES', `Routepunt ${index + 1} heeft ongeldige coördinaten.`);
+    return { point: { latitude, longitude } };
+  });
+  const size = points.length, times = Array.from({ length: size }, () => Array(size).fill(null) as (number | null)[]);
+  const originsPerRequest = Math.max(1, Math.floor(200 / size));
+  const endpoint = new URL('https://api.tomtom.com/routing/matrix/2');endpoint.searchParams.set('key', apiKey);
+  for (let offset = 0; offset < size; offset += originsPerRequest) {
+    const origins = points.slice(offset, Math.min(size, offset + originsPerRequest));
+    let completed = false, lastMessage = 'rijtijdmatrix niet beschikbaar';
+    for (let attempt = 0; attempt < 2 && !completed; attempt += 1) {
+      const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 30000);
+      try {
+        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ origins, destinations: points, options: { departAt: 'any', traffic: 'historical', routeType: 'fastest', travelMode: 'car' } }) });
+        const result = await response.json().catch(() => ({}));
+        if (response.ok && Array.isArray(result?.data)) {
+          for (const cell of result.data) {
+            const origin = offset + Number(cell.originIndex), destination = Number(cell.destinationIndex), seconds = Number(cell.routeSummary?.travelTimeInSeconds);
+            if (origin >= offset && origin < offset + origins.length && destination >= 0 && destination < size && Number.isFinite(seconds)) times[origin][destination] = Math.max(0, seconds);
+          }
+          completed = true;break;
+        }
+        lastMessage = result?.detailedError?.message || result?.error?.description || `TomTom Matrix HTTP ${response.status}`;
+        if ((response.status === 429 || response.status >= 500) && attempt === 0) { await pause(750);continue; }
+      } catch (error) {
+        lastMessage = error instanceof DOMException && error.name === 'AbortError' ? 'TomTom Matrix reageerde niet op tijd.' : (error instanceof Error ? error.message : String(error));
+        if (attempt === 0) { await pause(750);continue; }
+      } finally { clearTimeout(timer); }
+    }
+    if (!completed) throw new RouteError('MATRIX_FAILED', `TomTom kon de echte rijtijden niet bepalen: ${lastMessage}`, true);
+  }
+  for (let i = 0; i < size; i++) {
+    times[i][i] = 0;
+    for (let j = 0; j < size; j++) if (times[i][j] === null) throw new RouteError('MATRIX_INCOMPLETE', `TomTom kon de rijtijd van routepunt ${i + 1} naar ${j + 1} niet berekenen.`);
+  }
+  return { times };
+}
+
 async function geocode(apiKey: string, query: string, country: string) {
   const endpoint = new URL(`https://api.tomtom.com/search/2/geocode/${encodeURIComponent(query)}.json`);
   endpoint.searchParams.set('key', apiKey);
@@ -201,6 +244,10 @@ Deno.serve(async (request) => {
     }
     if (body.action === 'optimize-waypoints') {
       try { return json({ ok: true, ...(await optimizeWaypoints(settings.tomtom_api_key, body)), requestId }, 200, requestId); }
+      catch (error) { return applicationError(error, requestId); }
+    }
+    if (body.action === 'travel-time-matrix') {
+      try { return json({ ok: true, ...(await travelTimeMatrix(settings.tomtom_api_key, body)), requestId }, 200, requestId); }
       catch (error) { return applicationError(error, requestId); }
     }
     if (body.action === 'geocode') {

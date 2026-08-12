@@ -332,12 +332,32 @@
     return postcodeOk&&houseOk&&(streetOk||postcodeOk);
   }
 
+  function optimizeMatrixOrder(times,visitCount){
+    if(!visitCount)return [];
+    var endIndex=visitCount+1;
+    var cost=function(route){var total=0,previous=0;for(var i=0;i<route.length;i++){var next=route[i]+1,value=Number(times[previous]&&times[previous][next]);if(!Number.isFinite(value))return Infinity;total+=value;previous=next}var home=Number(times[previous]&&times[previous][endIndex]);return Number.isFinite(home)?total+home:Infinity};
+    var nearest=function(first){var remaining=Array.from({length:visitCount},function(_,i){return i}),route=[],previous=0;if(first!=null){remaining.splice(remaining.indexOf(first),1);route.push(first);previous=first+1}while(remaining.length){var best=0,bestValue=Infinity;remaining.forEach(function(index,pos){var value=Number(times[previous]&&times[previous][index+1]);if(value<bestValue){bestValue=value;best=pos}});var next=remaining.splice(best,1)[0];route.push(next);previous=next+1}return route};
+    var firstChoices=Array.from({length:visitCount},function(_,i){return i}).sort(function(a,b){return Number(times[0][a+1])-Number(times[0][b+1])}).slice(0,Math.min(10,visitCount));
+    var bestRoute=nearest(null),bestCost=cost(bestRoute);firstChoices.forEach(function(first){var candidate=nearest(first),value=cost(candidate);if(value<bestCost){bestRoute=candidate;bestCost=value}});
+    var improved=true,rounds=0;
+    while(improved&&rounds++<100){
+      improved=false;
+      for(var i=0;i<bestRoute.length-1&&!improved;i++)for(var j=i+1;j<bestRoute.length&&!improved;j++){var reversed=bestRoute.slice();reversed.splice(i,j-i+1,...reversed.slice(i,j+1).reverse());var reverseCost=cost(reversed);if(reverseCost+1<bestCost){bestRoute=reversed;bestCost=reverseCost;improved=true}}
+      for(var from=0;from<bestRoute.length&&!improved;from++)for(var to=0;to<bestRoute.length&&!improved;to++){if(from===to)continue;var moved=bestRoute.slice(),item=moved.splice(from,1)[0];moved.splice(to,0,item);var movedCost=cost(moved);if(movedCost+1<bestCost){bestRoute=moved;bestCost=movedCost;improved=true}}
+    }
+    return bestRoute;
+  }
+
   async function tomTomOrder(visits,start,end){
     if(visits.length<2)return visits.slice();
-    var response=await GJ_AUTH.sb.functions.invoke("tomtom-proxy",{body:{action:"optimize-waypoints",start:start,end:end,stops:visits.map(function(visit){return {lat:Number(visit.customer.lat),lng:Number(visit.customer.lng)}})}});
-    if(response.error||response.data&&response.data.error)throw new Error(response.data&&response.data.error||response.error&&response.error.message||"TomTom kon de routevolgorde niet bepalen.");
-    var order=response.data&&response.data.order;
-    if(!Array.isArray(order)||order.length!==visits.length||new Set(order).size!==visits.length)throw new Error("TomTom gaf geen volledige routevolgorde terug.");
+    if(visits.length>50)throw new Error("Deze route bevat meer dan 50 open adressen. Verdeel de opdrachten eerst over meerdere dagen.");
+    var points=[start].concat(visits.map(function(visit){return {lat:Number(visit.customer.lat),lng:Number(visit.customer.lng)}}),[end]);
+    var response=await GJ_AUTH.sb.functions.invoke("tomtom-proxy",{body:{action:"travel-time-matrix",points:points}});
+    if(response.error||response.data&&response.data.error)throw new Error(response.data&&response.data.error||response.error&&response.error.message||"TomTom kon de rijtijden niet bepalen.");
+    var times=response.data&&response.data.times;
+    if(!Array.isArray(times)||times.length!==points.length)throw new Error("TomTom gaf geen volledige rijtijdmatrix terug.");
+    var order=optimizeMatrixOrder(times,visits.length);
+    if(order.length!==visits.length||new Set(order).size!==visits.length)throw new Error("Planyx kon geen volledige routevolgorde bepalen.");
     return order.map(function(index){return visits[index]});
   }
 
@@ -486,7 +506,7 @@
     var c=state.courier,start={lat:number(c.startLat,NaN),lng:number(c.startLng,NaN)};
     var end=c.endSame!==false?start:{lat:number(c.endLat,NaN),lng:number(c.endLng,NaN)};
     if(!GJPlanningCore.hasPoint(start)||!GJPlanningCore.hasPoint(end)){openSettings();return alert("Stel eerst een geldig start- en eindadres in.");}
-    setBusy(true,"TomTom bepaalt de beste routevolgorde...");
+      setBusy(true,"TomTom berekent de echte rijtijden tussen alle adressen...");
     try{
       var visits=active.map(function(order){return {id:order.id,planningId:order.id,routeLock:order.route_lock||null,customer:{lat:Number(order.latitude),lng:Number(order.longitude),name:order.recipient_name}}});
       var first=visits.find(function(visit){return visit.routeLock==="first"})||null,last=visits.find(function(visit){return visit.routeLock==="last"})||null;
@@ -659,6 +679,6 @@
   }
 
   window.addEventListener("gj-auth-ready",function(event){init(event.detail)});
-  window.GJCourier={VERSION:"11.4.6-r3",mapExportRow:mapRow,combineDeliveryAddress:combinedAddress,normalizePhone:phoneValue,addressMatchesTomTom:semanticMatch};
+  window.GJCourier={VERSION:"11.4.6-r4",mapExportRow:mapRow,combineDeliveryAddress:combinedAddress,normalizePhone:phoneValue,addressMatchesTomTom:semanticMatch,optimizeMatrixOrder:optimizeMatrixOrder};
   if(window.GJ_AUTH&&GJ_AUTH.profile)setTimeout(function(){init({workspaceProfile:GJ_AUTH.workspaceProfile||GJ_AUTH.profile})},0);
 })();

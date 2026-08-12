@@ -6,6 +6,7 @@
 - De routevolgorde kan met de sleepgreep handmatig worden gewijzigd; tijden en afstanden worden daarna opnieuw berekend.
 - De koeriersweergave bevat een overzichtskaart met start, alle genummerde stops en het eindpunt.
 - R3 voegt **Alles leegmaken** toe. Daarmee worden na bevestiging alle bezorgopdrachten en routeberekeningen van uitsluitend de aangemelde koerierswerkruimte verwijderd; instellingen en goedgekeurde adrescorrecties blijven bewaard.
+- R4 vervangt TomToms niet-gegarandeerde `computeBestOrder`-heuristiek door een echte TomTom-rijtijdmatrix. Planyx minimaliseert totale historische rijtijd vanaf het startpunt, langs alle adressen en terug naar het eindpunt, met vaste eerste/laatste stops als harde voorwaarden.
 - De bestaande veldserviceweergave en regels blijven voor alle andere accounts ongewijzigd.
 - Excel/CSV-import ondersteunt de aangeleverde transportexport en gebruikt cargoid, met c_id als terugval.
 - d_address1 en d_address2 worden veilig samengevoegd met postcode, plaats en land.

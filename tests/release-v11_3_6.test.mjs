@@ -40,7 +40,7 @@ test('nieuwe merkbestanden worden gebouwd en veilig opnieuw gecachet',()=>{
     assert.match(build,new RegExp(asset.replace('.','\\.')));
     assert.match(worker,new RegExp(asset.replace('.','\\.')));
   }
-  assert.match(worker,/planyx-shell-v11.4.6-courier-r3/);
+  assert.match(worker,/planyx-shell-v11.4.6-courier-r4/);
   assert.match(worker,/planning-gjsystems-shell-/);
 });
 

@@ -15,4 +15,8 @@
 3. Vervang de code door de volledige inhoud van `supabase/functions/tomtom-proxy/index.ts` en kies **Deploy function**.
 4. Upload de R2-frontendbestanden naar GitHub en wacht tot de deployment groen is.
 
+## Routecorrectie R4
+
+R4 wijzigt opnieuw `tomtom-proxy`. Vervang daarom in **Supabase → Edge Functions → tomtom-proxy → Code** de volledige code door `supabase/functions/tomtom-proxy/index.ts` uit de R4-update en klik op **Deploy function**. Voor R4 is geen aanvullende SQL nodig.
+
 De TomTom API-key blijft uitsluitend in app_server_settings/de serverfunctie. Zet nooit een service-role-key of TomTom-key in browserbestanden.
