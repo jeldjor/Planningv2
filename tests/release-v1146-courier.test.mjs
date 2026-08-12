@@ -16,15 +16,17 @@ const [courier,css,auth,laptop,mobile,sql,build,worker,locations]=await Promise.
 
 test('koeriersmodule is syntactisch geldig en op laptop en iPhone geladen',()=>{
   new vm.Script(courier,{filename:'courier.js'});
-  assert.match(laptop,/courier\.css\?v=114600/);assert.match(laptop,/courier\.js\?v=114600/);
-  assert.match(mobile,/courier\.css\?v=114600/);assert.match(mobile,/courier\.js\?v=114600/);
+  assert.match(laptop,/courier\.css\?v=114601/);assert.match(laptop,/courier\.js\?v=114601/);
+  assert.match(mobile,/courier\.css\?v=114601/);assert.match(mobile,/courier\.js\?v=114601/);
   assert.match(build,/'courier\.js', 'courier\.css'/);
   assert.match(worker,/'\.\/courier\.js'/);
   assert.match(worker,/'\.\/courier\.css'/);
 });
 
 test('alleen het gekozen account krijgt de beveiligde koeriersmodus',()=>{
-  assert.match(sql,/7b870312-0fd3-4d7c-add6-5bb25588f2de/);
+  assert.match(sql,/28ccccdc-b7ef-4397-a01f-f1218f5303b7/);
+  assert.match(sql,/info@routerunner-direct\.com/);
+  assert.match(sql,/7b870312-0fd3-4d7c-add6-5bb25588f2de[\s\S]*app_mode='courier'|app_mode='field_service'[\s\S]*7b870312-0fd3-4d7c-add6-5bb25588f2de/);
   assert.match(sql,/app_mode='courier'/);
   assert.match(sql,/new\.app_mode := old\.app_mode/);
   assert.match(sql,/create policy courier_orders_workspace[\s\S]*auth\.uid\(\)/);
@@ -58,8 +60,10 @@ test('echte adresvarianten en Nederlandse telefoonnummers worden correct gemapt'
   const kept=api.mapExportRow({...common,d_address1:'Kerkstraat 12A',d_address2:''},0,{...complete,delivery_status:'delivered'});
   assert.equal(kept.delivery_status,'delivered');
   const exact={address:{postalCode:'5211 AB',streetName:'Kerkstraat',streetNumber:'12A'}};
+  const exactFormatting={address:{postalCode:'5211 AB',streetName:'Kerkstraat',freeformAddress:'Kerkstraat 12A, 5211 AB s-Hertogenbosch'}};
   const changed={address:{postalCode:'5211 AB',streetName:'Kerkstraat',streetNumber:'12'}};
   assert.equal(api.addressMatchesTomTom(complete,exact,complete.original_address),true);
+  assert.equal(api.addressMatchesTomTom(complete,exactFormatting,complete.original_address),true);
   assert.equal(api.addressMatchesTomTom(complete,changed,complete.original_address),false);
 });
 
@@ -104,4 +108,14 @@ test('koeriersroute wordt pas als volledige dag atomair opgeslagen',()=>{
   assert.match(sql,/expected<>jsonb_array_length/);
   assert.match(sql,/Een bezorgopdracht bestaat niet meer/);
   assert.match(courier,/rpc\("save_courier_route"/);
+});
+
+test('R2 accepteert inhoudelijk gelijke adressen en gebruikt TomTom voor de volgorde',()=>{
+  assert.match(courier,/postcodeOk&&houseOk/);
+  assert.match(courier,/action:"optimize-waypoints"/);
+  assert.match(courier,/routeLock==="first"/);
+  assert.match(courier,/routeLock==="last"/);
+  assert.match(courier,/courierDragHandle/);
+  assert.match(courier,/renderMap\(open\)/);
+  assert.match(sql,/route_lock text/);
 });

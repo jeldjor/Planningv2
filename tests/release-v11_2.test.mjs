@@ -16,7 +16,7 @@ test('v11.2 gebruikt één gedeelde TomTom-dagbatch zonder losse routecyclus',()
   assert.equal(core.VERSION,'11.4.6');
   assert.match(core.requestRouteBatch.toString(),/action:'route-batch'/);
   assert.doesNotMatch([mobile,laptop,v109].join('\n'),/functions\.invoke\('tomtom-proxy',[\s\S]{0,180}action:'route'/);
-  assert.match(worker,/planyx-shell-v11\.4\.6-courier-r1/);
+  assert.match(worker,/planyx-shell-v11\.4\.6-courier-r2/);
 });
 
 test('TomTom Edge Function heeft begrensde paralleliteit en een stabiel foutcontract',()=>{
